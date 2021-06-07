@@ -1,0 +1,29 @@
+package helper
+
+import (
+	"github.com/eosnationftw/eosn-base-api/response"
+	"github.com/gin-gonic/gin"
+)
+
+func ReportPublicError(c *gin.Context, apiError *response.ApiError, meta interface{}) {
+	reportError(c, apiError, meta, gin.ErrorTypePublic, false)
+}
+
+func ReportPublicErrorAndAbort(c *gin.Context, apiError *response.ApiError, meta interface{}) {
+	reportError(c, apiError, meta, gin.ErrorTypePublic, true)
+}
+
+func ReportPrivateError(c *gin.Context, apiError *response.ApiError, meta interface{}) {
+	reportError(c, apiError, meta, gin.ErrorTypePrivate, false)
+}
+
+func ReportPrivateErrorAndAbort(c *gin.Context, apiError *response.ApiError, meta interface{}) {
+	reportError(c, apiError, meta, gin.ErrorTypePrivate, true)
+}
+
+func reportError(c *gin.Context, apiError *response.ApiError, meta interface{}, errType gin.ErrorType, abort bool) {
+	c.Error(apiError).SetMeta(meta).SetType(errType)
+	if abort {
+		c.Abort()
+	}
+}
