@@ -1,9 +1,9 @@
 package service
 
 import (
+	"context"
 	"github.com/eosnationftw/eosn-base-api/dto"
 	"github.com/friendsofgo/errors"
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -11,5 +11,5 @@ var (
 )
 
 type UserService interface {
-	GetUserByAuth0Id(c *gin.Context, auth0Provider, auth0Id string) (*dto.User, error)
+	GetUserByAuth0Id(ctx context.Context, auth0Provider, auth0Id string) (*dto.User, error)
 }

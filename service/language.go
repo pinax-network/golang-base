@@ -1,9 +1,9 @@
 package service
 
 import (
+	"context"
 	"github.com/eosnationftw/eosn-base-api/dto"
 	"github.com/friendsofgo/errors"
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -11,6 +11,6 @@ var (
 )
 
 type LanguageService interface {
-	GetByCode(c *gin.Context, languageCode string) (*dto.Language, error)
-	ListSupportedLanguageCodes(c *gin.Context) []string
+	GetByCode(ctx context.Context, languageCode string) (*dto.Language, error)
+	ListSupportedLanguageCodes(ctx context.Context) []string
 }
