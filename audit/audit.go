@@ -32,10 +32,6 @@ func InitializeAuditLog(sinks ...Sink) {
 	auditLogger = &AuditLogger{sinks: sinks}
 }
 
-func test() {
-	InitializeAuditLog(&LogSink{})
-}
-
 func LogCreateResource(userId int, resourceId int, resource interface{}, time time.Time) {
 	incCreateResourceCounter()
 	for _, s := range auditLogger.sinks {
