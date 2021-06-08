@@ -1,0 +1,52 @@
+syntax = "proto3";
+package users;
+option go_package="./proto/pb";
+
+import "google/protobuf/timestamp.proto";
+
+// Models
+
+message UserProfile {
+  string eosn_id = 1;
+  string email = 2;
+  string username = 3;
+  string name = 4;
+  string avatar_url = 5;
+  string website_url = 6;
+  string twitter_handle = 7;
+  string github_account = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message UserSocials {
+  string eosn_id = 1;
+  repeated string socials = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+// Requests
+
+message UserProfileRequest {
+  string eosn_id = 1;
+}
+
+message UserSocialsRequest {
+  string eosn_id = 1;
+}
+
+// Responses
+
+message UserProfileResponse {
+  UserProfile result = 1;
+}
+
+message UserSocialsResponse {
+  UserSocials result = 1;
+}
+
+service UserService {
+  rpc GetUserProfile(UserProfileRequest) returns (UserProfileResponse) {};
+  rpc GetUserSocials(UserSocialsRequest) returns (UserSocialsResponse) {};
+}
