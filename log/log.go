@@ -2,9 +2,9 @@ package log
 
 import (
 	"fmt"
-	"github.com/prometheus/common/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
 	"os"
 )
 
@@ -66,11 +66,11 @@ func InitializeLogger(logDebug bool) error {
 func Log(logLevel LogLevelType, message string, additionalFields ...zap.Field) {
 
 	if ZapLogger == nil {
-		log.Error("zap logger isn't initialized yet!")
-		log.Error(message)
+		log.Println("zap logger isn't initialized yet!")
+		log.Println(message)
 
 		for _, f := range additionalFields {
-			log.Error(fmt.Sprintf("'%s': %s", f.Key, f.String))
+			log.Println(fmt.Sprintf("'%s': %s", f.Key, f.String))
 		}
 		if logLevel == LogLevel.FATAL {
 			os.Exit(1)
