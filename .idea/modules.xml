@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/pomelo-util.iml" filepath="$PROJECT_DIR$/.idea/pomelo-util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/eosn-base-api.iml" filepath="$PROJECT_DIR$/.idea/eosn-base-api.iml" />
     </modules>
   </component>
 </project>
