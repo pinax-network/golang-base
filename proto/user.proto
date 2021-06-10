@@ -12,6 +12,15 @@ message UpdatedUser {
   google.protobuf.Timestamp updated_at = 2;
 }
 
+message UserMeta {
+  string eosn_id = 1;
+  bool has_profile = 2;
+  bool has_linked_accounts = 3;
+  bool has_chain_account = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
 message UserProfile {
   string eosn_id = 1;
   string email = 2;
