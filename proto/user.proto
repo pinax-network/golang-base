@@ -34,14 +34,18 @@ message UserProfile {
   google.protobuf.Timestamp updated_at = 10;
 }
 
-message UserSocials {
+message UserSocial {
   string eosn_id = 1;
-  repeated string socials = 2;
+  string provider = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
-message UserLinkedAccounts {
+message UserLinkedAccount {
   string eosn_id = 1;
-  repeated string account_name = 2;
+  string account_name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 message UserChainAccount {
@@ -88,11 +92,11 @@ message UserProfileResponse {
 }
 
 message UserSocialsResponse {
-  UserSocials result = 1;
+  repeated UserSocial result = 1;
 }
 
 message UserLinkedAccountsResponse {
-  UserLinkedAccounts result = 1;
+  repeated UserLinkedAccount result = 1;
 }
 
 message UserChainAccountResponse {
