@@ -5,6 +5,10 @@ import (
 	"github.com/friendsofgo/errors"
 )
 
+func WrapErrorWithEmail(err error, email string) error {
+	return errors.WithMessage(err, fmt.Sprintf("email '%s'", email))
+}
+
 func WrapErrorWithName(err error, name string) error {
 	return errors.WithMessage(err, fmt.Sprintf("name '%s'", name))
 }

@@ -1,4 +1,4 @@
-package dto
+package base_models
 
 type Language struct {
 	ID             int    `db:"id" json:"id"`

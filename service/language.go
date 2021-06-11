@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/eosnationftw/eosn-base-api/dto"
+	"github.com/eosnationftw/eosn-base-api/models"
 	"github.com/friendsofgo/errors"
 )
 
@@ -11,6 +11,6 @@ var (
 )
 
 type LanguageService interface {
-	GetByCode(ctx context.Context, languageCode string) (*dto.Language, error)
+	GetByCode(ctx context.Context, languageCode string) (*base_models.Language, error)
 	ListSupportedLanguageCodes(ctx context.Context) []string
 }

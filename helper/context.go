@@ -2,12 +2,12 @@ package helper
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/dto"
+	"github.com/eosnationftw/eosn-base-api/models"
 	"github.com/eosnationftw/eosn-base-api/global"
 	"github.com/gin-gonic/gin"
 )
 
-func ExtractLanguageFromContext(c *gin.Context) (language *dto.Language, err error) {
+func ExtractLanguageFromContext(c *gin.Context) (language *base_models.Language, err error) {
 
 	langInterface, exists := c.Get(global.CONTEXT_LANGUAGE)
 	if !exists {
@@ -15,7 +15,7 @@ func ExtractLanguageFromContext(c *gin.Context) (language *dto.Language, err err
 		return
 	}
 
-	language, ok := langInterface.(*dto.Language)
+	language, ok := langInterface.(*base_models.Language)
 	if !ok {
 		err = fmt.Errorf("failed to convert language context model")
 		return
@@ -24,7 +24,7 @@ func ExtractLanguageFromContext(c *gin.Context) (language *dto.Language, err err
 	return
 }
 
-func MustExtractLanguageFromContext(c *gin.Context) *dto.Language {
+func MustExtractLanguageFromContext(c *gin.Context) *base_models.Language {
 
 	language, err := ExtractLanguageFromContext(c)
 	if err != nil {
@@ -34,7 +34,7 @@ func MustExtractLanguageFromContext(c *gin.Context) *dto.Language {
 	return language
 }
 
-func ExtractUserFromContext(c *gin.Context) (user *dto.User, err error) {
+func ExtractUserFromContext(c *gin.Context) (user *base_models.User, err error) {
 
 	userInterface, exists := c.Get(global.CONTEXT_USER)
 	if !exists {
@@ -42,7 +42,7 @@ func ExtractUserFromContext(c *gin.Context) (user *dto.User, err error) {
 		return
 	}
 
-	user, ok := userInterface.(*dto.User)
+	user, ok := userInterface.(*base_models.User)
 	if !ok {
 		err = fmt.Errorf("failed to convert user context model")
 		return
@@ -51,7 +51,7 @@ func ExtractUserFromContext(c *gin.Context) (user *dto.User, err error) {
 	return
 }
 
-func MustExtractUserFromContext(c *gin.Context) *dto.User {
+func MustExtractUserFromContext(c *gin.Context) *base_models.User {
 
 	user, err := ExtractUserFromContext(c)
 	if err != nil {

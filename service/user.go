@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/eosnationftw/eosn-base-api/dto"
+	"github.com/eosnationftw/eosn-base-api/models"
 	"github.com/friendsofgo/errors"
 )
 
@@ -11,5 +11,5 @@ var (
 )
 
 type UserService interface {
-	GetUserByAuth0Id(ctx context.Context, auth0Provider, auth0Id string) (*dto.User, error)
+	GetUserByAuth0Id(ctx context.Context, auth0Provider, auth0Id string) (*base_models.User, error)
 }
