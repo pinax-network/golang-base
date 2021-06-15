@@ -40,6 +40,7 @@ const (
 	CONFLICT_EMAIL_EXISTS             = "email_already_exists"
 	CONFLICT_GRANT_NAME_EXISTS        = "grant_name_already_exists"
 	CONFLICT_GRANT_TRANSLATION_EXISTS = "grant_translation_already_exists"
+	CONFLICT_USER_EXISTS              = "user_already_exists"
 	CONFLICT_USERNAME_EXISTS          = "username_already_exists"
 	CONFLICT_PROFILE_EXISTS           = "user_profile_already_exists"
 
