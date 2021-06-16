@@ -133,6 +133,7 @@ func NewJwksMiddleware(userService service.UserService) (*JwksMiddleware, error)
 func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// extract JWT from header
 		tokenString, err := jwtmiddleware.FromAuthHeader(c.Request)
 		if err != nil {
 			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
@@ -145,46 +146,52 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			return
 		}
 
+		// validate JWT
 		err = j.jwtMiddleware.CheckJWT(c.Writer, c.Request)
 		if err != nil {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, err)
 			return
 		}
 
-		// parse permission claims from token
-		claims := jwt.MapClaims{}
-		_, _, err = new(jwt.Parser).ParseUnverified(tokenString, &claims)
-		if err != nil {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
-			return
-		}
-
-		c.Set(global.CONTEXT_USER_PERMISIONS, claims["permissions"])
-
-		// extract and parse auth0 subject
-		subject, ok := claims["sub"].(string)
-		if !ok {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("jwt subject expected to be string, instead got: '%T', %v", claims["sub"], claims["sub"]))
-			return
-		}
-
-		extractAuth0 := strings.Split(subject, "|")
-		if len(extractAuth0) < 2 {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("invalid jwt subject given, needs to be of type 'auth_provider|user_id': %s", tokenString))
-			return
-		}
-
-		c.Set(global.CONTEXT_AUTH0_FULLID, subject)
-		c.Set(global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
-		c.Set(global.CONTEXT_AUTH0_ID, extractAuth0[1])
-
-		// extract user from database if requested
+		// extract user information from the token string if requested
 		if extractUser {
-			user, err := j.userService.GetUserByAuth0Id(c, c.GetString(global.CONTEXT_AUTH0_PROVIDER), c.GetString(global.CONTEXT_AUTH0_ID))
-			if err == service.ErrUserNotFound {
-				helper.ReportPrivateErrorAndAbort(c, response.NewApiErrorBadRequest(response.BAD_REQUEST_REGISTRATION_REQUIRED), "user registration is required before this endpoint can be used")
+
+			// parse permission claims from token
+			claims := jwt.MapClaims{}
+			_, _, err = new(jwt.Parser).ParseUnverified(tokenString, &claims)
+			if err != nil {
+				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
 				return
-			} else if err != nil {
+			}
+
+			c.Set(global.CONTEXT_USER_PERMISIONS, claims["permissions"])
+
+			// extract and parse auth0 subject
+			subject, ok := claims["sub"].(string)
+			if !ok {
+				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("jwt subject expected to be string, instead got: '%T', %v", claims["sub"], claims["sub"]))
+				return
+			}
+
+			extractAuth0 := strings.Split(subject, "|")
+			if len(extractAuth0) < 2 {
+				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("invalid jwt subject given, needs to be of type 'auth_provider|user_id': %s", tokenString))
+				return
+			}
+
+			c.Set(global.CONTEXT_AUTH0_FULLID, subject)
+			c.Set(global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
+			c.Set(global.CONTEXT_AUTH0_ID, extractAuth0[1])
+
+			// extract user ID (currently this should always be the EOS Nation ID)
+			eosnId, ok := claims["https://account.eosnation.io/user_id"].(string)
+			if !ok || eosnId == "" {
+				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id ('https://account.eosnation.io/user_id'): %s", tokenString))
+				return
+			}
+
+			user, err := j.userService.GetUserByEosnId(c, eosnId)
+			if err != nil {
 				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
 				return
 			}
