@@ -12,12 +12,12 @@ var (
 
 const (
 	BAD_REQUEST_FILE_INPUT            = "bad_file_input"
-	BAD_REQUEST_HEADER_MISSING        = "missing_required_header"
 	BAD_REQUEST_HEADER                = "bad_header"
+	BAD_REQUEST_HEADER_MISSING        = "missing_required_header"
 	BAD_REQUEST_JSON_INPUT            = "bad_json_input"
 	BAD_REQUEST_QUERY_INPUT           = "bad_query_input"
-	BAD_REQUEST_URI_INPUT             = "bad_uri_input"
 	BAD_REQUEST_REGISTRATION_REQUIRED = "bad_request_registration_required"
+	BAD_REQUEST_URI_INPUT             = "bad_uri_input"
 
 	UNAUTHORIZED = "unauthorized"
 	FORBIDDEN    = "forbidden"
@@ -32,17 +32,18 @@ const (
 	NOT_FOUND_RESOURCE           = "resource_not_found"
 	NOT_FOUND_ROUTE              = "route_not_found"
 	NOT_FOUND_USER               = "user_not_found"
-	NOT_FOUND_USER_PROFILE       = "user_profile_not_found"
 	NOT_FOUND_USER_CHAIN_ACCOUNT = "user_chain_account_not_found"
+	NOT_FOUND_USER_PROFILE       = "user_profile_not_found"
 
 	METHOD_NOT_ALLOWED = "method_not_allowed"
 
 	CONFLICT_EMAIL_EXISTS             = "email_already_exists"
 	CONFLICT_GRANT_NAME_EXISTS        = "grant_name_already_exists"
 	CONFLICT_GRANT_TRANSLATION_EXISTS = "grant_translation_already_exists"
-	CONFLICT_USER_EXISTS              = "user_already_exists"
-	CONFLICT_USERNAME_EXISTS          = "username_already_exists"
+	CONFLICT_LINKED_ACCOUNT_EXISTS    = "account_already_linked"
 	CONFLICT_PROFILE_EXISTS           = "user_profile_already_exists"
+	CONFLICT_USERNAME_EXISTS          = "username_already_exists"
+	CONFLICT_USER_EXISTS              = "user_already_exists"
 
 	INTERNAL_SERVER_ERROR = "internal_server_error"
 )
