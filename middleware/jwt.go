@@ -190,11 +190,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
-			user, err := j.userService.GetUserByEosnId(c, eosnId)
-			if err != nil {
-				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
-				return
-			}
+			user := j.userService.ExtractUserByEosnId(c, eosnId)
 
 			// convert permission list to string array
 			permissionInterface := claims["permissions"].([]interface{})

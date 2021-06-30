@@ -3,14 +3,10 @@ package service
 import (
 	"context"
 	base_models "github.com/eosnationftw/eosn-base-api/models"
-	"github.com/friendsofgo/errors"
-)
-
-var (
-	ErrUserNotFound = errors.New("user not found")
 )
 
 type UserService interface {
-	// deprecated GetUserByAuth0Id(ctx context.Context, auth0Provider, auth0Id string) (*base_models.User, error)
-	GetUserByEosnId(ctx context.Context, eosnId string) (*base_models.User, error)
+	// ExtractUserByEosnId assumes the user should be available in the database and must find it by it's EOS Nation ID.
+	// This method might panic if no user is found with the given id.
+	ExtractUserByEosnId(ctx context.Context, eosnId string) *base_models.User
 }
