@@ -105,7 +105,7 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 		for {
 			select {
 			case <-m.PingsDone:
-				log.Log(log.LogLevel.INFO, "stop pinging database connections")
+				log.Log(log.INFO, "stop pinging database connections")
 				return
 			case <-m.PingsTicker.C:
 

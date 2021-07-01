@@ -13,6 +13,11 @@ var (
 		Name:      "fatal_logs",
 		Help:      "Counter for logs of FATAL level.",
 	})
+	promLogsPanic = promauto.NewCounter(prometheus.CounterOpts{
+		Subsystem: SUBSYTEM,
+		Name:      "panic_logs",
+		Help:      "Counter for logs of PANIC level.",
+	})
 	promLogsError = promauto.NewCounter(prometheus.CounterOpts{
 		Subsystem: SUBSYTEM,
 		Name:      "error_logs",
@@ -27,6 +32,10 @@ var (
 
 func incFatalCounter() {
 	promLogsFatal.Inc()
+}
+
+func incPanicCounter() {
+	promLogsPanic.Inc()
 }
 
 func incErrorCounter() {
