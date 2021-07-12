@@ -164,8 +164,6 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
-			c.Set(global.CONTEXT_USER_PERMISIONS, claims["permissions"])
-
 			// extract and parse auth0 subject
 			subject, ok := claims["sub"].(string)
 			if !ok {
@@ -193,13 +191,17 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			user := j.userService.ExtractUserByEosnId(c, eosnId)
 
 			// convert permission list to string array
-			permissionInterface := claims["permissions"].([]interface{})
-			permissionStrings := make([]string, len(permissionInterface))
-			for i, p := range permissionInterface {
-				permissionStrings[i] = p.(string)
+			permissions, ok := claims["permissions"].([]interface{})
+			if ok {
+				c.Set(global.CONTEXT_USER_PERMISIONS, claims["permissions"])
+
+				permissionStrings := make([]string, len(permissions))
+				for i, p := range permissions {
+					permissionStrings[i] = p.(string)
+				}
+				user.Permissions = permissionStrings
 			}
 
-			user.Permissions = permissionStrings
 			c.Set(global.CONTEXT_USER, user)
 		}
 
