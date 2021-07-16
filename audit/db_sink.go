@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/database"
+	"github.com/eosnationftw/eosn-base-api/log"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -19,60 +21,81 @@ func NewDBSink(dbPool *database.MysqlConnectionPool) *DBSink {
 
 func (d *DBSink) CreateResource(userId int, resourceId int, resource interface{}, time time.Time) {
 
-	conn := d.dbPool.MustGetConnection()
-	resourceJson, err := json.Marshal(resource)
-
+	conn, err := d.dbPool.GetConnection()
 	if err != nil {
-		panic(fmt.Sprintf("failed to json marshal resource for audit logging: %e", err))
+		log.Error("failed to get database connection", zap.Error(err))
+		return
+	}
+
+	resourceJson, err := json.Marshal(resource)
+	if err != nil {
+		log.Error("failed to json marshal resource for audit logging", zap.Error(err))
+		return
 	}
 
 	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, resource_type, resource, time) VALUES (?,?,?,?,?,?)")
 	if err != nil {
-		panic(fmt.Sprintf("failed to prepare audit log statement: %e", err))
+		log.Error("failed to prepare audit log statement", zap.Error(err))
+		return
 	}
 
 	_, err = stmt.Exec(userId, resourceId, createAction, fmt.Sprintf("%T", resource), resourceJson, time)
 	if err != nil {
-		panic(fmt.Sprintf("failed to insert audit log: %e", err))
+		log.Error("failed to insert audit log", zap.Error(err))
+		return
 	}
 }
 
 func (d *DBSink) UpdateResource(userId int, resourceId int, newData interface{}, prevData interface{}, time time.Time) {
 
-	conn := d.dbPool.MustGetConnection()
+	conn, err := d.dbPool.GetConnection()
+	if err != nil {
+		log.Error("failed to get database connection", zap.Error(err))
+		return
+	}
 
 	newDataJson, err := json.Marshal(newData)
 	if err != nil {
-		panic(fmt.Sprintf("failed to json marshal resource for audit logging: %e", err))
+		log.Error("failed to json marshal resource for audit logging", zap.Error(err))
+		return
 	}
 
 	prevDataJson, err := json.Marshal(prevData)
 	if err != nil {
-		panic(fmt.Sprintf("failed to json marshal resource for audit logging: %e", err))
+		log.Error("failed to json marshal resource for audit logging", zap.Error(err))
+		return
 	}
 
 	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, resource_type, resource, resource_prev, time) VALUES (?,?,?,?,?,?,?)")
 	if err != nil {
-		panic(fmt.Sprintf("failed to prepare audit log statement: %e", err))
+		log.Error("failed to prepare audit log statement", zap.Error(err))
+		return
 	}
 
 	_, err = stmt.Exec(userId, resourceId, updateAction, fmt.Sprintf("%T", newData), newDataJson, prevDataJson, time)
 	if err != nil {
-		panic(fmt.Sprintf("failed to insert audit log: %e", err))
+		log.Error("failed to insert audit log", zap.Error(err))
+		return
 	}
 }
 
 func (d *DBSink) DeleteResource(userId int, resourceId int, time time.Time) {
 
-	conn := d.dbPool.MustGetConnection()
+	conn, err := d.dbPool.GetConnection()
+	if err != nil {
+		log.Error("failed to get database connection", zap.Error(err))
+		return
+	}
 
 	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, time) VALUES (?,?,?,?)")
 	if err != nil {
-		panic(fmt.Sprintf("failed to prepare audit log statement: %e", err))
+		log.Error("failed to prepare audit log statement", zap.Error(err))
+		return
 	}
 
 	_, err = stmt.Exec(userId, resourceId, deleteAction, time)
 	if err != nil {
-		panic(fmt.Sprintf("failed to insert audit log: %e", err))
+		log.Error("failed to insert audit log", zap.Error(err))
+		return
 	}
 }
