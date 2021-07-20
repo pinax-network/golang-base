@@ -37,11 +37,13 @@ func (f *LogSink) UpdateResource(userId int, resourceId int, newData interface{}
 	)
 }
 
-func (f *LogSink) DeleteResource(userId int, resourceId int, time time.Time) {
+func (f *LogSink) DeleteResource(userId int, resourceId int, resource interface{}, time time.Time) {
 	log.Info(
 		"[deleted resource]",
 		zap.Int("user_id", userId),
 		zap.Int("resource_id", resourceId),
+		zap.String("resource_type", fmt.Sprintf("%T", resource)),
+		zap.Any("resource_data", resource),
 		zap.Time("time", time),
 	)
 }

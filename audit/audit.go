@@ -20,7 +20,7 @@ type AuditLogger struct {
 type Sink interface {
 	CreateResource(userId int, resourceId int, resource interface{}, time time.Time)
 	UpdateResource(userId int, resourceId int, newData interface{}, prevData interface{}, time time.Time)
-	DeleteResource(userId int, resourceId int, time time.Time)
+	DeleteResource(userId int, resourceId int, resource interface{}, time time.Time)
 }
 
 func InitializeAuditLog(sinks ...Sink) {
@@ -46,9 +46,9 @@ func LogUpdateResource(userId int, resourceId int, newData interface{}, prevData
 	}
 }
 
-func LogDeleteResource(userId int, resourceId int, time time.Time) {
+func LogDeleteResource(userId int, resourceId int, resource interface{}, time time.Time) {
 	incDeleteResourceCounter()
 	for _, s := range auditLogger.sinks {
-		s.DeleteResource(userId, resourceId, time)
+		s.DeleteResource(userId, resourceId, resource, time)
 	}
 }

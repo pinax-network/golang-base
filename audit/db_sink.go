@@ -33,7 +33,7 @@ func (d *DBSink) CreateResource(userId int, resourceId int, resource interface{}
 		return
 	}
 
-	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, resource_type, resource, time) VALUES (?,?,?,?,?,?)")
+	stmt, err := conn.Prepare("INSERT INTO `audit_log` (`user_id`, `resource_id`, `action_type`, `resource_type`, `resource`, `time`) VALUES (?,?,?,?,?,?)")
 	if err != nil {
 		log.Error("failed to prepare audit log statement", zap.Error(err))
 		return
@@ -66,7 +66,7 @@ func (d *DBSink) UpdateResource(userId int, resourceId int, newData interface{},
 		return
 	}
 
-	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, resource_type, resource, resource_prev, time) VALUES (?,?,?,?,?,?,?)")
+	stmt, err := conn.Prepare("INSERT INTO `audit_log` (`user_id`, `resource_id`, `action_type`, `resource_type`, `resource`, `resource_prev`, `time`) VALUES (?,?,?,?,?,?,?)")
 	if err != nil {
 		log.Error("failed to prepare audit log statement", zap.Error(err))
 		return
@@ -79,7 +79,7 @@ func (d *DBSink) UpdateResource(userId int, resourceId int, newData interface{},
 	}
 }
 
-func (d *DBSink) DeleteResource(userId int, resourceId int, time time.Time) {
+func (d *DBSink) DeleteResource(userId int, resourceId int, resource interface{}, time time.Time) {
 
 	conn, err := d.dbPool.GetConnection()
 	if err != nil {
@@ -87,13 +87,19 @@ func (d *DBSink) DeleteResource(userId int, resourceId int, time time.Time) {
 		return
 	}
 
-	stmt, err := conn.Prepare("INSERT INTO audit_log (user_id, resource_id, action_type, time) VALUES (?,?,?,?)")
+	resourceJson, err := json.Marshal(resource)
+	if err != nil {
+		log.Error("failed to json marshal resource for audit logging", zap.Error(err))
+		return
+	}
+
+	stmt, err := conn.Prepare("INSERT INTO `audit_log` (`user_id`, `resource_id`, `action_type`, `resource_type`, `resource`, `time`) VALUES (?,?,?,?,?,?)")
 	if err != nil {
 		log.Error("failed to prepare audit log statement", zap.Error(err))
 		return
 	}
 
-	_, err = stmt.Exec(userId, resourceId, deleteAction, time)
+	_, err = stmt.Exec(userId, resourceId, deleteAction, fmt.Sprintf("%T", resource), resourceJson, time)
 	if err != nil {
 		log.Error("failed to insert audit log", zap.Error(err))
 		return
