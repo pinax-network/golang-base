@@ -2,6 +2,8 @@ package global
 
 const CONTEXT_LANGUAGE = "language"
 const CONTEXT_USER = "user"
+const CONTEXT_USER_EMAIL = "user_email"
+const CONTEXT_USER_EMAIL_VERIFIED = "user_email_verified"
 const CONTEXT_USER_PERMISIONS = "user_permissions"
 
 const CONTEXT_AUTH0_FULLID = "auth0_fullid"

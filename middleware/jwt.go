@@ -188,7 +188,19 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
+			c.Set(global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
+			c.Set(global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
+
 			user := j.userService.ExtractUserByEosnId(c, eosnId)
+
+			userEmail, ok := claims["https://account.eosnation.io/email"].(string)
+			if ok {
+				user.Email = userEmail
+			}
+			userEmailVerified, ok := claims["https://account.eosnation.io/email_verified"].(bool)
+			if ok {
+				user.EmailVerified = userEmailVerified
+			}
 
 			// convert permission list to string array
 			permissions, ok := claims["permissions"].([]interface{})
