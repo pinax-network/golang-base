@@ -1,0 +1,101 @@
+package repositories
+
+import (
+	"context"
+	"eosn-account-api/models/dto"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"golang.org/x/sys/unix"
+	"mime/multipart"
+	"os"
+	"path"
+	"path/filepath"
+)
+
+type FileType string
+
+const (
+	USER_AVATAR FileType = "user_avatar"
+)
+
+type UploadRepository struct {
+	tempUploadDir  string
+	fileRepository StaticFileRepository
+}
+
+type StaticFileRepository interface {
+	FileExists(ctx context.Context, fileUuid string, fileType FileType) bool
+	UploadFile(ctx context.Context, tmpFile, fileUuid string, fileType FileType)
+	GetFileUrl(ctx context.Context, fileUuid string, fileType FileType) string
+}
+
+func NewUploadRepository(fileRepository StaticFileRepository) (*UploadRepository, error) {
+
+	tmpDir, err := getTmpUploadDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize temp directory: %e", err)
+	}
+
+	return &UploadRepository{
+		tempUploadDir:  tmpDir,
+		fileRepository: fileRepository,
+	}, nil
+}
+
+func (u *UploadRepository) SaveTempFile(c *gin.Context, file *multipart.FileHeader) (fileName *dto.UploadedFile) {
+
+	extension := filepath.Ext(file.Filename)
+	fileNameUuid := uuid.New().String() + extension
+
+	err := c.SaveUploadedFile(file, path.Join(u.tempUploadDir, fileNameUuid))
+	if err != nil {
+		panic(fmt.Errorf("failed to save uploaded file to temp storage: %v", err))
+	}
+
+	fileName = &dto.UploadedFile{Filename: fileNameUuid}
+
+	return
+}
+
+func (s *UploadRepository) UploadFile(ctx context.Context, fileUuid string, fileType FileType) string {
+	s.fileRepository.UploadFile(ctx, path.Join(s.tempUploadDir, fileUuid), fileUuid, fileType)
+	return s.fileRepository.GetFileUrl(ctx, fileUuid, fileType)
+}
+
+func (s *UploadRepository) GetFileUrl(ctx context.Context, fileUuid string, fileType FileType) string {
+	return s.fileRepository.GetFileUrl(ctx, fileUuid, fileType)
+}
+
+func (s *UploadRepository) MustExistsTemp(ctx context.Context, fileUuid string) bool {
+
+	if fileUuid == "" {
+		return false
+	}
+
+	if _, err := os.Stat(path.Join(s.tempUploadDir, fileUuid)); err == nil {
+		return true
+	} else if os.IsNotExist(err) {
+		return false
+	} else {
+		panic(fmt.Sprintf("failed to check if file exists: '%s', error: %e", fileUuid, err))
+	}
+}
+
+func (s *UploadRepository) MustExists(ctx context.Context, fileUuid string, fileType FileType) bool {
+	return s.fileRepository.FileExists(ctx, fileUuid, fileType)
+}
+
+func getTmpUploadDir() (tmpDir string, err error) {
+	tmpDir = os.Getenv("TEMP_UPLOAD_DIR")
+
+	if err = writeable(tmpDir); err != nil {
+		err = fmt.Errorf("temp upload dir ('%s') not writable: '%e'", tmpDir, err)
+	}
+
+	return
+}
+
+func writeable(dir string) error {
+	return unix.Access(dir, unix.W_OK)
+}
