@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ParsePaginationInput(input *input.Pagination) {
+func ParsePaginationInput(input *base_input.Pagination) {
 	if input.Limit < 1 {
 		input.Limit = global.DEFAULT_LIMIT
 	}
@@ -17,10 +17,10 @@ func ParsePaginationInput(input *input.Pagination) {
 	}
 }
 
-func ParseSortInput(inputSortPairs []string, allowedSortFields []string, defaultField string, defaultDir input.Direction) (sortPairs []input.SortPair, err error) {
+func ParseSortInput(inputSortPairs []string, allowedSortFields []string, defaultField string, defaultDir base_input.Direction) (sortPairs []base_input.SortPair, err error) {
 
 	errors := []error{}
-	sortPairs = []input.SortPair{}
+	sortPairs = []base_input.SortPair{}
 
 	for _, p := range inputSortPairs {
 		split := strings.Split(p, ":")
@@ -28,19 +28,19 @@ func ParseSortInput(inputSortPairs []string, allowedSortFields []string, default
 		if len(split) != 2 {
 			errors = append(errors, fmt.Errorf("invalid sort pair given: '%s', needs to be of format 'field:direction'", p))
 		} else {
-			var dir input.Direction
+			var dir base_input.Direction
 
-			if split[1] == string(input.Ascending) {
-				dir = input.Ascending
-			} else if split[1] == string(input.Descending) {
-				dir = input.Descending
+			if split[1] == string(base_input.Ascending) {
+				dir = base_input.Ascending
+			} else if split[1] == string(base_input.Descending) {
+				dir = base_input.Descending
 			} else {
 				errors = append(errors, fmt.Errorf("invalid sort direction given: '%s', needs to be one of ['asc', 'desc']", p))
 				continue
 			}
 
 			if contains(allowedSortFields, split[0]) {
-				sortPairs = append(sortPairs, input.SortPair{
+				sortPairs = append(sortPairs, base_input.SortPair{
 					Attribute: split[0],
 					Direction: dir,
 				})
@@ -56,7 +56,7 @@ func ParseSortInput(inputSortPairs []string, allowedSortFields []string, default
 	}
 
 	if len(sortPairs) == 0 {
-		sortPairs = append(sortPairs, input.SortPair{
+		sortPairs = append(sortPairs, base_input.SortPair{
 			Attribute: defaultField,
 			Direction: defaultDir,
 		})

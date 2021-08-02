@@ -1,4 +1,4 @@
-package input
+package base_input
 
 type Pagination struct {
 	Limit int `form:"limit" binding:"omitempty,gte=1,lte=50" default:"20" minimum:"1" maximum:"50"` // limit results between 1 and 50

@@ -1,4 +1,4 @@
-package input
+package base_input
 
 type Direction string
 
