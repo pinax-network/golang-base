@@ -1,4 +1,4 @@
-package dto
+package base_models
 
 type UploadedFile struct {
 	Filename string `json:"filename"`

@@ -1,9 +1,10 @@
-package repositories
+package file_sink
 
 import (
 	"context"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/eosnationftw/eosn-base-api/repositories"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"go.uber.org/zap"
@@ -12,15 +13,14 @@ import (
 	"path"
 )
 
-const CEPH_USER_AVATAR_SUBDIR = "avatars"
-
 type CephRepository struct {
 	minioClient *minio.Client
 	bucket      string
 	baseUrl     string
+	subDirs     map[base_repositories.FileType]string
 }
 
-func NewCephRepository() (*CephRepository, error) {
+func NewCephRepository(subDirs map[base_repositories.FileType]string) (*CephRepository, error) {
 
 	if os.Getenv("CEPH_HOST") == "" || os.Getenv("CEPH_ACCESS_KEY") == "" ||
 		os.Getenv("CEPH_SECRET") == "" || os.Getenv("CEPH_SSL") == "" || os.Getenv("CEPH_BUCKET") == "" {
@@ -40,10 +40,11 @@ func NewCephRepository() (*CephRepository, error) {
 		minioClient: minioClient,
 		bucket:      os.Getenv("CEPH_BUCKET"),
 		baseUrl:     os.Getenv("STATIC_BASE_URL"),
+		subDirs:     subDirs,
 	}, nil
 }
 
-func (c *CephRepository) FileExists(ctx context.Context, fileUuid string, fileType FileType) bool {
+func (c *CephRepository) FileExists(ctx context.Context, fileUuid string, fileType base_repositories.FileType) bool {
 
 	if fileUuid == "" {
 		return false
@@ -64,7 +65,7 @@ func (c *CephRepository) FileExists(ctx context.Context, fileUuid string, fileTy
 	return true
 }
 
-func (c *CephRepository) UploadFile(ctx context.Context, tmpFile, fileUuid string, fileType FileType) {
+func (c *CephRepository) UploadFile(ctx context.Context, tmpFile, fileUuid string, fileType base_repositories.FileType) {
 
 	targetFile := c.getStaticFileName(fileUuid, fileType)
 
@@ -80,28 +81,24 @@ func (c *CephRepository) UploadFile(ctx context.Context, tmpFile, fileUuid strin
 	}
 }
 
-func (c *CephRepository) GetFileUrl(ctx context.Context, fileUuid string, fileType FileType) string {
+func (c *CephRepository) GetFileUrl(ctx context.Context, fileUuid string, fileType base_repositories.FileType) string {
 
-	switch fileType {
-	case USER_AVATAR:
-		return c.mustJoinUrl(c.baseUrl, path.Join(CEPH_USER_AVATAR_SUBDIR, fileUuid))
-	default:
-		panic("invalid file type given: " + fileType)
+	subDir, ok := c.subDirs[fileType]
+	if !ok {
+		panic("no subdir initialized for given file type: " + fileType)
 	}
+
+	return c.mustJoinUrl(c.baseUrl, path.Join(subDir, fileUuid))
 }
 
-func (c *CephRepository) getStaticFileName(fileUuid string, fileType FileType) string {
+func (c *CephRepository) getStaticFileName(fileUuid string, fileType base_repositories.FileType) string {
 
-	var res string
-	switch fileType {
-	case USER_AVATAR:
-		res = path.Join(CEPH_USER_AVATAR_SUBDIR, fileUuid)
-		break
-	default:
-		panic("invalid file type given: " + fileType)
+	subDir, ok := c.subDirs[fileType]
+	if !ok {
+		panic("no subdir initialized for given file type: " + fileType)
 	}
 
-	return res
+	return path.Join(subDir, fileUuid)
 }
 
 func (c *CephRepository) mustJoinUrl(baseurl, urlPath string) string {

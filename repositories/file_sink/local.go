@@ -1,25 +1,28 @@
-package repositories
+package file_sink
 
 import (
 	"context"
 	"fmt"
+	base_repositories "github.com/eosnationftw/eosn-base-api/repositories"
+	"golang.org/x/sys/unix"
 	"net/url"
 	"os"
 	"path"
 )
 
-const USER_AVATAR_SUBDIR = "avatars"
-
-type FileRepository struct {
-	userAvatarDir string
-	baseUrl       string
+type LocalFileRepository struct {
+	baseUrl string
+	subDirs map[base_repositories.FileType]string
 }
 
-func NewFileRepository() (*FileRepository, error) {
+func NewLocalFileRepository(subDirs map[base_repositories.FileType]string) (*LocalFileRepository, error) {
 
-	userAvatarDir, err := getStaticFileDir(USER_AVATAR_SUBDIR)
-	if err != nil {
-		return nil, err
+	// check if we have write access on all given sub dirs
+	for _, dir := range subDirs {
+		_, err := getStaticFileDir(dir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	baseUrl := os.Getenv("STATIC_BASE_URL")
@@ -27,17 +30,17 @@ func NewFileRepository() (*FileRepository, error) {
 		return nil, fmt.Errorf("env STATIC_BASE_URL is not set")
 	}
 
-	return &FileRepository{
-		userAvatarDir: userAvatarDir,
-		baseUrl:       baseUrl,
+	return &LocalFileRepository{
+		baseUrl: baseUrl,
+		subDirs: subDirs,
 	}, nil
 }
 
-func (f *FileRepository) Init() error {
+func (f *LocalFileRepository) Init() error {
 	return nil
 }
 
-func (f *FileRepository) FileExists(ctx context.Context, fileUuid string, fileType FileType) bool {
+func (f *LocalFileRepository) FileExists(ctx context.Context, fileUuid string, fileType base_repositories.FileType) bool {
 
 	if fileUuid == "" {
 		return false
@@ -54,7 +57,7 @@ func (f *FileRepository) FileExists(ctx context.Context, fileUuid string, fileTy
 	}
 }
 
-func (f *FileRepository) UploadFile(ctx context.Context, tmpFile, fileUuid string, fileType FileType) {
+func (f *LocalFileRepository) UploadFile(ctx context.Context, tmpFile, fileUuid string, fileType base_repositories.FileType) {
 
 	targetFile := f.getStaticFileName(fileUuid, fileType)
 
@@ -64,14 +67,14 @@ func (f *FileRepository) UploadFile(ctx context.Context, tmpFile, fileUuid strin
 	}
 }
 
-func (f *FileRepository) GetFileUrl(ctx context.Context, fileUuid string, fileType FileType) string {
+func (f *LocalFileRepository) GetFileUrl(ctx context.Context, fileUuid string, fileType base_repositories.FileType) string {
 
-	switch fileType {
-	case USER_AVATAR:
-		return mustJoinUrl(f.baseUrl, path.Join(USER_AVATAR_SUBDIR, fileUuid))
-	default:
-		panic("invalid file type given: " + fileType)
+	subDir, ok := f.subDirs[fileType]
+	if !ok {
+		panic("no subdir initialized for given file type: " + fileType)
 	}
+
+	return mustJoinUrl(f.baseUrl, path.Join(subDir, fileUuid))
 }
 
 func getStaticFileDir(subDir string) (staticDir string, err error) {
@@ -84,18 +87,14 @@ func getStaticFileDir(subDir string) (staticDir string, err error) {
 	return
 }
 
-func (f *FileRepository) getStaticFileName(fileUuid string, fileType FileType) string {
+func (f *LocalFileRepository) getStaticFileName(fileUuid string, fileType base_repositories.FileType) string {
 
-	var res string
-	switch fileType {
-	case USER_AVATAR:
-		res = path.Join(f.userAvatarDir, fileUuid)
-		break
-	default:
-		panic("invalid file type given: " + fileType)
+	subDir, ok := f.subDirs[fileType]
+	if !ok {
+		panic("no subdir initialized for given file type: " + fileType)
 	}
 
-	return res
+	return path.Join(subDir, fileUuid)
 }
 
 func mustJoinUrl(baseurl, urlPath string) string {
@@ -106,4 +105,8 @@ func mustJoinUrl(baseurl, urlPath string) string {
 
 	u.Path = path.Join(u.Path, urlPath)
 	return u.String()
+}
+
+func writeable(dir string) error {
+	return unix.Access(dir, unix.W_OK)
 }

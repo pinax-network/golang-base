@@ -1,9 +1,9 @@
-package repositories
+package base_repositories
 
 import (
 	"context"
-	"eosn-account-api/models/dto"
 	"fmt"
+	base_models "github.com/eosnationftw/eosn-base-api/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/sys/unix"
@@ -43,7 +43,7 @@ func NewUploadRepository(fileRepository StaticFileRepository) (*UploadRepository
 	}, nil
 }
 
-func (u *UploadRepository) SaveTempFile(c *gin.Context, file *multipart.FileHeader) (fileName *dto.UploadedFile) {
+func (u *UploadRepository) SaveTempFile(c *gin.Context, file *multipart.FileHeader) (fileName *base_models.UploadedFile) {
 
 	extension := filepath.Ext(file.Filename)
 	fileNameUuid := uuid.New().String() + extension
@@ -53,7 +53,7 @@ func (u *UploadRepository) SaveTempFile(c *gin.Context, file *multipart.FileHead
 		panic(fmt.Errorf("failed to save uploaded file to temp storage: %v", err))
 	}
 
-	fileName = &dto.UploadedFile{Filename: fileNameUuid}
+	fileName = &base_models.UploadedFile{Filename: fileNameUuid}
 
 	return
 }
