@@ -191,7 +191,11 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
 			c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
 
-			user := j.userService.ExtractUserByEosnId(c, eosnId)
+			user, apiErr := j.userService.ExtractUserByEosnId(c, eosnId)
+			if apiErr != nil {
+				helper.ReportPrivateErrorAndAbort(c, apiErr, nil)
+				return
+			}
 
 			userEmail, ok := claims["https://account.eosnation.io/email"].(string)
 			if ok {
