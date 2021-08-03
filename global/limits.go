@@ -1,4 +1,4 @@
-package global
+package base_global
 
 const LIMIT_PROJECT_LOGO_FILESIZE = 1 << 20 // 1 MB
 const LIMIT_USER_AVATAR_FILESIZE = 1 << 19  // 512 KB

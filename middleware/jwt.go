@@ -177,9 +177,9 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
-			c.Set(global.CONTEXT_AUTH0_FULLID, subject)
-			c.Set(global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
-			c.Set(global.CONTEXT_AUTH0_ID, extractAuth0[1])
+			c.Set(base_global.CONTEXT_AUTH0_FULLID, subject)
+			c.Set(base_global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
+			c.Set(base_global.CONTEXT_AUTH0_ID, extractAuth0[1])
 
 			// extract user ID (currently this should always be the EOS Nation ID)
 			eosnId, ok := claims["https://account.eosnation.io/user_id"].(string)
@@ -188,8 +188,8 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
-			c.Set(global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
-			c.Set(global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
+			c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
+			c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
 
 			user := j.userService.ExtractUserByEosnId(c, eosnId)
 
@@ -205,7 +205,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			// convert permission list to string array
 			permissions, ok := claims["permissions"].([]interface{})
 			if ok {
-				c.Set(global.CONTEXT_USER_PERMISIONS, claims["permissions"])
+				c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
 
 				permissionStrings := make([]string, len(permissions))
 				for i, p := range permissions {
@@ -214,7 +214,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				user.Permissions = permissionStrings
 			}
 
-			c.Set(global.CONTEXT_USER, user)
+			c.Set(base_global.CONTEXT_USER, user)
 		}
 
 		c.Next()

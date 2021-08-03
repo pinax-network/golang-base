@@ -21,7 +21,7 @@ func (a *AuthMiddleware) CheckPermissions(oneOf []string) gin.HandlerFunc {
 			panic(fmt.Errorf("restricting by permissions needs to set at least one allowed permission that is not empty"))
 		}
 
-		permissionInterface, exists := c.Get(global.CONTEXT_USER_PERMISIONS)
+		permissionInterface, exists := c.Get(base_global.CONTEXT_USER_PERMISIONS)
 
 		if !exists {
 			helper.ReportPrivateErrorAndAbort(c, response.Forbidden, nil)

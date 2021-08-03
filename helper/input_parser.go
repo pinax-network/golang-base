@@ -10,7 +10,7 @@ import (
 
 func ParsePaginationInput(input *base_input.Pagination) {
 	if input.Limit < 1 {
-		input.Limit = global.DEFAULT_LIMIT
+		input.Limit = base_global.DEFAULT_LIMIT
 	}
 	if input.Page < 1 {
 		input.Page = 1

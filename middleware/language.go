@@ -35,7 +35,7 @@ func (l *LanguageMiddleware) ParseLanguageHeader() gin.HandlerFunc {
 			return
 		}
 
-		c.Set(global.CONTEXT_LANGUAGE, language)
+		c.Set(base_global.CONTEXT_LANGUAGE, language)
 
 		c.Next()
 	}

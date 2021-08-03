@@ -1,4 +1,4 @@
-package global
+package base_global
 
 const CONTEXT_LANGUAGE = "language"
 const CONTEXT_USER = "user"

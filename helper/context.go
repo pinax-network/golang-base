@@ -9,7 +9,7 @@ import (
 
 func ExtractLanguageFromContext(c *gin.Context) (language *base_models.Language, err error) {
 
-	langInterface, exists := c.Get(global.CONTEXT_LANGUAGE)
+	langInterface, exists := c.Get(base_global.CONTEXT_LANGUAGE)
 	if !exists {
 		err = fmt.Errorf("failed to extract language from context, does not exist")
 		return
@@ -36,7 +36,7 @@ func MustExtractLanguageFromContext(c *gin.Context) *base_models.Language {
 
 func ExtractUserFromContext(c *gin.Context) (user *base_models.User, err error) {
 
-	userInterface, exists := c.Get(global.CONTEXT_USER)
+	userInterface, exists := c.Get(base_global.CONTEXT_USER)
 	if !exists {
 		err = fmt.Errorf("failed to extract user from context, does not exist")
 		return
