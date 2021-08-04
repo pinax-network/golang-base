@@ -188,6 +188,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 				return
 			}
 
+			c.Set(base_global.CONTEXT_USER_EOSN_ID, claims["https://account.eosnation.io/user_id"])
 			c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
 			c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
 
