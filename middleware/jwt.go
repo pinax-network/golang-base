@@ -153,45 +153,46 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			return
 		}
 
-		// extract user information from the token string if requested
+		// extract user information from the token
+		claims := jwt.MapClaims{}
+		_, _, err = new(jwt.Parser).ParseUnverified(tokenString, &claims)
+		if err != nil {
+			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
+			return
+		}
+
+		// extract and parse auth0 subject
+		subject, ok := claims["sub"].(string)
+		if !ok {
+			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("jwt subject expected to be string, instead got: '%T', %v", claims["sub"], claims["sub"]))
+			return
+		}
+
+		extractAuth0 := strings.Split(subject, "|")
+		if len(extractAuth0) < 2 {
+			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("invalid jwt subject given, needs to be of type 'auth_provider|user_id': %s", tokenString))
+			return
+		}
+
+		c.Set(base_global.CONTEXT_AUTH0_FULLID, subject)
+		c.Set(base_global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
+		c.Set(base_global.CONTEXT_AUTH0_ID, extractAuth0[1])
+
+		// extract user ID (currently this should always be the EOS Nation ID)
+		eosnId, ok := claims["https://account.eosnation.io/user_id"].(string)
+		if !ok || eosnId == "" {
+			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id ('https://account.eosnation.io/user_id'): %s", tokenString))
+			return
+		}
+
+		c.Set(base_global.CONTEXT_USER_EOSN_ID, claims["https://account.eosnation.io/user_id"])
+		c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
+		c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
+
+		c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
+
+		// get the corresponding user from the database if requested
 		if extractUser {
-
-			// parse permission claims from token
-			claims := jwt.MapClaims{}
-			_, _, err = new(jwt.Parser).ParseUnverified(tokenString, &claims)
-			if err != nil {
-				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
-				return
-			}
-
-			// extract and parse auth0 subject
-			subject, ok := claims["sub"].(string)
-			if !ok {
-				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("jwt subject expected to be string, instead got: '%T', %v", claims["sub"], claims["sub"]))
-				return
-			}
-
-			extractAuth0 := strings.Split(subject, "|")
-			if len(extractAuth0) < 2 {
-				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("invalid jwt subject given, needs to be of type 'auth_provider|user_id': %s", tokenString))
-				return
-			}
-
-			c.Set(base_global.CONTEXT_AUTH0_FULLID, subject)
-			c.Set(base_global.CONTEXT_AUTH0_PROVIDER, extractAuth0[0])
-			c.Set(base_global.CONTEXT_AUTH0_ID, extractAuth0[1])
-
-			// extract user ID (currently this should always be the EOS Nation ID)
-			eosnId, ok := claims["https://account.eosnation.io/user_id"].(string)
-			if !ok || eosnId == "" {
-				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id ('https://account.eosnation.io/user_id'): %s", tokenString))
-				return
-			}
-
-			c.Set(base_global.CONTEXT_USER_EOSN_ID, claims["https://account.eosnation.io/user_id"])
-			c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
-			c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
-
 			user, apiErr := j.userService.ExtractUserByEosnId(c, eosnId)
 			if apiErr != nil {
 				helper.ReportPrivateErrorAndAbort(c, apiErr, nil)
@@ -210,8 +211,6 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			// convert permission list to string array
 			permissions, ok := claims["permissions"].([]interface{})
 			if ok {
-				c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
-
 				permissionStrings := make([]string, len(permissions))
 				for i, p := range permissions {
 					permissionStrings[i] = p.(string)
