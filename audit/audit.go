@@ -27,7 +27,6 @@ func InitializeAuditLog(sinks ...Sink) {
 
 	if len(sinks) == 0 {
 		log.Warn("no sink is set for the audit log!")
-		sinks = make([]Sink, 0)
 	}
 
 	auditLogger = &AuditLogger{sinks: sinks}
