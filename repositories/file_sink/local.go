@@ -11,18 +11,28 @@ import (
 )
 
 type LocalFileRepository struct {
-	baseUrl string
-	subDirs map[base_repositories.FileType]string
+	baseUrl  string
+	subDirs  map[base_repositories.FileType]string
+	fileDirs map[base_repositories.FileType]string
 }
 
+// NewLocalFileRepository creates a new local file repository. The subDirs parameter specifies the subdirectories within
+// the STATIC_FILE_DIR which is specified as env variable. So if STATIC_FILE_DIR is /var/www/static and the subdir for
+// the USER_AVATAR base_repositories.FileType is avatars, then the static directory for avatars will be /var/www/static/avatars/
+//
+// The files will then be linked under STATIC_BASE_URL within the subDirs parameter. So if STATIC_BASE_URL is
+// http://localhost:8080/static user avatars will be linked http://localhost:8080/static/avatars/
 func NewLocalFileRepository(subDirs map[base_repositories.FileType]string) (*LocalFileRepository, error) {
 
-	// check if we have write access on all given sub dirs
-	for _, dir := range subDirs {
-		_, err := getStaticFileDir(dir)
+	fileDirs := make(map[base_repositories.FileType]string)
+
+	// replace sub dirs with static file dir path and check if it is writeable
+	for key, dir := range subDirs {
+		staticFileDir, err := getStaticFileDir(dir)
 		if err != nil {
 			return nil, err
 		}
+		fileDirs[key] = staticFileDir
 	}
 
 	baseUrl := os.Getenv("STATIC_BASE_URL")
@@ -31,8 +41,9 @@ func NewLocalFileRepository(subDirs map[base_repositories.FileType]string) (*Loc
 	}
 
 	return &LocalFileRepository{
-		baseUrl: baseUrl,
-		subDirs: subDirs,
+		baseUrl:  baseUrl,
+		subDirs:  subDirs,
+		fileDirs: fileDirs,
 	}, nil
 }
 
@@ -89,12 +100,12 @@ func getStaticFileDir(subDir string) (staticDir string, err error) {
 
 func (f *LocalFileRepository) getStaticFileName(fileUuid string, fileType base_repositories.FileType) string {
 
-	subDir, ok := f.subDirs[fileType]
+	fileDir, ok := f.fileDirs[fileType]
 	if !ok {
 		panic("no subdir initialized for given file type: " + fileType)
 	}
 
-	return path.Join(subDir, fileUuid)
+	return path.Join(fileDir, fileUuid)
 }
 
 func mustJoinUrl(baseurl, urlPath string) string {
