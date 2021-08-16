@@ -18,12 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	GetUpdatedUsers(ctx context.Context, in *UpdatedUsersRequest, opts ...grpc.CallOption) (UserService_GetUpdatedUsersClient, error)
-	GetUpdatedUsersSince(ctx context.Context, in *UpdatedUsersRequest, opts ...grpc.CallOption) (*UpdatedUsersResponse, error)
-	GetUserProfile(ctx context.Context, in *UserProfileRequest, opts ...grpc.CallOption) (*UserProfileResponse, error)
-	GetUserSocials(ctx context.Context, in *UserSocialsRequest, opts ...grpc.CallOption) (*UserSocialsResponse, error)
-	GetUserLinkedAccounts(ctx context.Context, in *UserLinkedAccountsRequest, opts ...grpc.CallOption) (*UserLinkedAccountsResponse, error)
-	GetUserChainAccount(ctx context.Context, in *UserChainAccountRequest, opts ...grpc.CallOption) (*UserChainAccountResponse, error)
+	SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error)
 }
 
 type userServiceClient struct {
@@ -34,77 +29,9 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
-func (c *userServiceClient) GetUpdatedUsers(ctx context.Context, in *UpdatedUsersRequest, opts ...grpc.CallOption) (UserService_GetUpdatedUsersClient, error) {
-	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], "/users.UserService/GetUpdatedUsers", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &userServiceGetUpdatedUsersClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type UserService_GetUpdatedUsersClient interface {
-	Recv() (*UpdatedUser, error)
-	grpc.ClientStream
-}
-
-type userServiceGetUpdatedUsersClient struct {
-	grpc.ClientStream
-}
-
-func (x *userServiceGetUpdatedUsersClient) Recv() (*UpdatedUser, error) {
-	m := new(UpdatedUser)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *userServiceClient) GetUpdatedUsersSince(ctx context.Context, in *UpdatedUsersRequest, opts ...grpc.CallOption) (*UpdatedUsersResponse, error) {
-	out := new(UpdatedUsersResponse)
-	err := c.cc.Invoke(ctx, "/users.UserService/GetUpdatedUsersSince", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) GetUserProfile(ctx context.Context, in *UserProfileRequest, opts ...grpc.CallOption) (*UserProfileResponse, error) {
-	out := new(UserProfileResponse)
-	err := c.cc.Invoke(ctx, "/users.UserService/GetUserProfile", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) GetUserSocials(ctx context.Context, in *UserSocialsRequest, opts ...grpc.CallOption) (*UserSocialsResponse, error) {
-	out := new(UserSocialsResponse)
-	err := c.cc.Invoke(ctx, "/users.UserService/GetUserSocials", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) GetUserLinkedAccounts(ctx context.Context, in *UserLinkedAccountsRequest, opts ...grpc.CallOption) (*UserLinkedAccountsResponse, error) {
-	out := new(UserLinkedAccountsResponse)
-	err := c.cc.Invoke(ctx, "/users.UserService/GetUserLinkedAccounts", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) GetUserChainAccount(ctx context.Context, in *UserChainAccountRequest, opts ...grpc.CallOption) (*UserChainAccountResponse, error) {
-	out := new(UserChainAccountResponse)
-	err := c.cc.Invoke(ctx, "/users.UserService/GetUserChainAccount", in, out, opts...)
+func (c *userServiceClient) SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error) {
+	out := new(SignedTransaction)
+	err := c.cc.Invoke(ctx, "/users.UserService/SignUserTransaction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +42,7 @@ func (c *userServiceClient) GetUserChainAccount(ctx context.Context, in *UserCha
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
-	GetUpdatedUsers(*UpdatedUsersRequest, UserService_GetUpdatedUsersServer) error
-	GetUpdatedUsersSince(context.Context, *UpdatedUsersRequest) (*UpdatedUsersResponse, error)
-	GetUserProfile(context.Context, *UserProfileRequest) (*UserProfileResponse, error)
-	GetUserSocials(context.Context, *UserSocialsRequest) (*UserSocialsResponse, error)
-	GetUserLinkedAccounts(context.Context, *UserLinkedAccountsRequest) (*UserLinkedAccountsResponse, error)
-	GetUserChainAccount(context.Context, *UserChainAccountRequest) (*UserChainAccountResponse, error)
+	SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -128,23 +50,8 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) GetUpdatedUsers(*UpdatedUsersRequest, UserService_GetUpdatedUsersServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetUpdatedUsers not implemented")
-}
-func (UnimplementedUserServiceServer) GetUpdatedUsersSince(context.Context, *UpdatedUsersRequest) (*UpdatedUsersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUpdatedUsersSince not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserProfile(context.Context, *UserProfileRequest) (*UserProfileResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserProfile not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserSocials(context.Context, *UserSocialsRequest) (*UserSocialsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserSocials not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserLinkedAccounts(context.Context, *UserLinkedAccountsRequest) (*UserLinkedAccountsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserLinkedAccounts not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserChainAccount(context.Context, *UserChainAccountRequest) (*UserChainAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserChainAccount not implemented")
+func (UnimplementedUserServiceServer) SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignUserTransaction not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -159,113 +66,20 @@ func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
 	s.RegisterService(&UserService_ServiceDesc, srv)
 }
 
-func _UserService_GetUpdatedUsers_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(UpdatedUsersRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(UserServiceServer).GetUpdatedUsers(m, &userServiceGetUpdatedUsersServer{stream})
-}
-
-type UserService_GetUpdatedUsersServer interface {
-	Send(*UpdatedUser) error
-	grpc.ServerStream
-}
-
-type userServiceGetUpdatedUsersServer struct {
-	grpc.ServerStream
-}
-
-func (x *userServiceGetUpdatedUsersServer) Send(m *UpdatedUser) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _UserService_GetUpdatedUsersSince_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdatedUsersRequest)
+func _UserService_SignUserTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserTransactionSignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUpdatedUsersSince(ctx, in)
+		return srv.(UserServiceServer).SignUserTransaction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/users.UserService/GetUpdatedUsersSince",
+		FullMethod: "/users.UserService/SignUserTransaction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUpdatedUsersSince(ctx, req.(*UpdatedUsersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_GetUserProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserProfileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserProfile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/users.UserService/GetUserProfile",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserProfile(ctx, req.(*UserProfileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_GetUserSocials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserSocialsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserSocials(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/users.UserService/GetUserSocials",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserSocials(ctx, req.(*UserSocialsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_GetUserLinkedAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserLinkedAccountsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserLinkedAccounts(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/users.UserService/GetUserLinkedAccounts",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserLinkedAccounts(ctx, req.(*UserLinkedAccountsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_GetUserChainAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserChainAccountRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserChainAccount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/users.UserService/GetUserChainAccount",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserChainAccount(ctx, req.(*UserChainAccountRequest))
+		return srv.(UserServiceServer).SignUserTransaction(ctx, req.(*UserTransactionSignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -278,32 +92,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUpdatedUsersSince",
-			Handler:    _UserService_GetUpdatedUsersSince_Handler,
-		},
-		{
-			MethodName: "GetUserProfile",
-			Handler:    _UserService_GetUserProfile_Handler,
-		},
-		{
-			MethodName: "GetUserSocials",
-			Handler:    _UserService_GetUserSocials_Handler,
-		},
-		{
-			MethodName: "GetUserLinkedAccounts",
-			Handler:    _UserService_GetUserLinkedAccounts_Handler,
-		},
-		{
-			MethodName: "GetUserChainAccount",
-			Handler:    _UserService_GetUserChainAccount_Handler,
+			MethodName: "SignUserTransaction",
+			Handler:    _UserService_SignUserTransaction_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "GetUpdatedUsers",
-			Handler:       _UserService_GetUpdatedUsers_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "user.proto",
 }
