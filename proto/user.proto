@@ -3,6 +3,7 @@ package users;
 option go_package = "./proto/pb";
 
 // import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 enum AuthId {
   POMELO = 0;
@@ -70,10 +71,15 @@ message UserChainAccount {
 // Requests
 
 message UserTransactionSignatureRequest {
-  string eosn_id = 2;
-  bytes chain_id = 3;
-  repeated AuthId auth_ids = 4;
-  bytes serialized_trx = 5;
+  string eosn_id = 1;
+  bytes chain_id = 2;
+  repeated AuthId auth_ids = 3;
+  bytes serialized_trx = 4;
+}
+
+message UpdateTrxIdRequest {
+  string account_name = 1;
+  bytes trx_id = 2;
 }
 
 /*message UpdatedUsersRequest {
@@ -121,6 +127,8 @@ message UserChainAccountResponse {
 
 service UserService {
   rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
+  rpc UpdateCreatedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
+  rpc UpdateLinkedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
   /*
     rpc GetUpdatedUsers(UpdatedUsersRequest) returns (stream UpdatedUser) {};
     rpc GetUpdatedUsersSince(UpdatedUsersRequest) returns (UpdatedUsersResponse) {};
