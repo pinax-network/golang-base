@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error)
 	UpdateCreatedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UpdateLinkedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateLinkedAccount(ctx context.Context, in *CreateLinkedAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userServiceClient struct {
@@ -50,9 +50,9 @@ func (c *userServiceClient) UpdateCreatedAccountTrxId(ctx context.Context, in *U
 	return out, nil
 }
 
-func (c *userServiceClient) UpdateLinkedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *userServiceClient) CreateLinkedAccount(ctx context.Context, in *CreateLinkedAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/users.UserService/UpdateLinkedAccountTrxId", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/users.UserService/CreateLinkedAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *userServiceClient) UpdateLinkedAccountTrxId(ctx context.Context, in *Up
 type UserServiceServer interface {
 	SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error)
 	UpdateCreatedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error)
-	UpdateLinkedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error)
+	CreateLinkedAccount(context.Context, *CreateLinkedAccountRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -79,8 +79,8 @@ func (UnimplementedUserServiceServer) SignUserTransaction(context.Context, *User
 func (UnimplementedUserServiceServer) UpdateCreatedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCreatedAccountTrxId not implemented")
 }
-func (UnimplementedUserServiceServer) UpdateLinkedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkedAccountTrxId not implemented")
+func (UnimplementedUserServiceServer) CreateLinkedAccount(context.Context, *CreateLinkedAccountRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateLinkedAccount not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -131,20 +131,20 @@ func _UserService_UpdateCreatedAccountTrxId_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_UpdateLinkedAccountTrxId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTrxIdRequest)
+func _UserService_CreateLinkedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateLinkedAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).UpdateLinkedAccountTrxId(ctx, in)
+		return srv.(UserServiceServer).CreateLinkedAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/users.UserService/UpdateLinkedAccountTrxId",
+		FullMethod: "/users.UserService/CreateLinkedAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateLinkedAccountTrxId(ctx, req.(*UpdateTrxIdRequest))
+		return srv.(UserServiceServer).CreateLinkedAccount(ctx, req.(*CreateLinkedAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -165,8 +165,8 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_UpdateCreatedAccountTrxId_Handler,
 		},
 		{
-			MethodName: "UpdateLinkedAccountTrxId",
-			Handler:    _UserService_UpdateLinkedAccountTrxId_Handler,
+			MethodName: "CreateLinkedAccount",
+			Handler:    _UserService_CreateLinkedAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

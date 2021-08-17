@@ -82,6 +82,12 @@ message UpdateTrxIdRequest {
   bytes trx_id = 2;
 }
 
+message CreateLinkedAccountRequest {
+  string eosn_id = 1;
+  string account_name = 2;
+  bytes trx_id = 3;
+}
+
 /*message UpdatedUsersRequest {
   google.protobuf.Timestamp updated_since = 1;
 }
@@ -128,7 +134,7 @@ message UserChainAccountResponse {
 service UserService {
   rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
   rpc UpdateCreatedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
-  rpc UpdateLinkedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
+  rpc CreateLinkedAccount(CreateLinkedAccountRequest) returns (google.protobuf.Empty) {};
   /*
     rpc GetUpdatedUsers(UpdatedUsersRequest) returns (stream UpdatedUser) {};
     rpc GetUpdatedUsersSince(UpdatedUsersRequest) returns (UpdatedUsersResponse) {};
