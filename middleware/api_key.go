@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"errors"
 	"github.com/eosnationftw/eosn-base-api/helper"
 	"github.com/eosnationftw/eosn-base-api/response"
@@ -29,7 +30,8 @@ func (a *ApiKeyMiddleware) Authenticate() gin.HandlerFunc {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "no api key set")
 			return
 		}
-		if apiKey != a.apiKey {
+
+		if subtle.ConstantTimeCompare([]byte(apiKey), []byte(a.apiKey)) != 1 {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid api key given")
 			return
 		}
