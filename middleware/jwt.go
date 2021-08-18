@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"crypto/rsa"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -89,7 +90,7 @@ func NewJwksMiddleware(userService service.UserService) (*JwksMiddleware, error)
 			}
 			token.Claims.(jwt.MapClaims)["aud"] = s
 
-			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(os.Getenv("AUTH0_AUDIENCE"), true)
+			checkAud := verifyAudience(token.Claims.(jwt.MapClaims)["aud"].(string), true)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
@@ -290,4 +291,22 @@ func loadCerts() (map[string]*rsa.PublicKey, error) {
 	}
 
 	return certs, nil
+}
+
+func verifyAudience(aud string, req bool) bool {
+
+	// remove all whitespaces and split by ,
+	allowedAudiences := strings.Split(strings.ReplaceAll(os.Getenv("AUTH0_ALLOWED_AUDIENCES"), " ", ""), ",")
+
+	if len(allowedAudiences) == 0 {
+		return !req
+	}
+
+	for _, a := range allowedAudiences {
+		if subtle.ConstantTimeCompare([]byte(a), []byte(aud)) != 0 {
+			return true
+		}
+	}
+
+	return false
 }
