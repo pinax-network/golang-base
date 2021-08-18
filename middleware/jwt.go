@@ -90,7 +90,7 @@ func NewJwksMiddleware(userService service.UserService) (*JwksMiddleware, error)
 			}
 			token.Claims.(jwt.MapClaims)["aud"] = s
 
-			checkAud := verifyAudience(token.Claims.(jwt.MapClaims)["aud"].(string), true)
+			checkAud := verifyAudience(token.Claims.(jwt.MapClaims)["aud"].([]string), true)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
@@ -293,18 +293,20 @@ func loadCerts() (map[string]*rsa.PublicKey, error) {
 	return certs, nil
 }
 
-func verifyAudience(aud string, req bool) bool {
+func verifyAudience(auds []string, req bool) bool {
 
 	// remove all whitespaces and split by ,
 	allowedAudiences := strings.Split(strings.ReplaceAll(os.Getenv("AUTH0_ALLOWED_AUDIENCES"), " ", ""), ",")
 
-	if len(allowedAudiences) == 0 {
+	if len(auds) == 0 {
 		return !req
 	}
 
-	for _, a := range allowedAudiences {
-		if subtle.ConstantTimeCompare([]byte(a), []byte(aud)) != 0 {
-			return true
+	for _, allowedAud := range allowedAudiences {
+		for _, aud := range auds {
+			if subtle.ConstantTimeCompare([]byte(aud), []byte(allowedAud)) != 0 {
+				return true
+			}
 		}
 	}
 
