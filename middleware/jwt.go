@@ -36,7 +36,7 @@ type JSONWebKeys struct {
 }
 
 type JwksMiddleware struct {
-	userService   service.UserService
+	userService   base_service.UserService
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 	certHandler   *CertHandler
 }
@@ -47,7 +47,7 @@ type CertHandler struct {
 	refreshMu   *sync.Mutex
 }
 
-func NewJwksMiddleware(userService service.UserService) (*JwksMiddleware, error) {
+func NewJwksMiddleware(userService base_service.UserService) (*JwksMiddleware, error) {
 
 	j := &JwksMiddleware{
 		userService: userService,
