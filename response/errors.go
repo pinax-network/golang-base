@@ -28,6 +28,7 @@ const (
 	NOT_FOUND_GRANT_CATEGORY     = "grant_category_not_found"
 	NOT_FOUND_GRANT_TRANSLATION  = "grant_translation_not_found"
 	NOT_FOUND_LANGUAGE           = "language_not_found"
+	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"
 	NOT_FOUND_REGION             = "region_not_found"
 	NOT_FOUND_RESOURCE           = "resource_not_found"
 	NOT_FOUND_ROUTE              = "route_not_found"

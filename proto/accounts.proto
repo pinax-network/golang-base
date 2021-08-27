@@ -1,0 +1,49 @@
+syntax = "proto3";
+package accounts;
+option go_package = "./proto/pb";
+
+// import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+enum AuthId {
+  POMELO = 0;
+  EOSN_LOGIN = 1;
+}
+
+
+// Models
+
+message SignedTransaction {
+  bytes signed_trx = 2;
+}
+
+
+// Requests
+
+message UserTransactionSignatureRequest {
+  string eosn_id = 1;
+  bytes chain_id = 2;
+  repeated AuthId auth_ids = 3;
+  bytes serialized_trx = 4;
+}
+
+message UpdateTrxIdRequest {
+  string eosn_id = 1;
+  string account_name = 2;
+  bytes trx_id = 3;
+}
+
+message CreateLinkedAccountRequest {
+  string eosn_id = 1;
+  string account_name = 2;
+  bytes trx_id = 3;
+}
+
+
+// Responses
+
+service AccountsInternalService {
+  rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
+  rpc UpdateCreatedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
+  rpc UpdateLinkedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
+}
