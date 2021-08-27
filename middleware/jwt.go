@@ -298,10 +298,6 @@ func verifyAudience(auds []string, req bool) bool {
 	// remove all whitespaces and split by ,
 	allowedAudiences := strings.Split(strings.ReplaceAll(os.Getenv("AUTH0_ALLOWED_AUDIENCES"), " ", ""), ",")
 
-	log.Debug("given auds", zap.Any("auds", auds))
-	log.Debug("allowed auds", zap.Any("auds", allowedAudiences))
-
-
 	if len(auds) == 0 {
 		return !req
 	}
@@ -313,8 +309,6 @@ func verifyAudience(auds []string, req bool) bool {
 			}
 		}
 	}
-
-	log.Debug("is not allowed!!!")
 
 	return false
 }
