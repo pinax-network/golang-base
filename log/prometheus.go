@@ -8,40 +8,28 @@ import (
 const SUBSYTEM = "log"
 
 var (
-	promLogsFatal = promauto.NewCounter(prometheus.CounterOpts{
-		Subsystem: SUBSYTEM,
-		Name:      "fatal_logs",
-		Help:      "Counter for logs of FATAL level.",
-	})
-	promLogsPanic = promauto.NewCounter(prometheus.CounterOpts{
-		Subsystem: SUBSYTEM,
-		Name:      "panic_logs",
-		Help:      "Counter for logs of PANIC level.",
-	})
-	promLogsError = promauto.NewCounter(prometheus.CounterOpts{
-		Subsystem: SUBSYTEM,
-		Name:      "error_logs",
-		Help:      "Counter for logs of ERROR level.",
-	})
-	promLogsWarn = promauto.NewCounter(prometheus.CounterOpts{
-		Subsystem: SUBSYTEM,
-		Name:      "warn_logs",
-		Help:      "Counter for logs of WARNING level.",
-	})
+	promLogs = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "count",
+			Help:      "Total number of log entries by log level.",
+		},
+		[]string{"level"},
+	)
 )
 
 func incFatalCounter() {
-	promLogsFatal.Inc()
+	promLogs.WithLabelValues("fatal").Inc()
 }
 
 func incPanicCounter() {
-	promLogsPanic.Inc()
+	promLogs.WithLabelValues("panic").Inc()
 }
 
 func incErrorCounter() {
-	promLogsError.Inc()
+	promLogs.WithLabelValues("error").Inc()
 }
 
 func incWarnCounter() {
-	promLogsWarn.Inc()
+	promLogs.WithLabelValues("warn").Inc()
 }
