@@ -13,6 +13,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-migrate/migrate/v4 v4.14.1
+	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -27,12 +28,14 @@ require (
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rs/xid v1.3.0 // indirect
+	github.com/tidwall/gjson v1.9.0
 	github.com/ugorji/go v1.2.6 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210825183410-e898025ed96a // indirect
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210825212027-de86158e7fda // indirect

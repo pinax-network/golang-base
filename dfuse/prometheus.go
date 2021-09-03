@@ -1,0 +1,40 @@
+package dfuse
+
+import (
+	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"time"
+)
+
+const SUBSYTEM = "dfuse"
+
+var (
+	promHeadBlockTime = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "head_block_time",
+			Help:      "Last successfully read block time from dfuse.",
+		},
+		[]string{"connector"},
+	)
+
+	promHeadBlockNumber = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "head_block_number",
+			Help:      "Last successfully read block number from dfuse.",
+		},
+		[]string{"connector"},
+	)
+)
+
+func ReportLastHeadBlockTime(connnector string, time time.Time) {
+	log.Info("report las head block time")
+	promHeadBlockTime.WithLabelValues(connnector).Set(float64(time.Unix()))
+}
+
+func ReportLastHeadBlockNumber(connnector string, number int) {
+	log.Info("report las head block number")
+	promHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
+}
