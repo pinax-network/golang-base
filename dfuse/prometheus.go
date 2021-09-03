@@ -1,7 +1,6 @@
 package dfuse
 
 import (
-	"github.com/eosnationftw/eosn-base-api/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"time"
@@ -30,11 +29,9 @@ var (
 )
 
 func ReportLastHeadBlockTime(connnector string, time time.Time) {
-	log.Info("report las head block time")
 	promHeadBlockTime.WithLabelValues(connnector).Set(float64(time.Unix()))
 }
 
 func ReportLastHeadBlockNumber(connnector string, number int) {
-	log.Info("report las head block number")
 	promHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
 }
