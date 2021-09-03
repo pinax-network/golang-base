@@ -42,6 +42,7 @@ const (
 	CONFLICT_GRANT_NAME_EXISTS        = "grant_name_already_exists"
 	CONFLICT_GRANT_TRANSLATION_EXISTS = "grant_translation_already_exists"
 	CONFLICT_LINKED_ACCOUNT_EXISTS    = "account_already_linked"
+	CONFLICT_LINKED_ACCOUNT_VERIFIED  = "linked_account_verified"
 	CONFLICT_MAX_ACCOUNTS_LINKED      = "max_accounts_linked"
 	CONFLICT_PROFILE_EXISTS           = "user_profile_already_exists"
 	CONFLICT_USERNAME_EXISTS          = "username_already_exists"
