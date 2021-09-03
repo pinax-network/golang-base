@@ -17,6 +17,11 @@ message SignedTransaction {
   bytes signed_trx = 2;
 }
 
+message Transaction {
+  bool undo = 1;
+  bytes trx_id = 2;
+}
+
 
 // Requests
 
@@ -27,23 +32,39 @@ message UserTransactionSignatureRequest {
   bytes serialized_trx = 4;
 }
 
-message UpdateTrxIdRequest {
-  string eosn_id = 1;
-  string account_name = 2;
-  bytes trx_id = 3;
+message CreateAccountRequest {
+  message CreateAccountActionData {
+    string eosn_id = 1;
+    repeated string public_keys = 2;
+  }
+  Transaction transaction = 1;
+  CreateAccountActionData action_data = 2;
 }
 
-message CreateLinkedAccountRequest {
-  string eosn_id = 1;
-  string account_name = 2;
-  bytes trx_id = 3;
+message LinkAccountRequest {
+  message LinkAccountActionData {
+    string eosn_id = 1;
+    string account_name = 2;
+    string signature = 3;
+  }
+  Transaction transaction = 1;
+  LinkAccountActionData action_data = 2;
 }
 
+message UnlinkAccountRequest {
+  message UnlinkAccountActionData {
+    string eosn_id = 1;
+    string account_name = 2;
+  }
+  Transaction transaction = 1;
+  UnlinkAccountActionData action_data = 2;
+}
 
 // Responses
 
 service AccountsInternalService {
   rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
-  rpc UpdateCreatedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
-  rpc UpdateLinkedAccountTrxId(UpdateTrxIdRequest) returns (google.protobuf.Empty) {};
+  rpc CreateAccount(CreateAccountRequest) returns (google.protobuf.Empty) {};
+  rpc LinkAccount(LinkAccountRequest) returns (google.protobuf.Empty) {};
+  rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty) {};
 }

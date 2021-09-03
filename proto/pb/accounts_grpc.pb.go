@@ -20,8 +20,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountsInternalServiceClient interface {
 	SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error)
-	UpdateCreatedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UpdateLinkedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	LinkAccount(ctx context.Context, in *LinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UnlinkAccount(ctx context.Context, in *UnlinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type accountsInternalServiceClient struct {
@@ -41,18 +42,27 @@ func (c *accountsInternalServiceClient) SignUserTransaction(ctx context.Context,
 	return out, nil
 }
 
-func (c *accountsInternalServiceClient) UpdateCreatedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *accountsInternalServiceClient) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/accounts.AccountsInternalService/UpdateCreatedAccountTrxId", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/accounts.AccountsInternalService/CreateAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *accountsInternalServiceClient) UpdateLinkedAccountTrxId(ctx context.Context, in *UpdateTrxIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *accountsInternalServiceClient) LinkAccount(ctx context.Context, in *LinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/accounts.AccountsInternalService/UpdateLinkedAccountTrxId", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/accounts.AccountsInternalService/LinkAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountsInternalServiceClient) UnlinkAccount(ctx context.Context, in *UnlinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/accounts.AccountsInternalService/UnlinkAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +74,9 @@ func (c *accountsInternalServiceClient) UpdateLinkedAccountTrxId(ctx context.Con
 // for forward compatibility
 type AccountsInternalServiceServer interface {
 	SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error)
-	UpdateCreatedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error)
-	UpdateLinkedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error)
+	CreateAccount(context.Context, *CreateAccountRequest) (*emptypb.Empty, error)
+	LinkAccount(context.Context, *LinkAccountRequest) (*emptypb.Empty, error)
+	UnlinkAccount(context.Context, *UnlinkAccountRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAccountsInternalServiceServer()
 }
 
@@ -76,11 +87,14 @@ type UnimplementedAccountsInternalServiceServer struct {
 func (UnimplementedAccountsInternalServiceServer) SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUserTransaction not implemented")
 }
-func (UnimplementedAccountsInternalServiceServer) UpdateCreatedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateCreatedAccountTrxId not implemented")
+func (UnimplementedAccountsInternalServiceServer) CreateAccount(context.Context, *CreateAccountRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
 }
-func (UnimplementedAccountsInternalServiceServer) UpdateLinkedAccountTrxId(context.Context, *UpdateTrxIdRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkedAccountTrxId not implemented")
+func (UnimplementedAccountsInternalServiceServer) LinkAccount(context.Context, *LinkAccountRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkAccount not implemented")
+}
+func (UnimplementedAccountsInternalServiceServer) UnlinkAccount(context.Context, *UnlinkAccountRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlinkAccount not implemented")
 }
 func (UnimplementedAccountsInternalServiceServer) mustEmbedUnimplementedAccountsInternalServiceServer() {
 }
@@ -114,38 +128,56 @@ func _AccountsInternalService_SignUserTransaction_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountsInternalService_UpdateCreatedAccountTrxId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTrxIdRequest)
+func _AccountsInternalService_CreateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountsInternalServiceServer).UpdateCreatedAccountTrxId(ctx, in)
+		return srv.(AccountsInternalServiceServer).CreateAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/accounts.AccountsInternalService/UpdateCreatedAccountTrxId",
+		FullMethod: "/accounts.AccountsInternalService/CreateAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountsInternalServiceServer).UpdateCreatedAccountTrxId(ctx, req.(*UpdateTrxIdRequest))
+		return srv.(AccountsInternalServiceServer).CreateAccount(ctx, req.(*CreateAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountsInternalService_UpdateLinkedAccountTrxId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTrxIdRequest)
+func _AccountsInternalService_LinkAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountsInternalServiceServer).UpdateLinkedAccountTrxId(ctx, in)
+		return srv.(AccountsInternalServiceServer).LinkAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/accounts.AccountsInternalService/UpdateLinkedAccountTrxId",
+		FullMethod: "/accounts.AccountsInternalService/LinkAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountsInternalServiceServer).UpdateLinkedAccountTrxId(ctx, req.(*UpdateTrxIdRequest))
+		return srv.(AccountsInternalServiceServer).LinkAccount(ctx, req.(*LinkAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountsInternalService_UnlinkAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlinkAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountsInternalServiceServer).UnlinkAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/accounts.AccountsInternalService/UnlinkAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountsInternalServiceServer).UnlinkAccount(ctx, req.(*UnlinkAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -162,12 +194,16 @@ var AccountsInternalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AccountsInternalService_SignUserTransaction_Handler,
 		},
 		{
-			MethodName: "UpdateCreatedAccountTrxId",
-			Handler:    _AccountsInternalService_UpdateCreatedAccountTrxId_Handler,
+			MethodName: "CreateAccount",
+			Handler:    _AccountsInternalService_CreateAccount_Handler,
 		},
 		{
-			MethodName: "UpdateLinkedAccountTrxId",
-			Handler:    _AccountsInternalService_UpdateLinkedAccountTrxId_Handler,
+			MethodName: "LinkAccount",
+			Handler:    _AccountsInternalService_LinkAccount_Handler,
+		},
+		{
+			MethodName: "UnlinkAccount",
+			Handler:    _AccountsInternalService_UnlinkAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
