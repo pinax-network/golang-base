@@ -3,15 +3,17 @@ package dfuse
 import "time"
 
 type SearchTransactionsForwardResponse struct {
-	SearchTransactionsForward struct {
-		Cursor string `json:"cursor"`
-		Undo   bool   `json:"undo"`
-		Trace  struct {
-			Block           BlockResponse    `json:"block"`
-			ID              string           `json:"id"`
-			MatchingActions []ActionResponse `json:"matchingActions"`
-		} `json:"trace"`
-	}
+	SearchTransactionsForwardDoc `json:"searchTransactionsForward"`
+}
+
+type SearchTransactionsForwardDoc struct {
+	Cursor string `json:"cursor"`
+	Undo   bool   `json:"undo"`
+	Trace  struct {
+		Block           BlockResponse    `json:"block"`
+		ID              string           `json:"id"`
+		MatchingActions []ActionResponse `json:"matchingActions"`
+	} `json:"trace"`
 }
 
 type BlockResponse struct {

@@ -28,10 +28,10 @@ var (
 	)
 )
 
-func ReportLastHeadBlockTime(connnector string, time time.Time) {
+func reportLastHeadBlockTime(connnector string, time time.Time) {
 	promHeadBlockTime.WithLabelValues(connnector).Set(float64(time.Unix()))
 }
 
-func ReportLastHeadBlockNumber(connnector string, number int) {
+func reportLastHeadBlockNumber(connnector string, number int) {
 	promHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
 }
