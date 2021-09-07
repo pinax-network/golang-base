@@ -35,7 +35,7 @@ message CreateAccountRequest {
     string eosn_id = 1;
     repeated string public_keys = 2;
   }
-  eosn.protobuf.Transaction transaction = 1;
+  Transaction transaction = 1;
   CreateAccountActionData action_data = 2;
 }
 
@@ -45,7 +45,7 @@ message LinkAccountRequest {
     string account_name = 2;
     string signature = 3;
   }
-  eosn.protobuf.Transaction transaction = 1;
+  Transaction transaction = 1;
   LinkAccountActionData action_data = 2;
 }
 
@@ -54,7 +54,7 @@ message UnlinkAccountRequest {
     string eosn_id = 1;
     string account_name = 2;
   }
-  eosn.protobuf.Transaction transaction = 1;
+  Transaction transaction = 1;
   UnlinkAccountActionData action_data = 2;
 }
 
