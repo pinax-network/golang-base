@@ -32,6 +32,7 @@ const (
 	NOT_FOUND_REGION             = "region_not_found"
 	NOT_FOUND_RESOURCE           = "resource_not_found"
 	NOT_FOUND_ROUTE              = "route_not_found"
+	NOT_FOUND_TOKEN              = "token_not_found"
 	NOT_FOUND_USER               = "user_not_found"
 	NOT_FOUND_USER_CHAIN_ACCOUNT = "user_chain_account_not_found"
 	NOT_FOUND_USER_PROFILE       = "user_profile_not_found"

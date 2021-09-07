@@ -1,8 +1,9 @@
 syntax = "proto3";
-package accounts;
+package eosn.protobuf;
 option go_package = "./proto/pb";
 
 // import "google/protobuf/timestamp.proto";
+import "common.proto";
 import "google/protobuf/empty.proto";
 
 enum AuthId {
@@ -17,10 +18,7 @@ message SignedTransaction {
   bytes signed_trx = 2;
 }
 
-message Transaction {
-  bool undo = 1;
-  bytes trx_id = 2;
-}
+
 
 
 // Requests
@@ -37,7 +35,7 @@ message CreateAccountRequest {
     string eosn_id = 1;
     repeated string public_keys = 2;
   }
-  Transaction transaction = 1;
+  eosn.protobuf.Transaction transaction = 1;
   CreateAccountActionData action_data = 2;
 }
 
@@ -47,7 +45,7 @@ message LinkAccountRequest {
     string account_name = 2;
     string signature = 3;
   }
-  Transaction transaction = 1;
+  eosn.protobuf.Transaction transaction = 1;
   LinkAccountActionData action_data = 2;
 }
 
@@ -56,7 +54,7 @@ message UnlinkAccountRequest {
     string eosn_id = 1;
     string account_name = 2;
   }
-  Transaction transaction = 1;
+  eosn.protobuf.Transaction transaction = 1;
   UnlinkAccountActionData action_data = 2;
 }
 

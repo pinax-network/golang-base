@@ -1,0 +1,11 @@
+syntax = "proto3";
+package eosn.protobuf;
+option go_package = "./proto/pb";
+
+import "google/protobuf/timestamp.proto";
+
+message Transaction {
+  bool undo = 1;
+  bytes trx_id = 2;
+  google.protobuf.Timestamp time = 3;
+}
