@@ -63,5 +63,11 @@ func (v *JsonValidator) lazyinit() {
 			return regex.MatchString(fl.Field().String())
 		})
 		log.FatalIfError("failed to initialize 'eosaccount' validation", err)
+
+		err = v.validate.RegisterValidation("username", func(fl validator.FieldLevel) bool {
+			regex := regexp.MustCompile("^[a-z\\d]([a-z\\d]|\\.([a-z\\d])){2,38}$")
+			return regex.MatchString(fl.Field().String())
+		})
+		log.FatalIfError("failed to initialize 'username' validation", err)
 	})
 }
