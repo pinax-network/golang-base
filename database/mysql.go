@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/log"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -186,7 +187,7 @@ func (m *MysqlConnectionPool) GetConnection() (*sql.DB, error) {
 	return nil, ErrNoHealthyConn
 }
 
-func (m *MysqlConnectionPool) BeginTx() *sql.Tx {
+func (m *MysqlConnectionPool) MustBeginTx() *sql.Tx {
 	db := m.MustGetConnection()
 	tx, err := db.Begin()
 	if err != nil {
@@ -194,6 +195,25 @@ func (m *MysqlConnectionPool) BeginTx() *sql.Tx {
 	}
 
 	return tx
+}
+
+func (m *MysqlConnectionPool) BeginTx() (*sql.Tx, error) {
+	db, err := m.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func IsTx(executor boil.ContextExecutor) bool {
+	_, ok := executor.(*sql.Tx)
+	return ok
 }
 
 func MustRollbackTx(tx *sql.Tx) {

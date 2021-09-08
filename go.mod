@@ -38,6 +38,7 @@ require (
 	github.com/rs/xid v1.3.0 // indirect
 	github.com/tidwall/gjson v1.9.0
 	github.com/ugorji/go v1.2.6 // indirect
+	github.com/volatiletech/sqlboiler/v4 v4.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0
