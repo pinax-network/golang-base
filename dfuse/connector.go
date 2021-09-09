@@ -59,8 +59,6 @@ func (c *Connector) Run(wg *sync.WaitGroup, ctx context.Context, query string) e
 				return fmt.Errorf("failed to unmarshal: %w", err)
 			}
 
-			log.Debug("received new dfuse result", zap.Any("document", document))
-
 			result := document.SearchTransactionsForwardDoc
 			blockNum := result.Trace.Block.Num
 			trxId, err := hex.DecodeString(result.Trace.ID)

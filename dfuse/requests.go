@@ -25,8 +25,21 @@ type BlockResponse struct {
 }
 
 type ActionResponse struct {
-	Account string      `json:"block"`
-	Name    string      `json:"name"`
-	Json    interface{} `json:"json"`
-	Seq     string      `json:"seq"`
+	Account string          `json:"block"`
+	Name    string          `json:"name"`
+	Json    interface{}     `json:"json"`
+	Seq     string          `json:"seq"`
+	DbOps   []DbOpsResponse `json:"dbOps"`
+}
+
+type DbOpsResponse struct {
+	Key struct {
+		Code  string `json:"code"`
+		Table string `json:"table"`
+		Scope string `json:"scope"`
+	} `json:"key"`
+	NewJson struct {
+		Object interface{} `json:"object"`
+		Error  string      `json:"error"`
+	} `json:"newJson"`
 }
