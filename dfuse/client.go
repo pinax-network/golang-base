@@ -2,12 +2,14 @@ package dfuse
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"github.com/tidwall/gjson"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/oauth"
+	"google.golang.org/grpc/keepalive"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,13 +20,34 @@ type DfuseClient struct {
 	GraphQLClient GraphQLClient
 }
 
-func NewDfuseClient(endpoint string) (*DfuseClient, error) {
+var plainTextDialOption = grpc.WithInsecure()
+var insecureTLSDialOption = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))
+var secureTLSDialOption = grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, ""))
+var maxCallRecvMsgSize = 1024 * 1024 * 100
+var defaultCallOptions = []grpc.CallOption{
+	grpc.MaxCallRecvMsgSize(maxCallRecvMsgSize),
+	grpc.WaitForReady(true),
+}
+
+var keepaliveDialOption = grpc.WithKeepaliveParams(keepalive.ClientParameters{
+	// Send pings every (x seconds) there is no activity
+	Time: 30 * time.Second,
+	// Wait that amount of time for ping ack before considering the connection dead
+	Timeout: 10 * time.Second,
+	// Send pings even without active streams
+	PermitWithoutStream: true,
+})
+
+func NewDfuseClient(endpoint string, insecure bool) (*DfuseClient, error) {
 
 	res := &DfuseClient{}
 
-	transportCreds := credentials.NewClientTLSFromCert(nil, "")
-	dialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(transportCreds),
+	dialOpts := []grpc.DialOption{keepaliveDialOption, grpc.WithDefaultCallOptions(defaultCallOptions...)}
+	if insecure {
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	} else {
+		transportCreds := credentials.NewClientTLSFromCert(nil, "")
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(transportCreds))
 	}
 
 	dfuseAPIKey := os.Getenv("DFUSE_API_KEY")
