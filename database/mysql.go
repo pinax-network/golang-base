@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"go.uber.org/zap"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -177,34 +178,45 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 	}()
 }
 
+// MustGetConnection returns an active connection of panics if none of the connections from the pool is healthy
 func (m *MysqlConnectionPool) MustGetConnection() *sql.DB {
 
-	m.Mutex.Lock()
-	defer m.Mutex.Unlock()
+	conn, err := m.GetConnection()
 
-	for _, db := range m.Connections {
-		if db.IsActive {
-			return db.DB
-		}
+	if err != nil {
+		panic(err)
 	}
-	incNoHealthyConnError()
-	panic(ErrNoHealthyConn)
+
+	return conn
 }
 
+// GetConnection returns an active connection or ErrNoHealthyConn if none of the connections from the pool is healthy
 func (m *MysqlConnectionPool) GetConnection() (*sql.DB, error) {
 
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 
+	rand.Seed(time.Now().UnixNano())
+	randConn := rand.Intn(len(m.Connections))
+
+	// check if random connection is active
+	if m.Connections[randConn].IsActive {
+		return m.Connections[randConn].DB, nil
+	}
+
+	// cycle through all connections otherwise and find an active one
 	for _, db := range m.Connections {
 		if db.IsActive {
 			return db.DB, nil
 		}
 	}
+
+	// could not find any healthy connection, report and return ErrNoHealthyConn
 	incNoHealthyConnError()
 	return nil, ErrNoHealthyConn
 }
 
+// MustBeginTx starts a database transaction or panics if an error occurs
 func (m *MysqlConnectionPool) MustBeginTx() *sql.Tx {
 	db := m.MustGetConnection()
 	tx, err := db.Begin()
@@ -215,6 +227,7 @@ func (m *MysqlConnectionPool) MustBeginTx() *sql.Tx {
 	return tx
 }
 
+// BeginTx starts a database transaction
 func (m *MysqlConnectionPool) BeginTx() (*sql.Tx, error) {
 	db, err := m.GetConnection()
 	if err != nil {
@@ -229,11 +242,13 @@ func (m *MysqlConnectionPool) BeginTx() (*sql.Tx, error) {
 	return tx, nil
 }
 
+// IsTx checks whether the given executor is a transaction
 func IsTx(executor boil.ContextExecutor) bool {
 	_, ok := executor.(*sql.Tx)
 	return ok
 }
 
+// MustRollbackTx rolls back the given transaction or panics if an error occurs
 func MustRollbackTx(tx *sql.Tx) {
 	err := tx.Rollback()
 	if err != nil {
@@ -241,6 +256,7 @@ func MustRollbackTx(tx *sql.Tx) {
 	}
 }
 
+// MustCommit commits the given transaction or panics if an error occurs
 func MustCommit(tx *sql.Tx) {
 	err := tx.Commit()
 	if err != nil {
@@ -248,6 +264,7 @@ func MustCommit(tx *sql.Tx) {
 	}
 }
 
+// Close closes all database connections from the pool
 func (m *MysqlConnectionPool) Close() {
 
 	m.PingsTicker.Stop()
