@@ -13,10 +13,11 @@ import (
 )
 
 type MysqlConnectionPool struct {
-	Connections []*MysqlConnection
-	Mutex       *sync.Mutex
-	PingsTicker *time.Ticker
-	PingsDone   chan bool
+	Connections     []*MysqlConnection
+	Mutex           *sync.Mutex
+	PingsTicker     *time.Ticker
+	PingsDone       chan bool
+	IsGaleraCluster bool
 }
 
 type MysqlConnection struct {
@@ -38,10 +39,11 @@ var (
 	ErrNoHealthyConn = errors.New("no healthy mysql connection available")
 )
 
-func NewMysqlConnectionPool(connections []MysqlConnectionOptions) (connPool *MysqlConnectionPool, err error) {
+func NewMysqlConnectionPool(connections []MysqlConnectionOptions, isGaleraCluster bool) (connPool *MysqlConnectionPool, err error) {
 	connPool = &MysqlConnectionPool{}
 	connPool.Connections = make([]*MysqlConnection, 0, len(connections))
 	connPool.Mutex = &sync.Mutex{}
+	connPool.IsGaleraCluster = isGaleraCluster
 
 	for _, connection := range connections {
 		conn := &MysqlConnection{}
@@ -52,7 +54,8 @@ func NewMysqlConnectionPool(connections []MysqlConnectionOptions) (connPool *Mys
 		conn.DB = db
 		conn.IsActive = true
 
-		if log.CriticalIfError("could not connect to database", err) {
+		if err != nil || !connPool.checkIsReachable(conn) {
+			log.Error("could not connect to database", zap.Any("conn", conn))
 			conn.IsActive = false
 		}
 
@@ -90,11 +93,29 @@ func connect(dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database %v", err)
 	}
 
-	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("could not ping DB: %v", err)
-	}
-
 	return db, nil
+}
+
+func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
+
+	// if it's not a cluster we can just ping the database
+	if !m.IsGaleraCluster {
+		err := conn.DB.Ping()
+		log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name))
+		return err == nil
+	} else {
+		// otherwise we need to check the global wsrep_ready state
+		var variableName string
+		var wsrepStatus string
+
+		err := conn.DB.QueryRow("SHOW GLOBAL STATUS LIKE 'wsrep_ready'").Scan(&variableName, &wsrepStatus)
+		if err != nil {
+			log.Warn("failed to check database connection", zap.Error(err), zap.String("name", conn.Name))
+			return false
+		}
+
+		return wsrepStatus == "ON"
+	}
 }
 
 func (m *MysqlConnectionPool) startDatabasePinging() {
@@ -117,11 +138,9 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 					isReachable := true
 
 					if conn.DB != nil {
-						err := conn.DB.Ping()
-						if err != nil {
-							log.Warn("failed to ping database", zap.Error(err), zap.String("name", conn.Name))
+						if !m.checkIsReachable(conn) {
 							isReachable = false
-						} else if !conn.IsActive { // conn was previously not reachable but can be pinged again
+						} else if !conn.IsActive { // conn was previously not reachable but now is again
 							log.Info("successfully reconnected to database", zap.String("name", conn.Name))
 							m.Mutex.Lock()
 							conn.IsActive = isReachable
@@ -134,8 +153,7 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 						if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
 							isReachable = false
 						} else {
-							err = db.Ping()
-							if !log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name)) {
+							if !m.checkIsReachable(conn) {
 								isReachable = false
 							}
 						}
