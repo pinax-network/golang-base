@@ -137,7 +137,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		// extract JWT from header
 		tokenString, err := jwtmiddleware.FromAuthHeader(c.Request)
 		if err != nil {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, err)
 			return
 		}
 
