@@ -11,45 +11,51 @@ var (
 )
 
 const (
-	BAD_REQUEST_FILE_INPUT            = "bad_file_input"
-	BAD_REQUEST_HEADER                = "bad_header"
-	BAD_REQUEST_HEADER_MISSING        = "missing_required_header"
-	BAD_REQUEST_JSON_INPUT            = "bad_json_input"
-	BAD_REQUEST_QUERY_INPUT           = "bad_query_input"
-	BAD_REQUEST_REGISTRATION_REQUIRED = "bad_request_registration_required"
-	BAD_REQUEST_URI_INPUT             = "bad_uri_input"
+	BAD_REQUEST_FILE_INPUT            = "bad_file_input"                    // request required a file but is not
+	BAD_REQUEST_FILE_NOT_IMAGE        = "bad_file_not_an_image"             // request required an image but is not
+	BAD_REQUEST_FILE_TOO_LARGE        = "bad_file_too_large"                // given file exceeds the filesize limit
+	BAD_REQUEST_HEADER                = "bad_header"                        // invalid or malformed header given
+	BAD_REQUEST_HEADER_MISSING        = "missing_required_header"           // request is missing a header
+	BAD_REQUEST_JSON_INPUT            = "bad_json_input"                    // given json input is missing or malformed
+	BAD_REQUEST_QUERY_INPUT           = "bad_query_input"                   // given query input is missing or malformed
+	BAD_REQUEST_REGISTRATION_REQUIRED = "bad_request_registration_required" // user profile required for accessing this endpoint
+	BAD_REQUEST_URI_INPUT             = "bad_uri_input"                     // given uri input is missing or malformed
 
-	UNAUTHORIZED = "unauthorized"
-	FORBIDDEN    = "forbidden"
+	UNAUTHORIZED = "unauthorized" // invalid authorization information given
 
-	NOT_FOUND_ABUSE_REPORT       = "abuse_report_not_found"
-	NOT_FOUND_FILE               = "file_not_found"
-	NOT_FOUND_GRANT              = "grant_not_found"
-	NOT_FOUND_GRANT_CATEGORY     = "grant_category_not_found"
-	NOT_FOUND_GRANT_TRANSLATION  = "grant_translation_not_found"
-	NOT_FOUND_LANGUAGE           = "language_not_found"
-	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"
-	NOT_FOUND_REGION             = "region_not_found"
-	NOT_FOUND_RESOURCE           = "resource_not_found"
-	NOT_FOUND_ROUTE              = "route_not_found"
-	NOT_FOUND_TOKEN              = "token_not_found"
-	NOT_FOUND_USER               = "user_not_found"
-	NOT_FOUND_USER_CHAIN_ACCOUNT = "user_chain_account_not_found"
-	NOT_FOUND_USER_PROFILE       = "user_profile_not_found"
+	FORBIDDEN = "forbidden" // not allowed to access this endpoint
 
-	METHOD_NOT_ALLOWED = "method_not_allowed"
+	NOT_FOUND_ABUSE_REPORT       = "abuse_report_not_found"       // the requested abuse report was not found
+	NOT_FOUND_FILE               = "file_not_found"               // the requested file was not found
+	NOT_FOUND_FUNDING_ADDRESS    = "funding_address_not_found"    // the eos account for the funding address could not be found on chain
+	NOT_FOUND_GRANT              = "grant_not_found"              // the requested grant was not found
+	NOT_FOUND_GRANT_CATEGORY     = "grant_category_not_found"     // the requested grant category was not found
+	NOT_FOUND_GRANT_TRANSLATION  = "grant_translation_not_found"  // the requested grant translation was not found
+	NOT_FOUND_LANGUAGE           = "language_not_found"           // the requested language was not found
+	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"     // the given account name is not linked to an eosn id
+	NOT_FOUND_MATCHING_PARTNER   = "matching_partner_not_found"   // the requested matching partner was not found
+	NOT_FOUND_MATCHING_ROUND     = "matching_round_not_found"     // the requested matching round was not found
+	NOT_FOUND_REGION             = "region_not_found"             // the requested region was not found
+	NOT_FOUND_RESOURCE           = "resource_not_found"           // the requested resource was not found
+	NOT_FOUND_ROUTE              = "route_not_found"              // the requested route was not found
+	NOT_FOUND_TOKEN              = "token_not_found"              // the requested token was not found
+	NOT_FOUND_USER               = "user_not_found"               // the requested user was not found
+	NOT_FOUND_USER_CHAIN_ACCOUNT = "user_chain_account_not_found" // there is no eosn chain account for the given eosn id
+	NOT_FOUND_USER_PROFILE       = "user_profile_not_found"       // the requested user profile was not found
 
-	CONFLICT_EMAIL_EXISTS             = "email_already_exists"
-	CONFLICT_GRANT_NAME_EXISTS        = "grant_name_already_exists"
-	CONFLICT_GRANT_TRANSLATION_EXISTS = "grant_translation_already_exists"
-	CONFLICT_LINKED_ACCOUNT_EXISTS    = "account_already_linked"
-	CONFLICT_LINKED_ACCOUNT_VERIFIED  = "linked_account_verified"
-	CONFLICT_MAX_ACCOUNTS_LINKED      = "max_accounts_linked"
-	CONFLICT_PROFILE_EXISTS           = "user_profile_already_exists"
-	CONFLICT_USERNAME_EXISTS          = "username_already_exists"
-	CONFLICT_USER_EXISTS              = "user_already_exists"
+	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
-	INTERNAL_SERVER_ERROR = "internal_server_error"
+	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"         // the given email already exists in the database
+	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"    // the given grant name already exists in the database
+	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"       // the given eos account is already linked to an eosn id
+	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"      // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
+	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"          // the maximum amount of accounts has already been linked
+	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round" // the grant is not in an active matching round
+	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"  // a user profile already exists for this user
+	CONFLICT_USERNAME_EXISTS              = "username_already_exists"      // the given username already exists in the database
+	CONFLICT_USER_EXISTS                  = "user_already_exists"          // a user with the given eosn id already exists in the database
+
+	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
 
 type ApiErrorResponse struct {
