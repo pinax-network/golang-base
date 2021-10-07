@@ -26,7 +26,8 @@ message Contribution {
   string to = 3;
   string memo = 4;
   string quantity = 5;
-  string user_id = 6;
+  float value = 6;
+  string user_id = 7;
 }
 
 
