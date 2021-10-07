@@ -24,12 +24,9 @@ func ParseSortInput(inputSortPairs []string, allowedSortFields []string, default
 
 	for _, p := range inputSortPairs {
 		split := strings.Split(p, ":")
+		dir := defaultDir
 
-		if len(split) != 2 {
-			errors = append(errors, fmt.Errorf("invalid sort pair given: '%s', needs to be of format 'field:direction'", p))
-		} else {
-			var dir base_input.Direction
-
+		if len(split) == 2 {
 			if split[1] == string(base_input.Ascending) {
 				dir = base_input.Ascending
 			} else if split[1] == string(base_input.Descending) {
@@ -38,16 +35,19 @@ func ParseSortInput(inputSortPairs []string, allowedSortFields []string, default
 				errors = append(errors, fmt.Errorf("invalid sort direction given: '%s', needs to be one of ['asc', 'desc']", p))
 				continue
 			}
+		} else if len(split) != 1 {
+			errors = append(errors, fmt.Errorf("invalid sort pair given: '%s', needs to be of format 'field:direction' or 'field'", p))
+			continue
+		}
 
-			if contains(allowedSortFields, split[0]) {
-				sortPairs = append(sortPairs, base_input.SortPair{
-					Attribute: split[0],
-					Direction: dir,
-				})
-			} else {
-				errors = append(errors, fmt.Errorf("invalid sort field given: '%s', needs to be one of %v", p, allowedSortFields))
-				continue
-			}
+		if contains(allowedSortFields, split[0]) {
+			sortPairs = append(sortPairs, base_input.SortPair{
+				Attribute: split[0],
+				Direction: dir,
+			})
+		} else {
+			errors = append(errors, fmt.Errorf("invalid sort field given: '%s', needs to be one of %v", p, allowedSortFields))
+			continue
 		}
 	}
 

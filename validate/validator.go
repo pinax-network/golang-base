@@ -53,7 +53,7 @@ func (v *JsonValidator) lazyinit() {
 		})
 
 		err := v.validate.RegisterValidation("sortpair", func(fl validator.FieldLevel) bool {
-			regex := regexp.MustCompile("^([A-Za-z_]+):(asc|desc)$")
+			regex := regexp.MustCompile("^([A-Za-z_]+)(:(asc|desc))?$")
 			return regex.MatchString(fl.Field().String())
 		})
 		log.FatalIfError("failed to initialize 'sortpair' validation", err)

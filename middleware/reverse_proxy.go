@@ -39,4 +39,3 @@ func (r *ReverseProxyMiddleware) ProxyRequest(responseHandler func(*gin.Context)
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 }
-
