@@ -65,7 +65,7 @@ func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
 		log.Println(message)
 
 		for _, f := range additionalFields {
-			log.Println(fmt.Sprintf("'%s': %s", f.Key, f.String))
+			log.Println(fmt.Sprintf("'%s': %+v", f.Key, f))
 		}
 		if logLevel == FATAL {
 			os.Exit(1)

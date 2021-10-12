@@ -16,7 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +38,7 @@ type JwksMiddleware struct {
 	userService   base_service.UserService
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 	certHandler   *CertHandler
+	config        *JwtMiddlewareConfig
 }
 
 type CertHandler struct {
@@ -47,9 +47,10 @@ type CertHandler struct {
 	refreshMu   *sync.Mutex
 }
 
-func NewJwksMiddleware(userService base_service.UserService) (*JwksMiddleware, error) {
+func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewareConfig) (*JwksMiddleware, error) {
 
 	j := &JwksMiddleware{
+		config:      config,
 		userService: userService,
 		certHandler: &CertHandler{
 			refreshMu: &sync.Mutex{},
@@ -90,13 +91,13 @@ func NewJwksMiddleware(userService base_service.UserService) (*JwksMiddleware, e
 			}
 			token.Claims.(jwt.MapClaims)["aud"] = s
 
-			checkAud := verifyAudience(s, true)
+			checkAud := j.verifyAudience(s, true)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
 
 			// Verify 'iss' claim
-			iss := "https://" + os.Getenv("AUTH0_DOMAIN") + "/"
+			iss := "https://" + j.config.Auth0Domain + "/"
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
 				return token, errors.New("invalid issuer")
@@ -227,7 +228,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 }
 
 func (j *JwksMiddleware) refreshCerts() error {
-	certs, err := loadCerts()
+	certs, err := j.loadCerts()
 
 	if err != nil {
 		return err
@@ -254,10 +255,10 @@ func (j *JwksMiddleware) startRefreshCertTimer() {
 	}
 }
 
-func loadCerts() (map[string]*rsa.PublicKey, error) {
+func (j *JwksMiddleware) loadCerts() (map[string]*rsa.PublicKey, error) {
 	certs := make(map[string]*rsa.PublicKey)
 
-	certsUrl := "https://" + os.Getenv("AUTH0_DOMAIN") + "/.well-known/jwks.json"
+	certsUrl := "https://" + j.config.Auth0Domain + "/.well-known/jwks.json"
 	resp, err := http.Get(certsUrl)
 
 	if err != nil {
@@ -293,16 +294,13 @@ func loadCerts() (map[string]*rsa.PublicKey, error) {
 	return certs, nil
 }
 
-func verifyAudience(auds []string, req bool) bool {
-
-	// remove all whitespaces and split by ,
-	allowedAudiences := strings.Split(strings.ReplaceAll(os.Getenv("AUTH0_ALLOWED_AUDIENCES"), " ", ""), ",")
+func (j *JwksMiddleware) verifyAudience(auds []string, req bool) bool {
 
 	if len(auds) == 0 {
 		return !req
 	}
 
-	for _, allowedAud := range allowedAudiences {
+	for _, allowedAud := range j.config.Auth0AllowedAudiences {
 		for _, aud := range auds {
 			if subtle.ConstantTimeCompare([]byte(aud), []byte(allowedAud)) != 0 {
 				return true

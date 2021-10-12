@@ -14,12 +14,12 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 )
 
 type DfuseClient struct {
 	GraphQLClient GraphQLClient
+	Config        *Config
 }
 
 var maxCallRecvMsgSize = 1024 * 1024 * 100
@@ -28,9 +28,11 @@ var defaultCallOptions = []grpc.CallOption{
 	grpc.WaitForReady(true),
 }
 
-func NewDfuseClient(endpoint string, insecure bool) (*DfuseClient, error) {
+func NewDfuseClient(config *Config) (*DfuseClient, error) {
 
-	res := &DfuseClient{}
+	res := &DfuseClient{
+		Config: config,
+	}
 
 	var keepaliveDialOption = keepalive.ClientParameters{
 		// Send pings every (x seconds) there is no activity
@@ -49,16 +51,15 @@ func NewDfuseClient(endpoint string, insecure bool) (*DfuseClient, error) {
 		grpc.WithStreamInterceptor(grpc_zap.StreamClientInterceptor(log.ZapLogger)),
 		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
 	}
-	if insecure {
+	if config.Insecure {
 		dialOpts = append(dialOpts, grpc.WithInsecure())
 	} else {
 		transportCreds := credentials.NewClientTLSFromCert(nil, "")
 		dialOpts = append(dialOpts, grpc.WithTransportCredentials(transportCreds))
 	}
 
-	dfuseAPIKey := os.Getenv("DFUSE_API_KEY")
-	if dfuseAPIKey != "" {
-		token, _, err := getToken(dfuseAPIKey)
+	if config.ApiKey != "" {
+		token, _, err := getToken(config.ApiKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get dfuse token: %w", err)
 		}
@@ -67,7 +68,7 @@ func NewDfuseClient(endpoint string, insecure bool) (*DfuseClient, error) {
 		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(credential))
 	}
 
-	conn, err := grpc.Dial(endpoint, dialOpts...)
+	conn, err := grpc.Dial(config.Endpoint, dialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc connection: %w", err)
 	}
@@ -78,6 +79,7 @@ func NewDfuseClient(endpoint string, insecure bool) (*DfuseClient, error) {
 }
 
 func getToken(apiKey string) (token string, expiration time.Time, err error) {
+
 	reqBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"api_key":"%s"}`, apiKey)))
 	resp, err := http.Post("https://auth.eosnation.io/v1/auth/issue", "application/json", reqBody)
 	if err != nil {
