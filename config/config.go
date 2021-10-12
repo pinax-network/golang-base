@@ -1,16 +1,8 @@
 package config
 
-type ApplicationMode string
-
-const (
-	Production ApplicationMode = "production" // Production mode
-	Debug      ApplicationMode = "debug"      // Debug mode
-)
-
 type ApplicationConfig struct {
-	Mode     ApplicationMode `yaml:"mode" json:"mode" mapstructure:"mode" validate:"required"` // Application mode, can be either production or develop
-	HttpHost string          `yaml:"http_host" json:"http_host" mapstructure:"http_host"`      // HTTP host and port to listen on (for applications serving HTTP)
-	GrpcHost string          `yaml:"grpc_host" json:"grpc_host" mapstructure:"grpc_host"`      // GRPC host and port to listen on (for applications serving GRPC)
+	HttpHost string `yaml:"http_host" json:"http_host" mapstructure:"http_host"` // HTTP host and port to listen on (for applications serving HTTP)
+	GrpcHost string `yaml:"grpc_host" json:"grpc_host" mapstructure:"grpc_host"` // GRPC host and port to listen on (for applications serving GRPC)
 }
 
 type SmartContractConfig struct {
@@ -20,8 +12,4 @@ type SmartContractConfig struct {
 
 type GrpcConfig struct {
 	Address string `yaml:"grpc_address" json:"grpc_address" mapstructure:"grpc_address" validate:"required"` // Grpc address (host + port)
-}
-
-func (a *ApplicationConfig) IsDebug() bool {
-	return a.Mode == Debug
 }
