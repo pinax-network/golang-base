@@ -9,10 +9,10 @@ const (
 )
 
 type ApplicationConfig struct {
-	GinMode  ApplicationMode `yaml:"gin_mode" json:"gin_mode" mapstructure:"gin_mode"`    // Gin mode, can be one of develop, release, test
-	Domain   string          `yaml:"domain" json:"domain" mapstructure:"domain"`          // The domain inclusive protocol this app is running on, for example http://localhost:8080
-	HttpHost string          `yaml:"http_host" json:"http_host" mapstructure:"http_host"` // HTTP host and port to listen on (for applications serving HTTP)
-	GrpcHost string          `yaml:"grpc_host" json:"grpc_host" mapstructure:"grpc_host"` // GRPC host and port to listen on (for applications serving GRPC)
+	GinMode  ApplicationMode `yaml:"gin_mode" json:"gin_mode" mapstructure:"gin_mode" validate:"omitempty,oneof=debug release test"` // Gin mode, can be one of develop, release, test
+	Domain   string          `yaml:"domain" json:"domain" mapstructure:"domain"`                                                     // The domain inclusive protocol this app is running on, for example http://localhost:8080
+	HttpHost string          `yaml:"http_host" json:"http_host" mapstructure:"http_host"`                                            // HTTP host and port to listen on (for applications serving HTTP)
+	GrpcHost string          `yaml:"grpc_host" json:"grpc_host" mapstructure:"grpc_host"`                                            // GRPC host and port to listen on (for applications serving GRPC)
 }
 
 func (a *ApplicationConfig) IsDebug() bool {
