@@ -23,6 +23,7 @@ type AccountsInternalServiceClient interface {
 	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	LinkAccount(ctx context.Context, in *LinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UnlinkAccount(ctx context.Context, in *UnlinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	StreamUpdatedUserSocials(ctx context.Context, in *GetUpdatedSocialsRequest, opts ...grpc.CallOption) (AccountsInternalService_StreamUpdatedUserSocialsClient, error)
 }
 
 type accountsInternalServiceClient struct {
@@ -69,6 +70,38 @@ func (c *accountsInternalServiceClient) UnlinkAccount(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *accountsInternalServiceClient) StreamUpdatedUserSocials(ctx context.Context, in *GetUpdatedSocialsRequest, opts ...grpc.CallOption) (AccountsInternalService_StreamUpdatedUserSocialsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &AccountsInternalService_ServiceDesc.Streams[0], "/eosn.protobuf.AccountsInternalService/StreamUpdatedUserSocials", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &accountsInternalServiceStreamUpdatedUserSocialsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AccountsInternalService_StreamUpdatedUserSocialsClient interface {
+	Recv() (*LinkedSocial, error)
+	grpc.ClientStream
+}
+
+type accountsInternalServiceStreamUpdatedUserSocialsClient struct {
+	grpc.ClientStream
+}
+
+func (x *accountsInternalServiceStreamUpdatedUserSocialsClient) Recv() (*LinkedSocial, error) {
+	m := new(LinkedSocial)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // AccountsInternalServiceServer is the server API for AccountsInternalService service.
 // All implementations must embed UnimplementedAccountsInternalServiceServer
 // for forward compatibility
@@ -77,6 +110,7 @@ type AccountsInternalServiceServer interface {
 	CreateAccount(context.Context, *CreateAccountRequest) (*emptypb.Empty, error)
 	LinkAccount(context.Context, *LinkAccountRequest) (*emptypb.Empty, error)
 	UnlinkAccount(context.Context, *UnlinkAccountRequest) (*emptypb.Empty, error)
+	StreamUpdatedUserSocials(*GetUpdatedSocialsRequest, AccountsInternalService_StreamUpdatedUserSocialsServer) error
 	mustEmbedUnimplementedAccountsInternalServiceServer()
 }
 
@@ -95,6 +129,9 @@ func (UnimplementedAccountsInternalServiceServer) LinkAccount(context.Context, *
 }
 func (UnimplementedAccountsInternalServiceServer) UnlinkAccount(context.Context, *UnlinkAccountRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkAccount not implemented")
+}
+func (UnimplementedAccountsInternalServiceServer) StreamUpdatedUserSocials(*GetUpdatedSocialsRequest, AccountsInternalService_StreamUpdatedUserSocialsServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamUpdatedUserSocials not implemented")
 }
 func (UnimplementedAccountsInternalServiceServer) mustEmbedUnimplementedAccountsInternalServiceServer() {
 }
@@ -182,6 +219,27 @@ func _AccountsInternalService_UnlinkAccount_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountsInternalService_StreamUpdatedUserSocials_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetUpdatedSocialsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AccountsInternalServiceServer).StreamUpdatedUserSocials(m, &accountsInternalServiceStreamUpdatedUserSocialsServer{stream})
+}
+
+type AccountsInternalService_StreamUpdatedUserSocialsServer interface {
+	Send(*LinkedSocial) error
+	grpc.ServerStream
+}
+
+type accountsInternalServiceStreamUpdatedUserSocialsServer struct {
+	grpc.ServerStream
+}
+
+func (x *accountsInternalServiceStreamUpdatedUserSocialsServer) Send(m *LinkedSocial) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // AccountsInternalService_ServiceDesc is the grpc.ServiceDesc for AccountsInternalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +264,12 @@ var AccountsInternalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AccountsInternalService_UnlinkAccount_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamUpdatedUserSocials",
+			Handler:       _AccountsInternalService_StreamUpdatedUserSocials_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "accounts.proto",
 }

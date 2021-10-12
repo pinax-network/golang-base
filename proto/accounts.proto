@@ -2,24 +2,22 @@ syntax = "proto3";
 package eosn.protobuf;
 option go_package = "./proto/pb";
 
-// import "google/protobuf/timestamp.proto";
 import "common.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 enum AuthId {
   POMELO = 0;
   EOSN_LOGIN = 1;
 }
 
-
-// Models
-
-message SignedTransaction {
-  bytes signed_trx = 2;
+enum SocialProvider {
+  EDEN = 0;
+  GITHUB = 1;
+  TWITTER = 2;
+  GOOGLE = 3;
+  FACEBOOK = 4;
 }
-
-
-
 
 // Requests
 
@@ -58,11 +56,33 @@ message UnlinkAccountRequest {
   UnlinkAccountActionData action_data = 2;
 }
 
+message GetUpdatedSocialsRequest {
+  google.protobuf.Timestamp since = 2;
+}
+
 // Responses
+
+message SignedTransaction {
+  bytes signed_trx = 2;
+}
+
+
+message LinkedSocial {
+  string eosn_id = 1;
+  SocialProvider provider = 2;
+  string username = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+
+
+// Service
 
 service AccountsInternalService {
   rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
   rpc CreateAccount(CreateAccountRequest) returns (google.protobuf.Empty) {};
   rpc LinkAccount(LinkAccountRequest) returns (google.protobuf.Empty) {};
   rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty) {};
+  rpc StreamUpdatedUserSocials(GetUpdatedSocialsRequest) returns (stream LinkedSocial) {};
 }
