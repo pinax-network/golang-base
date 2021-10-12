@@ -17,20 +17,20 @@ type KVClient struct {
 	folder string
 }
 
-func NewKVClient(host, datacenter, folder string) (*KVClient, error) {
+func NewKVClient(config *Config) (*KVClient, error) {
 
 	consulClient, err := api.NewClient(&api.Config{
-		Address:    host,
-		Datacenter: datacenter,
+		Address:    config.Host,
+		Datacenter: config.Datacenter,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	// remove trailing slash
-	folder = strings.TrimRight(folder, "/")
+	config.Folder = strings.TrimRight(config.Folder, "/")
 
-	return &KVClient{consul: consulClient.KV(), folder: folder}, nil
+	return &KVClient{consul: consulClient.KV(), folder: config.Folder}, nil
 }
 
 func (k *KVClient) GetInt(key string) (int, error) {

@@ -9,7 +9,6 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"go.uber.org/zap"
 	"net/url"
-	"os"
 	"path"
 )
 
@@ -20,17 +19,11 @@ type CephRepository struct {
 	subDirs     map[base_repositories.FileType]string
 }
 
-func NewCephRepository(subDirs map[base_repositories.FileType]string) (*CephRepository, error) {
+func NewCephRepository(subDirs map[base_repositories.FileType]string, config *CephFileSinkConfig) (*CephRepository, error) {
 
-	if os.Getenv("CEPH_HOST") == "" || os.Getenv("CEPH_ACCESS_KEY") == "" ||
-		os.Getenv("CEPH_SECRET") == "" || os.Getenv("CEPH_SSL") == "" || os.Getenv("CEPH_BUCKET") == "" {
-
-		return nil, fmt.Errorf("missing env variables, requires CEPH_HOST, CEPH_ACCESS_KEY, CEPH_SECRET, CEPH_SSL and CEPH_BUCKET")
-	}
-
-	minioClient, err := minio.New(os.Getenv("CEPH_HOST"), &minio.Options{
-		Creds:  credentials.NewStaticV4(os.Getenv("CEPH_ACCESS_KEY"), os.Getenv("CEPH_SECRET"), ""),
-		Secure: os.Getenv("CEPH_SSL") == "true",
+	minioClient, err := minio.New(config.Host, &minio.Options{
+		Creds:  credentials.NewStaticV4(config.AccessKey, config.Secret, ""),
+		Secure: config.Secure,
 	})
 	if err != nil {
 		return nil, err
@@ -38,8 +31,8 @@ func NewCephRepository(subDirs map[base_repositories.FileType]string) (*CephRepo
 
 	return &CephRepository{
 		minioClient: minioClient,
-		bucket:      os.Getenv("CEPH_BUCKET"),
-		baseUrl:     os.Getenv("STATIC_BASE_URL"),
+		bucket:      config.Bucket,
+		baseUrl:     config.BaseUrl,
 		subDirs:     subDirs,
 	}, nil
 }

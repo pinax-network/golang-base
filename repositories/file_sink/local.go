@@ -11,7 +11,7 @@ import (
 )
 
 type LocalFileRepository struct {
-	baseUrl  string
+	config   *LocalFileSinkConfig
 	subDirs  map[base_repositories.FileType]string
 	fileDirs map[base_repositories.FileType]string
 }
@@ -22,26 +22,21 @@ type LocalFileRepository struct {
 //
 // The files will then be linked under STATIC_BASE_URL within the subDirs parameter. So if STATIC_BASE_URL is
 // http://localhost:8080/static user avatars will be linked http://localhost:8080/static/avatars/
-func NewLocalFileRepository(subDirs map[base_repositories.FileType]string) (*LocalFileRepository, error) {
+func NewLocalFileRepository(subDirs map[base_repositories.FileType]string, config *LocalFileSinkConfig) (*LocalFileRepository, error) {
 
 	fileDirs := make(map[base_repositories.FileType]string)
 
 	// replace sub dirs with static file dir path and check if it is writeable
 	for key, dir := range subDirs {
-		staticFileDir, err := getStaticFileDir(dir)
+		staticFileDir, err := getStaticFileDir(config.UploadDir, dir)
 		if err != nil {
 			return nil, err
 		}
 		fileDirs[key] = staticFileDir
 	}
 
-	baseUrl := os.Getenv("STATIC_BASE_URL")
-	if baseUrl == "" {
-		return nil, fmt.Errorf("env STATIC_BASE_URL is not set")
-	}
-
 	return &LocalFileRepository{
-		baseUrl:  baseUrl,
+		config:   config,
 		subDirs:  subDirs,
 		fileDirs: fileDirs,
 	}, nil
@@ -85,11 +80,11 @@ func (f *LocalFileRepository) GetFileUrl(ctx context.Context, fileUuid string, f
 		panic("no subdir initialized for given file type: " + fileType)
 	}
 
-	return mustJoinUrl(f.baseUrl, path.Join(subDir, fileUuid))
+	return mustJoinUrl(f.config.BaseUrl, path.Join(subDir, fileUuid))
 }
 
-func getStaticFileDir(subDir string) (staticDir string, err error) {
-	staticDir = path.Join(os.Getenv("STATIC_FILE_DIR"), subDir)
+func getStaticFileDir(baseDir, subDir string) (staticDir string, err error) {
+	staticDir = path.Join(baseDir, subDir)
 
 	if err = writeable(staticDir); err != nil {
 		err = fmt.Errorf("static file dir ('%s') not writable: '%e'", staticDir, err)

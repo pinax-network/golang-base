@@ -30,15 +30,14 @@ type StaticFileRepository interface {
 	GetFileUrl(ctx context.Context, fileUuid string, fileType FileType) string
 }
 
-func NewUploadRepository(fileRepository StaticFileRepository) (*UploadRepository, error) {
+func NewUploadRepository(fileRepository StaticFileRepository, config *UploadRepositoryConfig) (*UploadRepository, error) {
 
-	tmpDir, err := getTmpUploadDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize temp directory: %e", err)
+	if err := writeable(config.TempUploadDir); err != nil {
+		err = fmt.Errorf("temp upload dir ('%s') not writable: '%e'", config.TempUploadDir, err)
 	}
 
 	return &UploadRepository{
-		tempUploadDir:  tmpDir,
+		tempUploadDir:  config.TempUploadDir,
 		fileRepository: fileRepository,
 	}, nil
 }
@@ -84,16 +83,6 @@ func (s *UploadRepository) MustExistsTemp(ctx context.Context, fileUuid string) 
 
 func (s *UploadRepository) MustExists(ctx context.Context, fileUuid string, fileType FileType) bool {
 	return s.fileRepository.FileExists(ctx, fileUuid, fileType)
-}
-
-func getTmpUploadDir() (tmpDir string, err error) {
-	tmpDir = os.Getenv("TEMP_UPLOAD_DIR")
-
-	if err = writeable(tmpDir); err != nil {
-		err = fmt.Errorf("temp upload dir ('%s') not writable: '%e'", tmpDir, err)
-	}
-
-	return
 }
 
 func writeable(dir string) error {
