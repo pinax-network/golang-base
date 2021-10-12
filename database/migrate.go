@@ -9,9 +9,17 @@ import (
 	"go.uber.org/zap"
 )
 
-func Migrate(connection MysqlConnectionOptions, migrationDir string) error {
+func Migrate(clusterConfig *ClusterConfig, config *MigrationConfig) error {
 
-	dir := fmt.Sprintf("file://%s", migrationDir)
+	connection := &MysqlConnectionOptions{
+		User:     clusterConfig.User,
+		Password: clusterConfig.Password,
+		Database: clusterConfig.Database,
+		Host:     clusterConfig.Connections[0].Host,
+		Port:     clusterConfig.Connections[0].Port,
+	}
+
+	dir := fmt.Sprintf("file://%s", config.MigrationDir)
 	dsn := fmt.Sprintf("mysql://%s", GetMysqlDsn(connection, true))
 
 	migration, err := migrate.New(dir, dsn)
@@ -20,7 +28,7 @@ func Migrate(connection MysqlConnectionOptions, migrationDir string) error {
 	}
 	defer func() {
 		sErr, dErr := migration.Close()
-		log.CriticalIfError("failed to close source connection after migration", sErr, zap.String("source_dir", migrationDir))
+		log.CriticalIfError("failed to close source connection after migration", sErr, zap.String("source_dir", config.MigrationDir))
 		log.CriticalIfError("failed to close database connection after migration", dErr, zap.Any("db_connection", connection))
 	}()
 

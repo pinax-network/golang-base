@@ -14,11 +14,11 @@ import (
 )
 
 type MysqlConnectionPool struct {
-	Connections     []*MysqlConnection
-	Mutex           *sync.Mutex
-	PingsTicker     *time.Ticker
-	PingsDone       chan bool
-	IsGaleraCluster bool
+	Connections []*MysqlConnection
+	Mutex       *sync.Mutex
+	PingsTicker *time.Ticker
+	PingsDone   chan bool
+	Config      *ClusterConfig
 }
 
 type MysqlConnection struct {
@@ -40,16 +40,21 @@ var (
 	ErrNoHealthyConn = errors.New("no healthy mysql connection available")
 )
 
-func NewMysqlConnectionPool(connections []MysqlConnectionOptions, isGaleraCluster bool) (connPool *MysqlConnectionPool, err error) {
+func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPool, err error) {
 	connPool = &MysqlConnectionPool{}
-	connPool.Connections = make([]*MysqlConnection, 0, len(connections))
+	connPool.Connections = make([]*MysqlConnection, 0, len(config.Connections))
 	connPool.Mutex = &sync.Mutex{}
-	connPool.IsGaleraCluster = isGaleraCluster
 
-	for _, connection := range connections {
+	for _, connection := range config.Connections {
 		conn := &MysqlConnection{}
 		conn.Name = connection.Host
-		conn.Dsn = GetMysqlDsn(connection, false)
+		conn.Dsn = GetMysqlDsn(&MysqlConnectionOptions{
+			User:     config.User,
+			Password: config.Password,
+			Database: config.Database,
+			Host:     connection.Host,
+			Port:     connection.Port,
+		}, false)
 
 		db, err := connect(conn.Dsn)
 		conn.DB = db
@@ -75,7 +80,7 @@ func NewMysqlConnectionPool(connections []MysqlConnectionOptions, isGaleraCluste
 	return
 }
 
-func GetMysqlDsn(connection MysqlConnectionOptions, multiStatements bool) string {
+func GetMysqlDsn(connection *MysqlConnectionOptions, multiStatements bool) string {
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=%t",
 		connection.User,
@@ -100,7 +105,7 @@ func connect(dsn string) (*sql.DB, error) {
 func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 
 	// if it's not a cluster we can just ping the database
-	if !m.IsGaleraCluster {
+	if !m.Config.IsGaleraCluster {
 		err := conn.DB.Ping()
 		log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name))
 		return err == nil
