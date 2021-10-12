@@ -51,7 +51,7 @@ func NewDfuseClient(config *Config) (*DfuseClient, error) {
 		grpc.WithStreamInterceptor(grpc_zap.StreamClientInterceptor(log.ZapLogger)),
 		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
 	}
-	if config.Insecure {
+	if !*config.Secure {
 		dialOpts = append(dialOpts, grpc.WithInsecure())
 	} else {
 		transportCreds := credentials.NewClientTLSFromCert(nil, "")

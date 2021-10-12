@@ -2,7 +2,7 @@ package file_sink
 
 type CephFileSinkConfig struct {
 	Host      string `yaml:"host" json:"host" mapstructure:"host" validate:"required"`                   // Host including the port, but without protocol. For example ceph-gw.service.march.consul.eosn.io:7480
-	Secure    bool   `yaml:"secure" json:"secure" mapstructure:"secure" validate:"required"`             // Whether to use TLS
+	Secure    *bool  `yaml:"secure" json:"secure" mapstructure:"secure" validate:"required"`             // Whether to use TLS
 	Bucket    string `yaml:"bucket" json:"bucket" mapstructure:"bucket" validate:"required"`             // Ceph bucket name
 	AccessKey string `yaml:"access_key" json:"access_key" mapstructure:"access_key" validate:"required"` // Ceph access key
 	Secret    string `yaml:"secret" json:"secret" mapstructure:"secret" validate:"required"`             // Ceph secret

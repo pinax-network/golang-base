@@ -23,7 +23,7 @@ func NewCephRepository(subDirs map[base_repositories.FileType]string, config *Ce
 
 	minioClient, err := minio.New(config.Host, &minio.Options{
 		Creds:  credentials.NewStaticV4(config.AccessKey, config.Secret, ""),
-		Secure: config.Secure,
+		Secure: *config.Secure,
 	})
 	if err != nil {
 		return nil, err

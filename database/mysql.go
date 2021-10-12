@@ -44,6 +44,7 @@ func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPoo
 	connPool = &MysqlConnectionPool{}
 	connPool.Connections = make([]*MysqlConnection, 0, len(config.Connections))
 	connPool.Mutex = &sync.Mutex{}
+	connPool.Config = config
 
 	for _, connection := range config.Connections {
 		conn := &MysqlConnection{}
@@ -105,7 +106,7 @@ func connect(dsn string) (*sql.DB, error) {
 func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 
 	// if it's not a cluster we can just ping the database
-	if !m.Config.IsGaleraCluster {
+	if !*m.Config.IsGaleraCluster {
 		err := conn.DB.Ping()
 		log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name))
 		return err == nil
