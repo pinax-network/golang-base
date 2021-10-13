@@ -3,6 +3,7 @@ package base_input
 import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/volatiletech/null/v8"
+	"html"
 )
 
 var (
@@ -12,7 +13,7 @@ var (
 
 func SanitizeString(input string, strict bool) string {
 	if strict {
-		return strictSanitizer.Sanitize(input)
+		return html.UnescapeString(strictSanitizer.Sanitize(input))
 	}
 	return htmlSanitizer.Sanitize(input)
 }
@@ -24,7 +25,7 @@ func SanitizeNullString(input null.String, strict bool) null.String {
 	}
 
 	if strict {
-		return null.StringFrom(strictSanitizer.Sanitize(input.String))
+		return null.StringFrom(html.UnescapeString(strictSanitizer.Sanitize(input.String)))
 	} else {
 		return null.StringFrom(htmlSanitizer.Sanitize(input.String))
 	}
