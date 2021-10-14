@@ -38,6 +38,7 @@ const (
 	NOT_FOUND_REGION             = "region_not_found"             // the requested region was not found
 	NOT_FOUND_RESOURCE           = "resource_not_found"           // the requested resource was not found
 	NOT_FOUND_ROUTE              = "route_not_found"              // the requested route was not found
+	NOT_FOUND_SEASON             = "season_not_found"             // the requested season was not found
 	NOT_FOUND_TOKEN              = "token_not_found"              // the requested token was not found
 	NOT_FOUND_USER               = "user_not_found"               // the requested user was not found
 	NOT_FOUND_USER_CHAIN_ACCOUNT = "user_chain_account_not_found" // there is no eosn chain account for the given eosn id
@@ -45,15 +46,17 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
-	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"         // the given email already exists in the database
-	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"    // the given grant name already exists in the database
-	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"       // the given eos account is already linked to an eosn id
-	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"      // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
-	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"          // the maximum amount of accounts has already been linked
-	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round" // the grant is not in an active matching round
-	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"  // a user profile already exists for this user
-	CONFLICT_USERNAME_EXISTS              = "username_already_exists"      // the given username already exists in the database
-	CONFLICT_USER_EXISTS                  = "user_already_exists"          // a user with the given eosn id already exists in the database
+	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"             // the given email already exists in the database
+	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"        // the given grant name already exists in the database
+	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"           // the given eos account is already linked to an eosn id
+	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"          // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
+	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"              // the maximum amount of accounts has already been linked
+	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round"     // the grant is not in an active matching round
+	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"      // a user profile already exists for this user
+	CONFLICT_ROUND_ID_EXISTS              = "matching_round_id_already_exists" // a matching round with the given id already exists in the database
+	CONFLICT_SEASON_ID_EXISTS             = "season_id_already_exists"         // a season with the given id already exists in the database
+	CONFLICT_USERNAME_EXISTS              = "username_already_exists"          // the given username already exists in the database
+	CONFLICT_USER_EXISTS                  = "user_already_exists"              // a user with the given eosn id already exists in the database
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
