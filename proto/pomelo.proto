@@ -28,6 +28,8 @@ message Contribution {
   string quantity = 5;
   float value = 6;
   string user_id = 7;
+  int32 round_id = 8;
+  int32 season_id = 9;
 }
 
 
