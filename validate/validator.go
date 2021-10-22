@@ -3,6 +3,7 @@ package validate
 import (
 	"github.com/eosnationftw/eosn-base-api/log"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
 	"reflect"
 	"regexp"
 	"strings"
@@ -52,7 +53,10 @@ func (v *JsonValidator) lazyinit() {
 			return name
 		})
 
-		err := v.validate.RegisterValidation("sortpair", func(fl validator.FieldLevel) bool {
+		err := v.validate.RegisterValidation("notblank", validators.NotBlank)
+		log.FatalIfError("failed to initialize 'notblank' validation", err)
+
+		err = v.validate.RegisterValidation("sortpair", func(fl validator.FieldLevel) bool {
 			regex := regexp.MustCompile("^([A-Za-z_]+)(:(asc|desc))?$")
 			return regex.MatchString(fl.Field().String())
 		})
