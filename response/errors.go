@@ -51,6 +51,8 @@ const (
 	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"           // the given eos account is already linked to an eosn id
 	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"          // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
 	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"              // the maximum amount of accounts has already been linked
+	CONFLICT_MAX_PENDING_GRANTS           = "max_pending_grants_reached"       // the maximum of pending grants is reached for this user
+	CONFLICT_MAX_TOTAL_GRANTS             = "max_total_grants_reached"         // the maximum amount of grants is reached for this user
 	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round"     // the grant is not in an active matching round
 	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"      // a user profile already exists for this user
 	CONFLICT_ROUND_ID_EXISTS              = "matching_round_id_already_exists" // a matching round with the given id already exists in the database
