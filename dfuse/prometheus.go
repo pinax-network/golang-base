@@ -12,8 +12,8 @@ var (
 	promHeadBlockTime = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: SUBSYTEM,
-			Name:      "head_block_time",
-			Help:      "Last successfully read block time from dfuse.",
+			Name:      "last_block_time",
+			Help:      "Last read block time from dfuse.",
 		},
 		[]string{"connector"},
 	)
@@ -21,8 +21,26 @@ var (
 	promHeadBlockNumber = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: SUBSYTEM,
-			Name:      "head_block_number",
-			Help:      "Last successfully read block number from dfuse.",
+			Name:      "last_block_number",
+			Help:      "Last read block number from dfuse.",
+		},
+		[]string{"connector"},
+	)
+
+	promSuccessfulHeadBlockTime = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "last_successful_block_time",
+			Help:      "Last read block time from dfuse in which no errors occurred. If this falls behind last_block_time it means there have been errors.",
+		},
+		[]string{"connector"},
+	)
+
+	promSuccessfulHeadBlockNumber = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "last_successful_block_number",
+			Help:      "Last read block number from dfuse in which no errors occurred. If this falls behind last_block_time it means there have been errors.",
 		},
 		[]string{"connector"},
 	)
@@ -34,4 +52,12 @@ func reportLastHeadBlockTime(connnector string, time time.Time) {
 
 func reportLastHeadBlockNumber(connnector string, number int) {
 	promHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
+}
+
+func reportLastSuccessfulBlockTime(connnector string, time time.Time) {
+	promSuccessfulHeadBlockTime.WithLabelValues(connnector).Set(float64(time.Unix()))
+}
+
+func reportLastSuccessfulBlockNumber(connnector string, number int) {
+	promSuccessfulHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
 }
