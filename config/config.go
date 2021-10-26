@@ -28,8 +28,9 @@ type SmartContractConfig struct {
 	InitialBlockNum int    `yaml:"initial_block_num" json:"initial_block_num" mapstructure:"initial_block_num" validate:"required"` // Block number on which the contract got deployed initially
 }
 
-type GrpcConfig struct {
-	Address string `yaml:"grpc_address" json:"grpc_address" mapstructure:"grpc_address" validate:"required"` // Grpc address (host + port)
+type ApiConfig struct {
+	GrpcAddress string `yaml:"grpc_address" json:"grpc_address" mapstructure:"grpc_address" validate:"required"` // Grpc address (host + port)
+	HttpAddress string `yaml:"http_address" json:"http_address" mapstructure:"http_address" validate:"required"` // Http address (host + port)
 }
 
 type TemporalConfig struct {
