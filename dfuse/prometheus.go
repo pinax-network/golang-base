@@ -44,6 +44,15 @@ var (
 		},
 		[]string{"connector"},
 	)
+
+	promDfuseErrorCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Subsystem: SUBSYTEM,
+			Name:      "handler_errors",
+			Help:      "Counter for errors coming from the dfuse handlers.",
+		},
+		[]string{"connector"},
+	)
 )
 
 func reportLastHeadBlockTime(connnector string, time time.Time) {
@@ -60,4 +69,8 @@ func reportLastSuccessfulBlockTime(connnector string, time time.Time) {
 
 func reportLastSuccessfulBlockNumber(connnector string, number int) {
 	promSuccessfulHeadBlockNumber.WithLabelValues(connnector).Set(float64(number))
+}
+
+func increaseDfuseErrorCounter(connector string) {
+	promDfuseErrorCounter.WithLabelValues(connector).Inc()
 }
