@@ -1,4 +1,4 @@
-package config
+package base_config
 
 import (
 	"fmt"
