@@ -34,7 +34,7 @@ func NewPomeloInternalServiceClient(cc grpc.ClientConnInterface) PomeloInternalS
 
 func (c *pomeloInternalServiceClient) GetLastTraidingPair(ctx context.Context, in *GetLastTradingPairRequest, opts ...grpc.CallOption) (*TraidingPair, error) {
 	out := new(TraidingPair)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.PomeloInternalService/GetLastTraidingPair", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.PomeloInternalService/GetLastTraidingPair", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (c *pomeloInternalServiceClient) GetLastTraidingPair(ctx context.Context, i
 
 func (c *pomeloInternalServiceClient) AddTraidingPair(ctx context.Context, in *TraidingPair, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.PomeloInternalService/AddTraidingPair", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.PomeloInternalService/AddTraidingPair", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *pomeloInternalServiceClient) AddTraidingPair(ctx context.Context, in *T
 
 func (c *pomeloInternalServiceClient) AddContribution(ctx context.Context, in *Contribution, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.PomeloInternalService/AddContribution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.PomeloInternalService/AddContribution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func _PomeloInternalService_GetLastTraidingPair_Handler(srv interface{}, ctx con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.PomeloInternalService/GetLastTraidingPair",
+		FullMethod: "/eosn.protobuf.v1.PomeloInternalService/GetLastTraidingPair",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PomeloInternalServiceServer).GetLastTraidingPair(ctx, req.(*GetLastTradingPairRequest))
@@ -123,7 +123,7 @@ func _PomeloInternalService_AddTraidingPair_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.PomeloInternalService/AddTraidingPair",
+		FullMethod: "/eosn.protobuf.v1.PomeloInternalService/AddTraidingPair",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PomeloInternalServiceServer).AddTraidingPair(ctx, req.(*TraidingPair))
@@ -141,7 +141,7 @@ func _PomeloInternalService_AddContribution_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.PomeloInternalService/AddContribution",
+		FullMethod: "/eosn.protobuf.v1.PomeloInternalService/AddContribution",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PomeloInternalServiceServer).AddContribution(ctx, req.(*Contribution))
@@ -153,7 +153,7 @@ func _PomeloInternalService_AddContribution_Handler(srv interface{}, ctx context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var PomeloInternalService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "eosn.protobuf.PomeloInternalService",
+	ServiceName: "eosn.protobuf.v1.PomeloInternalService",
 	HandlerType: (*PomeloInternalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

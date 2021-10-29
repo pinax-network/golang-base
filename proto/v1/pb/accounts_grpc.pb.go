@@ -35,7 +35,7 @@ func NewAccountsInternalServiceClient(cc grpc.ClientConnInterface) AccountsInter
 
 func (c *accountsInternalServiceClient) SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error) {
 	out := new(SignedTransaction)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.AccountsInternalService/SignUserTransaction", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/SignUserTransaction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (c *accountsInternalServiceClient) SignUserTransaction(ctx context.Context,
 
 func (c *accountsInternalServiceClient) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.AccountsInternalService/CreateAccount", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/CreateAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *accountsInternalServiceClient) CreateAccount(ctx context.Context, in *C
 
 func (c *accountsInternalServiceClient) LinkAccount(ctx context.Context, in *LinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.AccountsInternalService/LinkAccount", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/LinkAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *accountsInternalServiceClient) LinkAccount(ctx context.Context, in *Lin
 
 func (c *accountsInternalServiceClient) UnlinkAccount(ctx context.Context, in *UnlinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/eosn.protobuf.AccountsInternalService/UnlinkAccount", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/UnlinkAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func _AccountsInternalService_SignUserTransaction_Handler(srv interface{}, ctx c
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.AccountsInternalService/SignUserTransaction",
+		FullMethod: "/eosn.protobuf.v1.AccountsInternalService/SignUserTransaction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountsInternalServiceServer).SignUserTransaction(ctx, req.(*UserTransactionSignatureRequest))
@@ -138,7 +138,7 @@ func _AccountsInternalService_CreateAccount_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.AccountsInternalService/CreateAccount",
+		FullMethod: "/eosn.protobuf.v1.AccountsInternalService/CreateAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountsInternalServiceServer).CreateAccount(ctx, req.(*CreateAccountRequest))
@@ -156,7 +156,7 @@ func _AccountsInternalService_LinkAccount_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.AccountsInternalService/LinkAccount",
+		FullMethod: "/eosn.protobuf.v1.AccountsInternalService/LinkAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountsInternalServiceServer).LinkAccount(ctx, req.(*LinkAccountRequest))
@@ -174,7 +174,7 @@ func _AccountsInternalService_UnlinkAccount_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/eosn.protobuf.AccountsInternalService/UnlinkAccount",
+		FullMethod: "/eosn.protobuf.v1.AccountsInternalService/UnlinkAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountsInternalServiceServer).UnlinkAccount(ctx, req.(*UnlinkAccountRequest))
@@ -186,7 +186,7 @@ func _AccountsInternalService_UnlinkAccount_Handler(srv interface{}, ctx context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AccountsInternalService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "eosn.protobuf.AccountsInternalService",
+	ServiceName: "eosn.protobuf.v1.AccountsInternalService",
 	HandlerType: (*AccountsInternalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

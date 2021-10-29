@@ -1,6 +1,6 @@
 syntax = "proto3";
-package eosn.protobuf;
-option go_package = "./proto/pb";
+package eosn.protobuf.v1;
+option go_package = "./pb";
 
 // import "google/protobuf/timestamp.proto";
 import "common.proto";
