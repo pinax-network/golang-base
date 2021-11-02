@@ -25,6 +25,7 @@ type MysqlConnection struct {
 	Name     string
 	Dsn      string
 	DB       *sql.DB
+	Config   *MysqlConnectionOptions
 	IsActive bool
 }
 
@@ -49,13 +50,14 @@ func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPoo
 	for _, connection := range config.Connections {
 		conn := &MysqlConnection{}
 		conn.Name = connection.Host
-		conn.Dsn = GetMysqlDsn(&MysqlConnectionOptions{
+		conn.Config = &MysqlConnectionOptions{
 			User:     config.User,
 			Password: config.Password,
 			Database: config.Database,
 			Host:     connection.Host,
 			Port:     connection.Port,
-		}, false)
+		}
+		conn.Dsn = GetMysqlDsn(conn.Config, false)
 
 		db, err := connect(conn.Dsn)
 		conn.DB = db
@@ -199,6 +201,28 @@ func (m *MysqlConnectionPool) MustGetConnection() *sql.DB {
 // GetConnection returns an active connection or ErrNoHealthyConn if none of the connections from the pool is healthy
 func (m *MysqlConnectionPool) GetConnection() (*sql.DB, error) {
 
+	active, err := m.getActive()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return active.DB, err
+}
+
+func (m *MysqlConnectionPool) GetActiveConfig() (*MysqlConnectionOptions, error) {
+
+	active, err := m.getActive()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return active.Config, err
+}
+
+func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
+
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 
@@ -207,13 +231,13 @@ func (m *MysqlConnectionPool) GetConnection() (*sql.DB, error) {
 
 	// check if random connection is active
 	if m.Connections[randConn].IsActive {
-		return m.Connections[randConn].DB, nil
+		return m.Connections[randConn], nil
 	}
 
 	// cycle through all connections otherwise and find an active one
 	for _, db := range m.Connections {
 		if db.IsActive {
-			return db.DB, nil
+			return db, nil
 		}
 	}
 

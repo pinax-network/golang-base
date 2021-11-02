@@ -47,3 +47,9 @@ type AuditConfig struct {
 	LogToDatabase bool   `yaml:"to_database" json:"to_database" mapstructure:"to_database"` // Set true to log into database
 	LogToConsole  bool   `yaml:"to_console" json:"to_console" mapstructure:"to_console"`    // Set true to log to console
 }
+
+type ElasticsearchConfig struct {
+	Hosts    []string `yaml:"hosts" json:"hosts" mapstructure:"hosts"`
+	User     string   `yaml:"user" json:"user" mapstructure:"user"`
+	Password string   `yaml:"password" json:"password" mapstructure:"password"`
+}
