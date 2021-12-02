@@ -59,6 +59,12 @@ func Recovery(stack bool) gin.HandlerFunc {
 
 				errInternal := response.InternalServerError
 				errResponse := response.ApiErrorResponse{Errors: []*response.ApiError{errInternal}}
+
+				// if we are running in debug mode attach the stack trace to the error response
+				if gin.IsDebugging() {
+					errResponse.Errors[0].Detail = string(debug.Stack())
+				}
+
 				c.AbortWithStatusJSON(errInternal.Status, errResponse)
 				return
 			}

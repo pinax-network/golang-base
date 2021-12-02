@@ -47,8 +47,8 @@ func Errors() gin.HandlerFunc {
 
 		resultErrs := []*response.ApiError{httpErr}
 
-		// if the error is not private, try to get the error detail from parsing the meta interface
-		if !err.IsType(gin.ErrorTypePrivate) && err.Meta != nil {
+		// if we have a non-private error or we are in debug mode try to get the error detail from parsing the meta interface
+		if (!err.IsType(gin.ErrorTypePrivate) || gin.IsDebugging()) && err.Meta != nil {
 			metaInterface := err.Meta
 			switch v := metaInterface.(type) {
 			case string:
