@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	base_response "github.com/eosnationftw/eosn-base-api/response"
@@ -41,4 +42,9 @@ func ReadResponseBody(response *http.Response, target interface{}) error {
 	}
 
 	return nil
+}
+
+// BasicAuth creates the base64 encoded string containing user:password for basic authentication headers
+func BasicAuth(user, password string) string {
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", user, password)))
 }
