@@ -2,6 +2,7 @@ package shufti
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/helper"
@@ -9,6 +10,19 @@ import (
 	"net/http"
 	"strings"
 	"time"
+)
+
+const (
+	RequestPending            = "request.pending"
+	RequestInvalid            = "request.invalid"
+	VerificationCancelled     = "verification.cancelled"
+	RequestTimeout            = "request.timeout"
+	RequestUnauthorized       = "request.unauthorized"
+	VerificationAccepted      = "verification.accepted"
+	VerificationDeclined      = "verification.declined"
+	VerificationStatusChanged = "verification.status.changed"
+	RequestDeleted            = "request.deleted"
+	RequestReceived           = "request.received"
 )
 
 type Client struct {
@@ -32,6 +46,17 @@ func NewClient(config *Config) (*Client, error) {
 
 func (c *Client) GetVerificationUrlTtl() int {
 	return c.config.VerificationUrlTtl
+}
+
+func (c *Client) VerifySignatureHeader(signature, requestBody string) bool {
+
+	// calculate sha256sum(request_body + shufti_secret)
+	checksum := sha256.Sum256([]byte(requestBody + c.config.Secret))
+
+	// valid if hex representation of the checksum equals the given signature
+	isValid := fmt.Sprintf("%x", checksum) == signature
+
+	return isValid
 }
 
 func (c *Client) GetVerificationUrl(reference, email string) (string, error) {

@@ -24,7 +24,6 @@ message UserTransactionSignatureRequest {
 
 message RequireUserKycRequest {
   string eosn_id = 1;
-  string redirect_url = 2;
 }
 
 message CreateAccountRequest {
