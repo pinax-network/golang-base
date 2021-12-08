@@ -30,6 +30,10 @@ func NewClient(config *Config) (*Client, error) {
 	return res, nil
 }
 
+func (c *Client) GetVerificationUrlTtl() int {
+	return c.config.VerificationUrlTtl
+}
+
 func (c *Client) GetVerificationUrl(reference, email string) (string, error) {
 
 	requestData := getDefaultDocumentVerificationRequest()
