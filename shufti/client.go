@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/helper"
-	"github.com/eosnationftw/eosn-base-api/log"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -52,15 +50,11 @@ func (c *Client) GetVerificationUrlTtl() int {
 
 func (c *Client) VerifySignatureHeader(signature, requestBody string) bool {
 
-	log.Debug("VerifySignatureHeader", zap.String("signature", signature), zap.String("requestBody", requestBody))
-
+	// calculate sha256sum(request_body + shufti_secret)
 	checksum := sha256.Sum256([]byte(requestBody + c.config.Secret))
 
-	log.Debug("calculated checksum", zap.String("checksum", fmt.Sprintf("%x", checksum)))
-
+	// valid if hex representation of the checksum equals the given signature
 	isValid := fmt.Sprintf("%x", checksum) == signature
-
-	log.Debug("is equal", zap.Bool("isValid", isValid))
 
 	return isValid
 }
