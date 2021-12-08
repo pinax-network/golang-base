@@ -6,20 +6,12 @@ option go_package = "./pb";
 import "common.proto";
 import "google/protobuf/empty.proto";
 
+// Models
+
 enum AuthId {
   POMELO = 0;
   EOSN_LOGIN = 1;
 }
-
-
-// Models
-
-message SignedTransaction {
-  bytes signed_trx = 2;
-}
-
-
-
 
 // Requests
 
@@ -28,6 +20,11 @@ message UserTransactionSignatureRequest {
   bytes chain_id = 2;
   repeated AuthId auth_ids = 3;
   bytes serialized_trx = 4;
+}
+
+message RequireUserKycRequest {
+  string eosn_id = 1;
+  string redirect_url = 2;
 }
 
 message CreateAccountRequest {
@@ -60,8 +57,16 @@ message UnlinkAccountRequest {
 
 // Responses
 
+message SignedTransaction {
+  bytes signed_trx = 2;
+}
+
+
+// Services
+
 service AccountsInternalService {
   rpc SignUserTransaction(UserTransactionSignatureRequest) returns (SignedTransaction) {};
+  rpc RequireUserKyc(RequireUserKycRequest) returns (google.protobuf.Empty) {};
   rpc CreateAccount(CreateAccountRequest) returns (google.protobuf.Empty) {};
   rpc LinkAccount(LinkAccountRequest) returns (google.protobuf.Empty) {};
   rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty) {};

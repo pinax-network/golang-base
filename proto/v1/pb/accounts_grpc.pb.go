@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountsInternalServiceClient interface {
 	SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error)
+	RequireUserKyc(ctx context.Context, in *RequireUserKycRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	LinkAccount(ctx context.Context, in *LinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UnlinkAccount(ctx context.Context, in *UnlinkAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -36,6 +37,15 @@ func NewAccountsInternalServiceClient(cc grpc.ClientConnInterface) AccountsInter
 func (c *accountsInternalServiceClient) SignUserTransaction(ctx context.Context, in *UserTransactionSignatureRequest, opts ...grpc.CallOption) (*SignedTransaction, error) {
 	out := new(SignedTransaction)
 	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/SignUserTransaction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountsInternalServiceClient) RequireUserKyc(ctx context.Context, in *RequireUserKycRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.AccountsInternalService/RequireUserKyc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +84,7 @@ func (c *accountsInternalServiceClient) UnlinkAccount(ctx context.Context, in *U
 // for forward compatibility
 type AccountsInternalServiceServer interface {
 	SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error)
+	RequireUserKyc(context.Context, *RequireUserKycRequest) (*emptypb.Empty, error)
 	CreateAccount(context.Context, *CreateAccountRequest) (*emptypb.Empty, error)
 	LinkAccount(context.Context, *LinkAccountRequest) (*emptypb.Empty, error)
 	UnlinkAccount(context.Context, *UnlinkAccountRequest) (*emptypb.Empty, error)
@@ -86,6 +97,9 @@ type UnimplementedAccountsInternalServiceServer struct {
 
 func (UnimplementedAccountsInternalServiceServer) SignUserTransaction(context.Context, *UserTransactionSignatureRequest) (*SignedTransaction, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUserTransaction not implemented")
+}
+func (UnimplementedAccountsInternalServiceServer) RequireUserKyc(context.Context, *RequireUserKycRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequireUserKyc not implemented")
 }
 func (UnimplementedAccountsInternalServiceServer) CreateAccount(context.Context, *CreateAccountRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
@@ -124,6 +138,24 @@ func _AccountsInternalService_SignUserTransaction_Handler(srv interface{}, ctx c
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountsInternalServiceServer).SignUserTransaction(ctx, req.(*UserTransactionSignatureRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountsInternalService_RequireUserKyc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequireUserKycRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountsInternalServiceServer).RequireUserKyc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/eosn.protobuf.v1.AccountsInternalService/RequireUserKyc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountsInternalServiceServer).RequireUserKyc(ctx, req.(*RequireUserKycRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,6 +224,10 @@ var AccountsInternalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SignUserTransaction",
 			Handler:    _AccountsInternalService_SignUserTransaction_Handler,
+		},
+		{
+			MethodName: "RequireUserKyc",
+			Handler:    _AccountsInternalService_RequireUserKyc_Handler,
 		},
 		{
 			MethodName: "CreateAccount",
