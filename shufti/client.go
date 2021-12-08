@@ -14,6 +14,19 @@ import (
 	"time"
 )
 
+const (
+	RequestPending            = "request.pending"
+	RequestInvalid            = "request.invalid"
+	VerificationCancelled     = "verification.cancelled"
+	RequestTimeout            = "request.timeout"
+	RequestUnauthorized       = "request.unauthorized"
+	VerificationAccepted      = "verification.accepted"
+	VerificationDeclined      = "verification.declined"
+	VerificationStatusChanged = "verification.status.changed"
+	RequestDeleted            = "request.deleted"
+	RequestReceived           = "request.received"
+)
+
 type Client struct {
 	httpClient *http.Client
 	config     *Config

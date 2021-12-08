@@ -40,6 +40,10 @@ type VerificationResponse struct {
 }
 
 type CallbackResponse struct {
+	Reference      string   `json:"reference"`
+	Event          string   `json:"event"`
+	DeclinedReason string   `json:"declined_reason,omitempty"`
+	DeclinedCodes  []string `json:"declined_codes,omitempty"`
 }
 
 func getDefaultDocumentVerificationRequest() VerificationRequest {
