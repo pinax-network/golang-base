@@ -31,6 +31,7 @@ const (
 	NOT_FOUND_GRANT              = "grant_not_found"              // the requested grant was not found
 	NOT_FOUND_GRANT_CATEGORY     = "grant_category_not_found"     // the requested grant category was not found
 	NOT_FOUND_GRANT_TRANSLATION  = "grant_translation_not_found"  // the requested grant translation was not found
+	NOT_FOUND_KYC_REQUIRED       = "kyc_not_required"             // kyc information has been requested but kyc is not required for the given user
 	NOT_FOUND_LANGUAGE           = "language_not_found"           // the requested language was not found
 	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"     // the given account name is not linked to an eosn id
 	NOT_FOUND_MATCHING_PARTNER   = "matching_partner_not_found"   // the requested matching partner was not found
@@ -48,6 +49,9 @@ const (
 
 	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"             // the given email already exists in the database
 	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"        // the given grant name already exists in the database
+	CONFLICT_KYC_ALREADY_APPROVED         = "kyc_already_approved"             // Kyc verification url has been requested but the user has already been approved kyc
+	CONFLICT_KYC_ALREADY_DECLINED         = "kyc_already_declined"             // Kyc verification url has been requested but the user has already been declined kyc
+	CONFLICT_KYC_ALREADY_RECEIVED         = "kyc_already_received"             // Kyc verification url has been requested but the user has gone though the kyc process (but no result available yet)
 	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"           // the given eos account is already linked to an eosn id
 	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"          // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
 	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"              // the maximum amount of accounts has already been linked
