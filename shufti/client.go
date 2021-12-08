@@ -35,6 +35,7 @@ func (c *Client) GetVerificationUrl(reference, email string) (string, error) {
 	requestData := getDefaultDocumentVerificationRequest()
 	requestData.Reference = reference
 	requestData.Email = email
+	requestData.Ttl = c.config.VerificationUrlTtl
 
 	if c.config.CallbackUrl != "" {
 		requestData.CallbackUrl = c.config.CallbackUrl
