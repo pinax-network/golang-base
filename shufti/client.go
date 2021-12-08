@@ -2,9 +2,12 @@ package shufti
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/helper"
+	"github.com/eosnationftw/eosn-base-api/log"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -32,6 +35,21 @@ func NewClient(config *Config) (*Client, error) {
 
 func (c *Client) GetVerificationUrlTtl() int {
 	return c.config.VerificationUrlTtl
+}
+
+func (c *Client) VerifySignatureHeader(signature, requestBody string) bool {
+
+	log.Debug("VerifySignatureHeader", zap.String("signature", signature), zap.String("requestBody", requestBody))
+
+	checksum := sha256.Sum256([]byte(requestBody + c.config.Secret))
+
+	log.Debug("calculated checksum", zap.String("checksum", fmt.Sprintf("%x", checksum)))
+
+	isValid := fmt.Sprintf("%x", checksum) == signature
+
+	log.Debug("is equal", zap.Bool("isValid", isValid))
+
+	return isValid
 }
 
 func (c *Client) GetVerificationUrl(reference, email string) (string, error) {

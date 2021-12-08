@@ -39,6 +39,9 @@ type VerificationResponse struct {
 	VerificationUrl string `json:"verification_url"`
 }
 
+type CallbackResponse struct {
+}
+
 func getDefaultDocumentVerificationRequest() VerificationRequest {
 	return VerificationRequest{
 		VerificationMode:  "any",
