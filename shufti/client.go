@@ -59,18 +59,16 @@ func (c *Client) VerifySignatureHeader(signature, requestBody string) bool {
 	return isValid
 }
 
-func (c *Client) GetVerificationUrl(reference, email string) (string, error) {
+func (c *Client) GetVerificationUrl(reference, email, redirectUrl string) (string, error) {
 
 	requestData := getDefaultDocumentVerificationRequest()
 	requestData.Reference = reference
 	requestData.Email = email
 	requestData.Ttl = c.config.VerificationUrlTtl
+	requestData.RedirectUrl = redirectUrl
 
 	if c.config.CallbackUrl != "" {
 		requestData.CallbackUrl = c.config.CallbackUrl
-	}
-	if c.config.RedirectUrl != "" {
-		requestData.RedirectUrl = c.config.RedirectUrl
 	}
 
 	requestBytes, err := json.Marshal(requestData)

@@ -54,7 +54,7 @@ func getDefaultDocumentVerificationRequest() VerificationRequest {
 		ShowPrivacyPolicy: "1",
 		ShowResults:       "1",
 		ShowConsent:       "1",
-		ShowFeedbackForm:  "1",
+		ShowFeedbackForm:  "0",
 		Document: DocumentVerification{
 			Proof:             "",
 			SupportedTypes:    []string{"id_card", "driving_license", "passport"},
