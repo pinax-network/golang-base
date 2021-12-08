@@ -14,7 +14,9 @@ type VerificationRequest struct {
 	ShowResults       string               `json:"show_results"`
 	ShowConsent       string               `json:"show_consent"`
 	ShowFeedbackForm  string               `json:"show_feedback_form"`
+	Ttl               int                  `json:"ttl"`
 	Document          DocumentVerification `json:"document"`
+	BackgroundChecks  string               `json:"background_checks"`
 }
 
 type DocumentVerification struct {
@@ -46,6 +48,7 @@ func getDefaultDocumentVerificationRequest() VerificationRequest {
 		ShowResults:       "1",
 		ShowConsent:       "1",
 		ShowFeedbackForm:  "1",
+		Ttl:               1440,
 		Document: DocumentVerification{
 			Proof:             "",
 			SupportedTypes:    []string{"id_card", "driving_license", "passport"},
@@ -58,5 +61,6 @@ func getDefaultDocumentVerificationRequest() VerificationRequest {
 			Gender:            "",
 			PlaceOfIssue:      "",
 		},
+		BackgroundChecks: "",
 	}
 }
