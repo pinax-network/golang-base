@@ -10,6 +10,7 @@ type VerificationRequest struct {
 	Language          string               `json:"language,omitempty"`
 	AllowOffline      string               `json:"allow_offline"`
 	AllowOnline       string               `json:"allow_online"`
+	AllowRetry        string               `json:"allow_retry"`
 	ShowPrivacyPolicy string               `json:"show_privacy_policy"`
 	ShowResults       string               `json:"show_results"`
 	ShowConsent       string               `json:"show_consent"`
@@ -51,6 +52,7 @@ func getDefaultDocumentVerificationRequest() VerificationRequest {
 		VerificationMode:  "any",
 		AllowOffline:      "1",
 		AllowOnline:       "1",
+		AllowRetry:        "1",
 		ShowPrivacyPolicy: "1",
 		ShowResults:       "1",
 		ShowConsent:       "1",
