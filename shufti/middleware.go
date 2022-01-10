@@ -5,11 +5,9 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/helper"
-	"github.com/eosnationftw/eosn-base-api/log"
 	"github.com/eosnationftw/eosn-base-api/response"
 	"github.com/friendsofgo/errors"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"io/ioutil"
 )
 
@@ -44,8 +42,6 @@ func (s *ShuftiAuthMiddleware) VerifySignature() gin.HandlerFunc {
 
 		// write back request body
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(rawBody))
-
-		log.Debug("Shufti signature verification", zap.String("signature", signature), zap.Bool("is_valid", s.verifySignatureHeader(signature, string(rawBody))))
 
 		if !s.verifySignatureHeader(signature, string(rawBody)) {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid signature given")
