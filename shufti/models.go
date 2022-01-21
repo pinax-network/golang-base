@@ -17,7 +17,6 @@ type VerificationRequest struct {
 	ShowFeedbackForm  string               `json:"show_feedback_form"`
 	Ttl               int                  `json:"ttl"`
 	Document          DocumentVerification `json:"document"`
-	BackgroundChecks  string               `json:"background_checks"`
 }
 
 type DocumentVerification struct {
@@ -69,6 +68,5 @@ func getDefaultDocumentVerificationRequest() VerificationRequest {
 			Gender:            "",
 			PlaceOfIssue:      "",
 		},
-		BackgroundChecks: "",
 	}
 }
