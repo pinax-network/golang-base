@@ -48,6 +48,7 @@ const (
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
 	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"             // the given email already exists in the database
+	CONFLICT_GRANT_ALREADY_APPLIED        = "grant_already_applied"            // the given grant has already applied to this matching round
 	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"        // the given grant name already exists in the database
 	CONFLICT_KYC_ALREADY_APPROVED         = "kyc_already_approved"             // Kyc verification url has been requested but the user has already been approved kyc
 	CONFLICT_KYC_ALREADY_DECLINED         = "kyc_already_declined"             // Kyc verification url has been requested but the user has already been declined kyc
