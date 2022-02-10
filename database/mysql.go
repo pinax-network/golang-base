@@ -2,9 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/friendsofgo/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"go.uber.org/zap"
@@ -38,7 +38,8 @@ type MysqlConnectionOptions struct {
 }
 
 var (
-	ErrNoHealthyConn = errors.New("no healthy mysql connection available")
+	ErrNoHealthyConn            = errors.New("no healthy mysql connection available")
+	ErrUnsupportedBalancingMode = errors.New("unsupported balancing mode given")
 )
 
 func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPool, err error) {
@@ -226,24 +227,35 @@ func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 
-	rand.Seed(time.Now().UnixNano())
-	randConn := rand.Intn(len(m.Connections))
+	switch m.Config.BalancingMode {
+	case Random:
+		rand.Seed(time.Now().UnixNano())
+		randConn := rand.Intn(len(m.Connections))
 
-	// check if random connection is active
-	if m.Connections[randConn].IsActive {
-		return m.Connections[randConn], nil
-	}
-
-	// cycle through all connections otherwise and find an active one
-	for _, db := range m.Connections {
-		if db.IsActive {
-			return db, nil
+		// check if random connection is active
+		if m.Connections[randConn].IsActive {
+			return m.Connections[randConn], nil
 		}
-	}
 
-	// could not find any healthy connection, report and return ErrNoHealthyConn
-	incNoHealthyConnError()
-	return nil, ErrNoHealthyConn
+		// if the random connection is not active we fall through here and get the first active one
+		fallthrough
+
+	case Ordered:
+
+		// get the first active connection and return it
+		for _, db := range m.Connections {
+			if db.IsActive {
+				return db, nil
+			}
+		}
+
+		// could not find any healthy connection, report and return ErrNoHealthyConn
+		incNoHealthyConnError()
+		return nil, ErrNoHealthyConn
+
+	default:
+		return nil, errors.WithMessage(ErrUnsupportedBalancingMode, string(m.Config.BalancingMode))
+	}
 }
 
 // MustBeginTx starts a database transaction or panics if an error occurs
