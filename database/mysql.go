@@ -39,7 +39,7 @@ type MysqlConnectionOptions struct {
 
 var (
 	ErrNoHealthyConn            = errors.New("no healthy mysql connection available")
-	ErrUnsupportedBalancingMode = errors.New("unsupported balancing mode given")
+	ErrUnsupportedBalancingMode = errors.New("unsupported balancing mode")
 )
 
 func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPool, err error) {
