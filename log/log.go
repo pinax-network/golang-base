@@ -31,7 +31,7 @@ func InitializeLogger(logDebug bool) error {
 		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		minLevel = zapcore.DebugLevel
 	} else {
-		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		minLevel = zapcore.InfoLevel
 	}
 
@@ -106,24 +106,48 @@ func Debug(message string, additionalFields ...zap.Field) {
 	Log(DEBUG, message, additionalFields...)
 }
 
+func Debugf(template string, args ...interface{}) {
+	SugaredLogger.Debugf(template, args)
+}
+
 func Info(message string, additionalFields ...zap.Field) {
 	Log(INFO, message, additionalFields...)
+}
+
+func Infof(template string, args ...interface{}) {
+	SugaredLogger.Infof(template, args)
 }
 
 func Warn(message string, additionalFields ...zap.Field) {
 	Log(WARNING, message, additionalFields...)
 }
 
+func Warnf(template string, args ...interface{}) {
+	SugaredLogger.Warnf(template, args)
+}
+
 func Error(message string, additionalFields ...zap.Field) {
 	Log(ERROR, message, additionalFields...)
+}
+
+func Errorf(template string, args ...interface{}) {
+	SugaredLogger.Errorf(template, args)
 }
 
 func Panic(message string, additionalFields ...zap.Field) {
 	Log(PANIC, message, additionalFields...)
 }
 
+func Panicf(template string, args ...interface{}) {
+	SugaredLogger.Panicf(template, args)
+}
+
 func Fatal(message string, additionalFields ...zap.Field) {
 	Log(FATAL, message, additionalFields...)
+}
+
+func Fatalf(template string, args ...interface{}) {
+	SugaredLogger.Fatalf(template, args)
 }
 
 func LogIfError(logLevel LogLevel, message string, err error, additionalFields ...zap.Field) bool {
