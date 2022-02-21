@@ -50,6 +50,7 @@ const (
 	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"             // the given email already exists in the database
 	CONFLICT_GRANT_ALREADY_APPLIED        = "grant_already_applied"            // the given grant has already applied to this matching round
 	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"        // the given grant name already exists in the database
+	CONFLICT_GRANT_NOT_PUBLISHED          = "grant_not_published"              // the given grant is not published yet
 	CONFLICT_KYC_ALREADY_APPROVED         = "kyc_already_approved"             // Kyc verification url has been requested but the user has already been approved kyc
 	CONFLICT_KYC_ALREADY_DECLINED         = "kyc_already_declined"             // Kyc verification url has been requested but the user has already been declined kyc
 	CONFLICT_KYC_ALREADY_RECEIVED         = "kyc_already_received"             // Kyc verification url has been requested but the user has gone though the kyc process (but no result available yet)
