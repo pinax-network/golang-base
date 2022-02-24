@@ -63,13 +63,13 @@ func MustExtractUserFromContext(c *gin.Context) *base_models.User {
 
 func ExtractFullAuth0IdFromContext(c *gin.Context) (auth0FullId string, err error) {
 
-	userInterface, exists := c.Get(base_global.CONTEXT_USER)
+	auth0IdInterface, exists := c.Get(base_global.CONTEXT_AUTH0_FULLID)
 	if !exists {
 		err = fmt.Errorf("failed to extract user from context, does not exist")
 		return
 	}
 
-	auth0FullId, ok := userInterface.(string)
+	auth0FullId, ok := auth0IdInterface.(string)
 	if !ok {
 		err = fmt.Errorf("failed to convert user context model")
 		return
