@@ -60,3 +60,30 @@ func MustExtractUserFromContext(c *gin.Context) *base_models.User {
 
 	return user
 }
+
+func ExtractFullAuth0IdFromContext(c *gin.Context) (auth0FullId string, err error) {
+
+	userInterface, exists := c.Get(base_global.CONTEXT_USER)
+	if !exists {
+		err = fmt.Errorf("failed to extract user from context, does not exist")
+		return
+	}
+
+	auth0FullId, ok := userInterface.(string)
+	if !ok {
+		err = fmt.Errorf("failed to convert user context model")
+		return
+	}
+
+	return
+}
+
+func MustExtractFullAuth0IdFromContext(c *gin.Context) (auth0FullId string) {
+
+	auth0FullId, err := ExtractFullAuth0IdFromContext(c)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
