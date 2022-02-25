@@ -47,24 +47,25 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
-	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"             // the given email already exists in the database
-	CONFLICT_GRANT_ALREADY_APPLIED        = "grant_already_applied"            // the given grant has already applied to this matching round
-	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"        // the given grant name already exists in the database
-	CONFLICT_GRANT_NOT_PUBLISHED          = "grant_not_published"              // the given grant is not published yet
-	CONFLICT_KYC_ALREADY_APPROVED         = "kyc_already_approved"             // Kyc verification url has been requested but the user has already been approved kyc
-	CONFLICT_KYC_ALREADY_DECLINED         = "kyc_already_declined"             // Kyc verification url has been requested but the user has already been declined kyc
-	CONFLICT_KYC_ALREADY_RECEIVED         = "kyc_already_received"             // Kyc verification url has been requested but the user has gone though the kyc process (but no result available yet)
-	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"           // the given eos account is already linked to an eosn id
-	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"          // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
-	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"              // the maximum amount of accounts has already been linked
-	CONFLICT_MAX_PENDING_GRANTS           = "max_pending_grants_reached"       // the maximum of pending grants is reached for this user
-	CONFLICT_MAX_TOTAL_GRANTS             = "max_total_grants_reached"         // the maximum amount of grants is reached for this user
-	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round"     // the grant is not in an active matching round
-	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"      // a user profile already exists for this user
-	CONFLICT_ROUND_ID_EXISTS              = "matching_round_id_already_exists" // a matching round with the given id already exists in the database
-	CONFLICT_SEASON_ID_EXISTS             = "season_id_already_exists"         // a season with the given id already exists in the database
-	CONFLICT_USERNAME_EXISTS              = "username_already_exists"          // the given username already exists in the database
-	CONFLICT_USER_EXISTS                  = "user_already_exists"              // a user with the given eosn id already exists in the database
+	CONFLICT_EMAIL_EXISTS                 = "email_already_exists"              // the given email already exists in the database
+	CONFLICT_GRANT_ALREADY_APPLIED        = "grant_already_applied"             // the given grant has already applied to this matching round
+	CONFLICT_GRANT_NAME_EXISTS            = "grant_name_already_exists"         // the given grant name already exists in the database
+	CONFLICT_GRANT_NOT_PUBLISHED          = "grant_not_published"               // the given grant is not published yet
+	CONFLICT_KYC_ALREADY_APPROVED         = "kyc_already_approved"              // Kyc verification url has been requested but the user has already been approved kyc
+	CONFLICT_KYC_ALREADY_DECLINED         = "kyc_already_declined"              // Kyc verification url has been requested but the user has already been declined kyc
+	CONFLICT_KYC_ALREADY_RECEIVED         = "kyc_already_received"              // Kyc verification url has been requested but the user has gone though the kyc process (but no result available yet)
+	CONFLICT_LINKED_ACCOUNT_EXISTS        = "account_already_linked"            // the given eos account is already linked to an eosn id
+	CONFLICT_LINKED_ACCOUNT_VERIFIED      = "linked_account_verified"           // the given linked account name cannot be deleted as it's already verified on chain (needs unlink transaction)
+	CONFLICT_MAX_ACCOUNTS_LINKED          = "max_accounts_linked"               // the maximum amount of accounts has already been linked
+	CONFLICT_MAX_PENDING_GRANTS           = "max_pending_grants_reached"        // the maximum of pending grants is reached for this user
+	CONFLICT_MAX_TOTAL_GRANTS             = "max_total_grants_reached"          // the maximum amount of grants is reached for this user
+	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND = "not_in_active_matching_round"      // the grant is not in an active matching round
+	CONFLICT_PROFILE_EXISTS               = "user_profile_already_exists"       // a user profile already exists for this user
+	CONFLICT_ROUND_ID_EXISTS              = "matching_round_id_already_exists"  // a matching round with the given id already exists in the database
+	CONFLICT_SEASON_ID_EXISTS             = "season_id_already_exists"          // a season with the given id already exists in the database
+	CONFLICT_SOCIAL_ALREADY_CONNECTED     = "social_provider_already_connected" // the user has already connected his account with the given social provider
+	CONFLICT_USERNAME_EXISTS              = "username_already_exists"           // the given username already exists in the database
+	CONFLICT_USER_EXISTS                  = "user_already_exists"               // a user with the given eosn id already exists in the database
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
