@@ -33,25 +33,25 @@ message Contribution {
 message UserData {
   string user_id = 1;                                 // the users eosn_id
   int32 round_id = 2;                                 // the id of the matching round this user data is valid for
-  float value = 3;                                    // total value of the users donations within the matching round (in USD)
-  float boost = 4;                                    // the total amount of boost of this user within the matching round
-  float multiplier = 5;                               // the users multiplier based on verified socials
+  double value = 3;                                    // total value of the users donations within the matching round (in USD)
+  double boost = 4;                                    // the total amount of boost of this user within the matching round
+  double multiplier = 5;                               // the users multiplier based on verified socials
   repeated UserGrantContributions contributions = 6;  // the list of total contributions per grant within the matching round
   google.protobuf.Timestamp updated_at = 7;           // updated_at timestamp of the database table
 }
 
 message UserGrantContributions {
   string grant_id = 1;  // the grant id which received the contributions
-  float value = 2;      // the total value of contributions this grant has received from the user in the matching round (in USD)
+  double value = 2;      // the total value of contributions this grant has received from the user in the matching round (in USD)
 }
 
 message GrantData {
   string grant_id = 1;                        // the grant id
   int32 round_id = 2;                         // the id of the matching round this grant data is valid for
-  float square = 3;
-  float sum_boost = 4;
-  float sum_sqrt = 5;
-  float sum_value = 6;
+  double square = 3;
+  double sum_boost = 4;
+  double sum_sqrt = 5;
+  double sum_value = 6;
   int32 total_users = 7;
   google.protobuf.Timestamp updated_at = 8;   // updated_at timestamp of the database table
 }
@@ -59,10 +59,10 @@ message GrantData {
 message RoundData {
   int32 round_id = 1;                         // the id of the matching round this grant data is valid for
   int32 season_id = 2;
-  float sum_boost = 3;
-  float sum_square = 4;
-  float sum_value = 5;
-  float match_value = 6;
+  double sum_boost = 3;
+  double sum_square = 4;
+  double sum_value = 5;
+  double match_value = 6;
   repeated string grant_ids = 7;
   repeated string user_ids = 8;
   repeated TokenData donated_tokens = 9;
@@ -84,11 +84,12 @@ message TransferData {
   string to = 6;
   string memo = 7;
   string fee = 8;
-  float value = 9;
-  int32 transfer_id = 10;
-  string trx_id = 11;
-  string user_id = 12;
-  google.protobuf.Timestamp created_at = 13;
+  double value = 9;
+  TokenData ext_quantity = 10;
+  int32 transfer_id = 11;
+  bytes trx_id = 12;
+  string user_id = 13;
+  google.protobuf.Timestamp created_at = 14;
 }
 
 
