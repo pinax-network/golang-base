@@ -13,15 +13,15 @@ const (
 	AddContactsEndpoint = "/v3/marketing/contacts"
 )
 
-type SendgridClient struct {
+type Client struct {
 	config Config
 }
 
-func NewSendgridClient(config *Config) *SendgridClient {
-	return &SendgridClient{config: *config}
+func NewClient(config *Config) *Client {
+	return &Client{config: *config}
 }
 
-func (s *SendgridClient) AddContacts(ctx context.Context, contacts []Contact) (*ImportContactsResponse, error) {
+func (s *Client) AddContacts(ctx context.Context, contacts []Contact) (*ImportContactsResponse, error) {
 
 	req := sendgrid.GetRequest(s.config.ApiKey, AddContactsEndpoint, s.config.Host)
 	req.Method = http.MethodPut
@@ -45,7 +45,7 @@ func (s *SendgridClient) AddContacts(ctx context.Context, contacts []Contact) (*
 	return result, nil
 }
 
-func (s *SendgridClient) makeRequest(ctx context.Context, endpoint string, request rest.Request, response interface{}) error {
+func (s *Client) makeRequest(ctx context.Context, endpoint string, request rest.Request, response interface{}) error {
 
 	res, err := sendgrid.MakeRequestWithContext(ctx, request)
 	if err != nil {
