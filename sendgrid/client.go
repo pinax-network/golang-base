@@ -36,13 +36,13 @@ func (s *Client) AddContacts(ctx context.Context, contacts []Contact) (*ImportCo
 
 	req.Body = requestData
 
-	var result *ImportContactsResponse
-	err = s.makeRequest(ctx, AddContactsEndpoint, req, result)
+	var result ImportContactsResponse
+	err = s.makeRequest(ctx, AddContactsEndpoint, req, &result)
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func (s *Client) makeRequest(ctx context.Context, endpoint string, request rest.Request, response interface{}) error {
