@@ -66,6 +66,7 @@ const (
 	CONFLICT_PROFILE_EXISTS                = "user_profile_already_exists"       // a user profile already exists for this user
 	CONFLICT_ROUND_ID_EXISTS               = "matching_round_id_already_exists"  // a matching round with the given id already exists in the database
 	CONFLICT_SEASON_ID_EXISTS              = "season_id_already_exists"          // a season with the given id already exists in the database
+	CONFLICT_SUBMISSIONS_NOT_OPEN          = "submissions_not_open"              // a grant has tried to apply to a matching round outside the submission range
 	CONFLICT_SOCIAL_ALREADY_CONNECTED      = "social_provider_already_connected" // the user has already connected his account with the given social provider
 	CONFLICT_USERNAME_EXISTS               = "username_already_exists"           // the given username already exists in the database
 	CONFLICT_USER_EXISTS                   = "user_already_exists"               // a user with the given eosn id already exists in the database
