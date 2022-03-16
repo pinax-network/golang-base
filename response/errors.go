@@ -34,6 +34,7 @@ const (
 	NOT_FOUND_KYC_REQUIRED       = "kyc_not_required"             // kyc information has been requested but kyc is not required for the given user
 	NOT_FOUND_LANGUAGE           = "language_not_found"           // the requested language was not found
 	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"     // the given account name is not linked to an eosn id
+	NOT_FOUND_LINKED_SOCIAL      = "linked_social_not_found"      // the user tried to unlink a social that hasn't been linked before
 	NOT_FOUND_MATCHING_PARTNER   = "matching_partner_not_found"   // the requested matching partner was not found
 	NOT_FOUND_MATCHING_ROUND     = "matching_round_not_found"     // the requested matching round was not found
 	NOT_FOUND_PORT_ACCOUNT       = "port_account_not_found"       // there has been no port verification found for the authenticated eosn_id
