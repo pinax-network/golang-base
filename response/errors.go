@@ -49,6 +49,7 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
+	CONFLICT_CANNOT_UNLINK_MAIN_SOCIAL     = "cannot_unlink_main_social"         // the user tried to unlink the social provider he has used to create the account
 	CONFLICT_EMAIL_EXISTS                  = "email_already_exists"              // the given email already exists in the database
 	CONFLICT_GRANT_ALREADY_APPLIED         = "grant_already_applied"             // the given grant has already applied to this matching round
 	CONFLICT_GRANT_NAME_EXISTS             = "grant_name_already_exists"         // the given grant name already exists in the database
