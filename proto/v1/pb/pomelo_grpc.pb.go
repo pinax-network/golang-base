@@ -22,6 +22,7 @@ type PomeloInternalServiceClient interface {
 	GetLastTraidingPair(ctx context.Context, in *GetLastTradingPairRequest, opts ...grpc.CallOption) (*TraidingPair, error)
 	AddTraidingPair(ctx context.Context, in *TraidingPair, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddContribution(ctx context.Context, in *Contribution, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdateMatching(ctx context.Context, in *MatchingData, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type pomeloInternalServiceClient struct {
@@ -59,6 +60,15 @@ func (c *pomeloInternalServiceClient) AddContribution(ctx context.Context, in *C
 	return out, nil
 }
 
+func (c *pomeloInternalServiceClient) UpdateMatching(ctx context.Context, in *MatchingData, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.PomeloInternalService/UpdateMatching", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PomeloInternalServiceServer is the server API for PomeloInternalService service.
 // All implementations must embed UnimplementedPomeloInternalServiceServer
 // for forward compatibility
@@ -66,6 +76,7 @@ type PomeloInternalServiceServer interface {
 	GetLastTraidingPair(context.Context, *GetLastTradingPairRequest) (*TraidingPair, error)
 	AddTraidingPair(context.Context, *TraidingPair) (*emptypb.Empty, error)
 	AddContribution(context.Context, *Contribution) (*emptypb.Empty, error)
+	UpdateMatching(context.Context, *MatchingData) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPomeloInternalServiceServer()
 }
 
@@ -81,6 +92,9 @@ func (UnimplementedPomeloInternalServiceServer) AddTraidingPair(context.Context,
 }
 func (UnimplementedPomeloInternalServiceServer) AddContribution(context.Context, *Contribution) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddContribution not implemented")
+}
+func (UnimplementedPomeloInternalServiceServer) UpdateMatching(context.Context, *MatchingData) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMatching not implemented")
 }
 func (UnimplementedPomeloInternalServiceServer) mustEmbedUnimplementedPomeloInternalServiceServer() {}
 
@@ -149,6 +163,24 @@ func _PomeloInternalService_AddContribution_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PomeloInternalService_UpdateMatching_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MatchingData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PomeloInternalServiceServer).UpdateMatching(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/eosn.protobuf.v1.PomeloInternalService/UpdateMatching",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PomeloInternalServiceServer).UpdateMatching(ctx, req.(*MatchingData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PomeloInternalService_ServiceDesc is the grpc.ServiceDesc for PomeloInternalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -167,6 +199,10 @@ var PomeloInternalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddContribution",
 			Handler:    _PomeloInternalService_AddContribution_Handler,
+		},
+		{
+			MethodName: "UpdateMatching",
+			Handler:    _PomeloInternalService_UpdateMatching_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

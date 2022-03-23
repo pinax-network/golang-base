@@ -24,10 +24,14 @@ message TraidingPair {
 
 message Contribution {
   Transaction transaction = 1;
-  UserData user_data = 2;
-  GrantData grant_data = 3;
-  RoundData round_data = 4;
   TransferData transfer_data = 5;
+}
+
+message MatchingData {
+  int32 matching_round_id = 1;
+  UserData user_data = 2;
+  repeated GrantData grant_data = 3;
+  RoundData round_data = 4;
 }
 
 message UserData {
@@ -105,4 +109,5 @@ service PomeloInternalService {
   rpc GetLastTraidingPair(GetLastTradingPairRequest) returns (TraidingPair) {};
   rpc AddTraidingPair(TraidingPair) returns (google.protobuf.Empty) {};
   rpc AddContribution(Contribution) returns (google.protobuf.Empty) {};
+  rpc UpdateMatching(MatchingData) returns (google.protobuf.Empty) {};
 }
