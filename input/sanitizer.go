@@ -68,3 +68,15 @@ func SanitizeNullString(input null.String, options SanitizeOptions) null.String 
 
 	return null.StringFrom(SanitizeString(input.String, options))
 }
+
+// SanitizeStringSlice provides the functionality of SanitizeString for the string slices.
+func SanitizeStringSlice(input []string, options SanitizeOptions) []string {
+
+	res := make([]string, len(input))
+
+	for i, str := range input {
+		res[i] = SanitizeString(str, options)
+	}
+
+	return res
+}

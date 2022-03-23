@@ -34,6 +34,7 @@ const (
 	NOT_FOUND_KYC_REQUIRED       = "kyc_not_required"             // kyc information has been requested but kyc is not required for the given user
 	NOT_FOUND_LANGUAGE           = "language_not_found"           // the requested language was not found
 	NOT_FOUND_LINKED_ACCOUNT     = "linked_account_not_found"     // the given account name is not linked to an eosn id
+	NOT_FOUND_LINKED_SOCIAL      = "linked_social_not_found"      // the user tried to unlink a social that hasn't been linked before
 	NOT_FOUND_MATCHING_PARTNER   = "matching_partner_not_found"   // the requested matching partner was not found
 	NOT_FOUND_MATCHING_ROUND     = "matching_round_not_found"     // the requested matching round was not found
 	NOT_FOUND_PORT_ACCOUNT       = "port_account_not_found"       // there has been no port verification found for the authenticated eosn_id
@@ -48,6 +49,7 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
+	CONFLICT_CANNOT_UNLINK_MAIN_SOCIAL     = "cannot_unlink_main_social"         // the user tried to unlink the social provider he has used to create the account
 	CONFLICT_EMAIL_EXISTS                  = "email_already_exists"              // the given email already exists in the database
 	CONFLICT_GRANT_ALREADY_APPLIED         = "grant_already_applied"             // the given grant has already applied to this matching round
 	CONFLICT_GRANT_NAME_EXISTS             = "grant_name_already_exists"         // the given grant name already exists in the database
