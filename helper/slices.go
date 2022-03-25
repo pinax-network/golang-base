@@ -51,3 +51,39 @@ func IntegerToInterfaceSlice(input []int) []interface{} {
 
 	return slice
 }
+
+func ToAnySlice[T any](input []T) []any {
+
+	slice := make([]any, len(input))
+	for index, num := range input {
+		slice[index] = num
+	}
+
+	return slice
+}
+
+func SliceContains[T comparable](haystack []T, needle T) bool {
+
+	if haystack == nil || len(haystack) == 0 {
+		return false
+	}
+
+	for _, c := range haystack {
+		if c == needle {
+			return true
+		}
+	}
+
+	return false
+}
+
+func EliminateDuplicates[T comparable](input []T) (result []T) {
+
+	for _, e := range input {
+		if !SliceContains(result, e) {
+			result = append(result, e)
+		}
+	}
+
+	return
+}
