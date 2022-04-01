@@ -87,3 +87,14 @@ func EliminateDuplicates[T comparable](input []T) (result []T) {
 
 	return
 }
+
+func RemoveElement[T comparable](input []T, removeElement T) (result []T) {
+
+	for _, e := range input {
+		if e != removeElement {
+			result = append(result, e)
+		}
+	}
+
+	return
+}
