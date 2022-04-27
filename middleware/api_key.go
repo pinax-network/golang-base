@@ -13,7 +13,7 @@ type ApiKeyMiddleware struct {
 	apiKeyHeader string
 }
 
-func NewApiKeyMiddleware(apiKey, apiKeyHeader string) (*ApiKeyMiddleware, error) {
+func NewApiKeyMiddleware(apiKeyHeader, apiKey string) (*ApiKeyMiddleware, error) {
 
 	if apiKey == "" || len(apiKey) < 16 {
 		return nil, errors.New("invalid or empty api key given")
