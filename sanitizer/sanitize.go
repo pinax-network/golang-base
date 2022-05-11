@@ -39,6 +39,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 		log.Info("call sanitizer")
 		log.Info("current field",
 			zap.Any("name", source.FieldType.Name),
+			zap.Any("type", source.FieldType.Type),
 			zap.Any("value", source.FieldValue.String()),
 		)
 
@@ -46,22 +47,49 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 
 	case reflect.Struct:
 		for i := 0; i < source.FieldValue.NumField(); i += 1 {
-
-			varName := source.FieldValue.Type().Field(i).Name
-			varType := source.FieldValue.Type().Field(i).Type
-			varValue := source.FieldValue.Field(i).Interface()
-
-			log.Info("struct field",
-				zap.Any("varName", varName),
-				zap.Any("varType", varType),
-				zap.Any("varValue", varValue),
-			)
-
 			embeddedTypeValue := TypeValue{
 				FieldType:  source.FieldValue.Type().Field(i),
 				FieldValue: source.FieldValue.Field(i),
 			}
 			sanitize(embeddedTypeValue, target.Field(i), sanitizer)
 		}
+
+	case reflect.Pointer:
+		sourceValue := source.FieldValue.Elem()
+
+		// Check if the pointer is nil
+		if !sourceValue.IsValid() {
+			return
+		}
+		// Allocate a new object and set the pointer to it
+		target.Set(reflect.New(sourceValue.Type()))
+
+		sourceType := source.FieldType
+		sourceType.Type = sourceValue.Type()
+
+		extractedTypeValue := TypeValue{
+			FieldType:  sourceType,
+			FieldValue: sourceValue,
+		}
+
+		sanitize(extractedTypeValue, target.Elem(), sanitizer)
+
+	case reflect.Interface:
+		sourceValue := source.FieldValue.Elem()
+
+		// Create a new object. Now new gives us a pointer, but we want the value it
+		// points to, so we have to call Elem() to unwrap it
+		targetValue := reflect.New(sourceValue.Type()).Elem()
+
+		sourceType := source.FieldType
+		sourceType.Type = sourceValue.Type()
+
+		extractedTypeValue := TypeValue{
+			FieldType:  sourceType,
+			FieldValue: sourceValue,
+		}
+
+		sanitize(extractedTypeValue, targetValue, sanitizer)
+		target.Set(targetValue)
 	}
 }

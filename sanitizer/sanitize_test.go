@@ -10,22 +10,35 @@ type LogSanitizer struct {
 	t *testing.T
 }
 
+type TestSanitizer struct{}
+
 func (l LogSanitizer) SanitizeString(fieldName, fieldValue string) string {
 	log.Info("call SanitizeString()", zap.String("fieldName", fieldName), zap.String("fieldValue", fieldValue))
 
 	return fieldValue
 }
 
+func (t TestSanitizer) SanitizeString(fieldName, fieldValue string) string {
+	return fieldValue + "_sanitized"
+}
+
 type TestStruct struct {
-	SomeField string
+	StringField    string
+	StringFieldPtr *string
 }
 
 func TestSum(t *testing.T) {
 
 	_ = log.InitializeLogger(true)
 
-	logSanitizer := LogSanitizer{}
-	testSource := TestStruct{SomeField: "test"}
+	logSanitizer := TestSanitizer{}
+
+	testStringPtr := "test_string_pointer"
+
+	testSource := TestStruct{
+		StringField:    "test_string_field",
+		StringFieldPtr: &testStringPtr,
+	}
 
 	res := SanitizeInput(testSource, logSanitizer)
 
