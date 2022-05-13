@@ -1,6 +1,7 @@
 package sanitizer
 
 import (
+	"github.com/bmizerany/assert"
 	"github.com/eosnationftw/eosn-base-api/log"
 	"go.uber.org/zap"
 	"testing"
@@ -22,25 +23,115 @@ func (t TestSanitizer) SanitizeString(fieldName, fieldValue string) string {
 	return fieldValue + "_sanitized"
 }
 
-type TestStruct struct {
-	StringField    string
-	StringFieldPtr *string
-}
+func TestStringField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
 
-func TestSum(t *testing.T) {
-
-	_ = log.InitializeLogger(true)
-
-	logSanitizer := TestSanitizer{}
-
-	testStringPtr := "test_string_pointer"
-
-	testSource := TestStruct{
-		StringField:    "test_string_field",
-		StringFieldPtr: &testStringPtr,
+	testField := "test_field"
+	testStruct := struct {
+		TestField string
+	}{
+		TestField: testField,
 	}
 
-	res := SanitizeInput(testSource, logSanitizer)
+	res := SanitizeInput(testStruct, testSanitizer)
+	testStruct.TestField = testSanitizer.SanitizeString("", testField)
+	assert.Equal(t, testStruct, res)
+}
 
-	log.Info("result", zap.Any("res", res))
+func TestStringPtrField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testField := "test_field"
+	testStruct := struct {
+		TestField *string
+	}{
+		TestField: &testField,
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+	sanitizedField := testSanitizer.SanitizeString("", testField)
+	testStruct.TestField = &sanitizedField
+	assert.Equal(t, testStruct, res)
+}
+
+func TestStringSliceField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testStruct := struct {
+		TestField []string
+	}{
+		TestField: []string{"test_entry_1", "test_entry_2", "test_entry_3"},
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+
+	for i, f := range testStruct.TestField {
+		testStruct.TestField[i] = testSanitizer.SanitizeString("", f)
+	}
+
+	assert.Equal(t, testStruct, res)
+}
+
+func TestStringPtrSliceField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testString1 := "test_entry_1"
+	testString2 := "test_entry_2"
+	testString3 := "test_entry_3"
+
+	testStruct := struct {
+		TestField []*string
+	}{
+		TestField: []*string{&testString1, &testString2, &testString3},
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+
+	for i, f := range testStruct.TestField {
+		sanitizedString := testSanitizer.SanitizeString("", *f)
+		testStruct.TestField[i] = &sanitizedString
+	}
+
+	assert.Equal(t, testStruct, res)
+}
+
+func TestStringSlicePtrField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testStruct := struct {
+		TestField *[]string
+	}{
+		TestField: &[]string{"test_entry_1", "test_entry_2", "test_entry_3"},
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+
+	for i, f := range *testStruct.TestField {
+		(*testStruct.TestField)[i] = testSanitizer.SanitizeString("", f)
+	}
+
+	assert.Equal(t, testStruct, res)
+}
+
+func TestStringPtrSlicePtrField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testString1 := "test_entry_1"
+	testString2 := "test_entry_2"
+	testString3 := "test_entry_3"
+
+	testStruct := struct {
+		TestField *[]*string
+	}{
+		TestField: &[]*string{&testString1, &testString2, &testString3},
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+
+	for i, f := range *testStruct.TestField {
+		sanitizedString := testSanitizer.SanitizeString("", *f)
+		(*testStruct.TestField)[i] = &sanitizedString
+	}
+
+	assert.Equal(t, testStruct, res)
 }

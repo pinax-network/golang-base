@@ -1,8 +1,6 @@
 package sanitizer
 
 import (
-	"github.com/eosnationftw/eosn-base-api/log"
-	"go.uber.org/zap"
 	"reflect"
 )
 
@@ -11,12 +9,13 @@ type Sanitizer interface {
 }
 
 type TypeValue struct {
-	FieldType   reflect.StructField
-	StructField reflect.StructField
-	FieldValue  reflect.Value
+	FieldType  reflect.StructField
+	FieldValue reflect.Value
 }
 
 func SanitizeInput(source any, sanitizer Sanitizer) any {
+
+	// todo test that source is a struct
 
 	sourceRef := TypeValue{
 		FieldType:  reflect.TypeOf(source).Field(0),
@@ -36,12 +35,11 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 	switch source.FieldValue.Kind() {
 
 	case reflect.String:
-		log.Info("call sanitizer")
-		log.Info("current field",
-			zap.Any("name", source.FieldType.Name),
-			zap.Any("type", source.FieldType.Type),
-			zap.Any("value", source.FieldValue.String()),
-		)
+		//log.Info("current field",
+		//	zap.Any("name", source.FieldType.Name),
+		//	zap.Any("type", source.FieldType.Type),
+		//	zap.Any("value", source.FieldValue.String()),
+		//)
 
 		target.SetString(sanitizer.SanitizeString(source.FieldType.Name, source.FieldValue.String()))
 
@@ -91,5 +89,43 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 
 		sanitize(extractedTypeValue, targetValue, sanitizer)
 		target.Set(targetValue)
+
+	case reflect.Slice:
+		target.Set(reflect.MakeSlice(source.FieldType.Type, source.FieldValue.Len(), source.FieldValue.Cap()))
+		for i := 0; i < source.FieldValue.Len(); i += 1 {
+
+			elementValue := source.FieldValue.Index(i)
+			elementType := source.FieldType
+			elementType.Type = elementValue.Type()
+
+			elementTypeValue := TypeValue{
+				FieldType:  elementType,
+				FieldValue: elementValue,
+			}
+
+			sanitize(elementTypeValue, target.Index(i), sanitizer)
+		}
+
+	case reflect.Map:
+		target.Set(reflect.MakeMap(source.FieldType.Type))
+		for _, key := range source.FieldValue.MapKeys() {
+			elementValue := source.FieldValue.MapIndex(key)
+			// New gives us a pointer, but again we want the value
+			targetValue := reflect.New(elementValue.Type()).Elem()
+
+			elementType := source.FieldType
+			elementType.Type = elementValue.Type()
+
+			elementTypeValue := TypeValue{
+				FieldType:  elementType,
+				FieldValue: elementValue,
+			}
+
+			sanitize(elementTypeValue, targetValue, sanitizer)
+			target.SetMapIndex(key, targetValue)
+		}
+
+	default:
+		target.Set(source.FieldValue)
 	}
 }
