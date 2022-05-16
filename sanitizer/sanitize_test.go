@@ -160,5 +160,23 @@ func TestMapField(t *testing.T) {
 		testStruct.TestMap[i] = sanitizedString
 	}
 
-	assert.Equal(t, "testStruct", res)
+	assert.Equal(t, testStruct, res)
+}
+
+type StringType string
+
+func TestStringTypeField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	var testField StringType
+	testField = "test_field"
+	testStruct := struct {
+		TestField StringType
+	}{
+		TestField: testField,
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+	testStruct.TestField = StringType(testSanitizer.SanitizeString("", string(testField)))
+	assert.Equal(t, testStruct, res)
 }
