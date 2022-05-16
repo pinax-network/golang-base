@@ -135,3 +135,30 @@ func TestStringPtrSlicePtrField(t *testing.T) {
 
 	assert.Equal(t, testStruct, res)
 }
+
+func TestMapField(t *testing.T) {
+	testSanitizer := TestSanitizer{}
+
+	testString1 := "test_entry_1"
+	testString2 := "test_entry_2"
+	testString3 := "test_entry_3"
+
+	testStruct := struct {
+		TestMap map[string]string
+	}{
+		TestMap: map[string]string{
+			"field1": testString1,
+			"field2": testString2,
+			"field3": testString3,
+		},
+	}
+
+	res := SanitizeInput(testStruct, testSanitizer)
+
+	for i, f := range testStruct.TestMap {
+		sanitizedString := testSanitizer.SanitizeString("", f)
+		testStruct.TestMap[i] = sanitizedString
+	}
+
+	assert.Equal(t, "testStruct", res)
+}
