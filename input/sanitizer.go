@@ -35,7 +35,7 @@ func GetDefaultHtmlOptions() SanitizeOptions {
 }
 
 // SanitizeString will apply a html sanitization on the given string. If strict is set to true all html tags will be
-// removed (bluemonday.StrictPolicy() will be applied). Otherwise it will only remove html tags and attributes that are
+// removed (bluemonday.StrictPolicy() will be applied). Otherwise, it will only remove html tags and attributes that are
 // deemed dangerous (bluemonday.UGCPolicy() will be applied).
 func SanitizeString(input string, options SanitizeOptions) string {
 
