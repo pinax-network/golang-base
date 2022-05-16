@@ -13,9 +13,13 @@ type TypeValue struct {
 	FieldValue reflect.Value
 }
 
-func SanitizeInput(source any, sanitizer Sanitizer) any {
+func SanitizeInput[T any](source T, sanitizer Sanitizer) T {
 
-	// todo test that source is a struct
+	if reflect.TypeOf(source).Kind() != reflect.Struct {
+		panic("input must be a struct")
+	}
+
+	// todo allow pointers to struct as well?
 
 	sourceRef := TypeValue{
 		FieldType:  reflect.TypeOf(source).Field(0),
@@ -27,7 +31,7 @@ func SanitizeInput(source any, sanitizer Sanitizer) any {
 
 	sanitize(sourceRef, sourceCopy, sanitizer)
 
-	return sourceCopy.Interface()
+	return sourceCopy.Interface().(T)
 }
 
 func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
@@ -35,12 +39,6 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 	switch source.FieldValue.Kind() {
 
 	case reflect.String:
-		//log.Info("current field",
-		//	zap.Any("name", source.FieldType.Name),
-		//	zap.Any("type", source.FieldType.Type),
-		//	zap.Any("value", source.FieldValue.String()),
-		//)
-
 		target.SetString(sanitizer.SanitizeString(source.FieldType.Name, source.FieldValue.String()))
 
 	case reflect.Struct:
