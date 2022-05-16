@@ -13,25 +13,27 @@ type TypeValue struct {
 	FieldValue reflect.Value
 }
 
+// SanitizeInput traverses any arbitary struct, applies the given sanitizer on all fields of type string and returns a
+// deep copy of the given struct with it's fields sanitized.
+// Note: this method panics if the given source is not a struct.
 func SanitizeInput[T any](source T, sanitizer Sanitizer) T {
 
-	if reflect.TypeOf(source).Kind() != reflect.Struct {
-		panic("input must be a struct")
+	if reflect.TypeOf(source).Kind() == reflect.Struct {
+
+		sourceRef := TypeValue{
+			FieldType:  reflect.TypeOf(source).Field(0),
+			FieldValue: reflect.ValueOf(source),
+		}
+
+		sourceValue := reflect.ValueOf(source)
+		sourceCopy := reflect.New(sourceValue.Type()).Elem()
+
+		sanitize(sourceRef, sourceCopy, sanitizer)
+
+		return sourceCopy.Interface().(T)
 	}
 
-	// todo allow pointers to struct as well?
-
-	sourceRef := TypeValue{
-		FieldType:  reflect.TypeOf(source).Field(0),
-		FieldValue: reflect.ValueOf(source),
-	}
-
-	sourceValue := reflect.ValueOf(source)
-	sourceCopy := reflect.New(sourceValue.Type()).Elem()
-
-	sanitize(sourceRef, sourceCopy, sanitizer)
-
-	return sourceCopy.Interface().(T)
+	panic("invalid type given, needs to be a struct")
 }
 
 func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
