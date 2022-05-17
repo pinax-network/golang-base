@@ -26,6 +26,7 @@ const (
 	FORBIDDEN = "forbidden" // not allowed to access this endpoint
 
 	NOT_FOUND_ABUSE_REPORT            = "abuse_report_not_found"            // the requested abuse report was not found
+	NOT_FOUND_BOUNTY                  = "bounty_not_found"                  // the requested bounty was not found
 	NOT_FOUND_BOUNTY_CATEGORY         = "bounty_category_not_found"         // the requested bounty category was not found
 	NOT_FOUND_BOUNTY_SKILL            = "bounty_skill_not_found"            // the requested bounty skill was not found
 	NOT_FOUND_BOUNTY_EXPERIENCE_LEVEL = "bounty_experience_level_not_found" // the requested bounty experience level was not found
