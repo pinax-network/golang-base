@@ -73,6 +73,7 @@ const (
 	CONFLICT_PORT_ATTESTATION_INSUFFICIENT = "port_attestation_insufficient"     // a port verification has been found but the attestation level is insufficient
 	CONFLICT_PROFILE_EXISTS                = "user_profile_already_exists"       // a user profile already exists for this user
 	CONFLICT_ROUND_ID_EXISTS               = "matching_round_id_already_exists"  // a matching round with the given id already exists in the database
+	CONFLICT_REWARD_IMMUTABLE              = "reward_immutable"                  // the bounty reward cannot be changed anymore
 	CONFLICT_SEASON_ID_EXISTS              = "season_id_already_exists"          // a season with the given id already exists in the database
 	CONFLICT_SUBMISSIONS_NOT_OPEN          = "submissions_not_open"              // a grant has tried to apply to a matching round outside the submission range
 	CONFLICT_SOCIAL_ALREADY_CONNECTED      = "social_provider_already_connected" // the user has already connected his account with the given social provider
