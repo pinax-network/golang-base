@@ -80,6 +80,7 @@ const (
 	CONFLICT_SOCIAL_ALREADY_CONNECTED      = "social_provider_already_connected" // the user has already connected his account with the given social provider
 	CONFLICT_USERNAME_EXISTS               = "username_already_exists"           // the given username already exists in the database
 	CONFLICT_USER_EXISTS                   = "user_already_exists"               // a user with the given eosn id already exists in the database
+	CONFLICT_USER_HAS_OPEN_GRANTS          = "user_has_open_grants"              // the action cannot be performed on the user as he has pending or published grants
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
