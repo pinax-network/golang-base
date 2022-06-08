@@ -53,6 +53,7 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
+	CONFLICT_ACCOUNT_DEACTIVATED           = "account_deactivated"               // the given account has been deactivated
 	CONFLICT_BOUNTY_NAME_EXISTS            = "bounty_name_already_exists"        // the given bounty name has already been used
 	CONFLICT_CANNOT_UNLINK_MAIN_SOCIAL     = "cannot_unlink_main_social"         // the user tried to unlink the social provider he has used to create the account
 	CONFLICT_EMAIL_EXISTS                  = "email_already_exists"              // the given email already exists in the database
