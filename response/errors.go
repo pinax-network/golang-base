@@ -53,6 +53,7 @@ const (
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
+	CONFLICT_ACCOUNT_DEACTIVATED           = "account_deactivated"               // the given account has been deactivated
 	CONFLICT_BOUNTY_NAME_EXISTS            = "bounty_name_already_exists"        // the given bounty name has already been used
 	CONFLICT_CANNOT_UNLINK_MAIN_SOCIAL     = "cannot_unlink_main_social"         // the user tried to unlink the social provider he has used to create the account
 	CONFLICT_EMAIL_EXISTS                  = "email_already_exists"              // the given email already exists in the database
@@ -79,6 +80,7 @@ const (
 	CONFLICT_SOCIAL_ALREADY_CONNECTED      = "social_provider_already_connected" // the user has already connected his account with the given social provider
 	CONFLICT_USERNAME_EXISTS               = "username_already_exists"           // the given username already exists in the database
 	CONFLICT_USER_EXISTS                   = "user_already_exists"               // a user with the given eosn id already exists in the database
+	CONFLICT_USER_HAS_OPEN_GRANTS          = "user_has_open_grants"              // the action cannot be performed on the user as he has pending or published grants
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
