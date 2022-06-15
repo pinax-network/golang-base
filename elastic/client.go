@@ -3,8 +3,8 @@ package elastic
 import (
 	"context"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esutil"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esutil"
 	"github.com/eosnationftw/eosn-base-api/log"
 	"github.com/friendsofgo/errors"
 	"go.uber.org/zap"
