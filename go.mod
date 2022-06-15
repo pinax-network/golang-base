@@ -6,7 +6,7 @@ require (
 	github.com/Depado/ginprom v1.7.4
 	github.com/auth0/go-jwt-middleware v1.0.1
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-	github.com/elastic/go-elasticsearch/v7 v7.17.1
+	github.com/elastic/go-elasticsearch/v8 v8.2.0
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gabriel-vasile/mimetype v1.4.0
@@ -44,6 +44,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.1.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
