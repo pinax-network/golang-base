@@ -2,22 +2,10 @@ package sanitizer
 
 import (
 	"github.com/bmizerany/assert"
-	"github.com/eosnationftw/eosn-base-api/log"
-	"go.uber.org/zap"
 	"testing"
 )
 
-type LogSanitizer struct {
-	t *testing.T
-}
-
 type TestSanitizer struct{}
-
-func (l LogSanitizer) SanitizeString(fieldName, fieldValue string) string {
-	log.Info("call SanitizeString()", zap.String("fieldName", fieldName), zap.String("fieldValue", fieldValue))
-
-	return fieldValue
-}
 
 func (t TestSanitizer) SanitizeString(fieldName, fieldValue string) string {
 	return fieldValue + "_sanitized"
