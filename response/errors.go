@@ -60,6 +60,7 @@ const (
 	CONFLICT_GRANT_ALREADY_APPLIED         = "grant_already_applied"             // the given grant has already applied to this matching round
 	CONFLICT_GRANT_NAME_EXISTS             = "grant_name_already_exists"         // the given grant name already exists in the database
 	CONFLICT_GRANT_NOT_PUBLISHED           = "grant_not_published"               // the given grant is not published yet
+	CONFLICT_INVALID_GRANT_STATE           = "invalid_grant_state"               // the grant state doesn't allow the requested action
 	CONFLICT_KYC_ALREADY_APPROVED          = "kyc_already_approved"              // Kyc verification url has been requested but the user has already been approved kyc
 	CONFLICT_KYC_ALREADY_DECLINED          = "kyc_already_declined"              // Kyc verification url has been requested but the user has already been declined kyc
 	CONFLICT_KYC_ALREADY_RECEIVED          = "kyc_already_received"              // Kyc verification url has been requested but the user has gone though the kyc process (but no result available yet)
@@ -70,14 +71,14 @@ const (
 	CONFLICT_MAX_TOTAL_GRANTS              = "max_total_grants_reached"          // the maximum amount of grants is reached for this user
 	CONFLICT_MIN_REWARD_NOT_REACHED        = "min_reward_amount_not_reached"     // the minimum reward amount for a bounty has not been reached
 	CONFLICT_NOT_IN_ACTIVE_MATCHING_ROUND  = "not_in_active_matching_round"      // the grant is not in an active matching round
-	CONFLICT_PORT_VERIFICATION_EXPIRED     = "port_verification_expired"         // the port verification has already been expired
 	CONFLICT_PORT_ATTESTATION_INSUFFICIENT = "port_attestation_insufficient"     // a port verification has been found but the attestation level is insufficient
+	CONFLICT_PORT_VERIFICATION_EXPIRED     = "port_verification_expired"         // the port verification has already been expired
 	CONFLICT_PROFILE_EXISTS                = "user_profile_already_exists"       // a user profile already exists for this user
-	CONFLICT_ROUND_ID_EXISTS               = "matching_round_id_already_exists"  // a matching round with the given id already exists in the database
 	CONFLICT_REWARD_IMMUTABLE              = "reward_immutable"                  // the bounty reward cannot be changed anymore
+	CONFLICT_ROUND_ID_EXISTS               = "matching_round_id_already_exists"  // a matching round with the given id already exists in the database
 	CONFLICT_SEASON_ID_EXISTS              = "season_id_already_exists"          // a season with the given id already exists in the database
-	CONFLICT_SUBMISSIONS_NOT_OPEN          = "submissions_not_open"              // a grant has tried to apply to a matching round outside the submission range
 	CONFLICT_SOCIAL_ALREADY_CONNECTED      = "social_provider_already_connected" // the user has already connected his account with the given social provider
+	CONFLICT_SUBMISSIONS_NOT_OPEN          = "submissions_not_open"              // a grant has tried to apply to a matching round outside the submission range
 	CONFLICT_USERNAME_EXISTS               = "username_already_exists"           // the given username already exists in the database
 	CONFLICT_USER_EXISTS                   = "user_already_exists"               // a user with the given eosn id already exists in the database
 	CONFLICT_USER_HAS_OPEN_GRANTS          = "user_has_open_grants"              // the action cannot be performed on the user as he has pending or published grants
