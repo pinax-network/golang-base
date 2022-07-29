@@ -9,3 +9,10 @@ message Transaction {
   bytes trx_id = 2;
   google.protobuf.Timestamp time = 3;
 }
+
+message EosTransfer {
+  string From = 1;
+  string Memo = 2;
+  string Quantity = 3;
+  string To = 4;
+}

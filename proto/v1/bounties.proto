@@ -1,0 +1,23 @@
+syntax = "proto3";
+package eosn.protobuf.v1;
+option go_package = "./pb";
+
+import "common.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+// Models
+
+message BountyTransfer {
+  Transaction transaction = 1;
+  EosTransfer transfer = 2;
+}
+
+// Requests
+
+// Service
+
+service PomeloBountiesInternalService {
+  rpc AddBountyTransfer(BountyTransfer) returns (google.protobuf.Empty) {};
+}
