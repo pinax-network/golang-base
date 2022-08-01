@@ -4,8 +4,6 @@ option go_package = "./pb";
 
 import "common.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
-
 
 // Models
 
