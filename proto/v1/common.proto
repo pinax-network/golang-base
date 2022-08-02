@@ -16,3 +16,8 @@ message EosTransfer {
   string Quantity = 3;
   string To = 4;
 }
+
+message TokenData {
+  string quantity = 1;
+  string contract = 2;
+}

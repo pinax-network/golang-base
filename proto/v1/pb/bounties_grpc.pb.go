@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PomeloBountiesInternalServiceClient interface {
-	AddBountyTransfer(ctx context.Context, in *BountyTransfer, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddBountyTransfer(ctx context.Context, in *BountyContribution, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type pomeloBountiesInternalServiceClient struct {
@@ -34,7 +34,7 @@ func NewPomeloBountiesInternalServiceClient(cc grpc.ClientConnInterface) PomeloB
 	return &pomeloBountiesInternalServiceClient{cc}
 }
 
-func (c *pomeloBountiesInternalServiceClient) AddBountyTransfer(ctx context.Context, in *BountyTransfer, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *pomeloBountiesInternalServiceClient) AddBountyTransfer(ctx context.Context, in *BountyContribution, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/eosn.protobuf.v1.PomeloBountiesInternalService/AddBountyTransfer", in, out, opts...)
 	if err != nil {
@@ -47,7 +47,7 @@ func (c *pomeloBountiesInternalServiceClient) AddBountyTransfer(ctx context.Cont
 // All implementations must embed UnimplementedPomeloBountiesInternalServiceServer
 // for forward compatibility
 type PomeloBountiesInternalServiceServer interface {
-	AddBountyTransfer(context.Context, *BountyTransfer) (*emptypb.Empty, error)
+	AddBountyTransfer(context.Context, *BountyContribution) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPomeloBountiesInternalServiceServer()
 }
 
@@ -55,7 +55,7 @@ type PomeloBountiesInternalServiceServer interface {
 type UnimplementedPomeloBountiesInternalServiceServer struct {
 }
 
-func (UnimplementedPomeloBountiesInternalServiceServer) AddBountyTransfer(context.Context, *BountyTransfer) (*emptypb.Empty, error) {
+func (UnimplementedPomeloBountiesInternalServiceServer) AddBountyTransfer(context.Context, *BountyContribution) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBountyTransfer not implemented")
 }
 func (UnimplementedPomeloBountiesInternalServiceServer) mustEmbedUnimplementedPomeloBountiesInternalServiceServer() {
@@ -73,7 +73,7 @@ func RegisterPomeloBountiesInternalServiceServer(s grpc.ServiceRegistrar, srv Po
 }
 
 func _PomeloBountiesInternalService_AddBountyTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BountyTransfer)
+	in := new(BountyContribution)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func _PomeloBountiesInternalService_AddBountyTransfer_Handler(srv interface{}, c
 		FullMethod: "/eosn.protobuf.v1.PomeloBountiesInternalService/AddBountyTransfer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PomeloBountiesInternalServiceServer).AddBountyTransfer(ctx, req.(*BountyTransfer))
+		return srv.(PomeloBountiesInternalServiceServer).AddBountyTransfer(ctx, req.(*BountyContribution))
 	}
 	return interceptor(ctx, in, info, handler)
 }
