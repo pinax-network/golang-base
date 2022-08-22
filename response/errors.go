@@ -50,6 +50,7 @@ const (
 	NOT_FOUND_USER                    = "user_not_found"                    // the requested user was not found
 	NOT_FOUND_USER_CHAIN_ACCOUNT      = "user_chain_account_not_found"      // there is no eosn chain account for the given eosn id
 	NOT_FOUND_USER_PROFILE            = "user_profile_not_found"            // the requested user profile was not found
+	NOT_FOUND_COLLECTION              = "collection_not_found"              // the requested collection was not found
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
@@ -82,6 +83,8 @@ const (
 	CONFLICT_USERNAME_EXISTS               = "username_already_exists"           // the given username already exists in the database
 	CONFLICT_USER_EXISTS                   = "user_already_exists"               // a user with the given eosn id already exists in the database
 	CONFLICT_USER_HAS_OPEN_GRANTS          = "user_has_open_grants"              // the action cannot be performed on the user as he has pending or published grants
+	CONFLICT_COLLECTION_NAME_EXISTS        = "collection_already_exists"         // a collection with the given name already exists in the database
+	CONFLICT_MAX_TOTAL_COLLECTIONS         = "max_total_collections_reached"     // the maximum number of collections is reached for this user
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
