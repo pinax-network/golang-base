@@ -87,6 +87,7 @@ const (
 	CONFLICT_COLLECTION_NAME_EXISTS        = "collection_already_exists"         // a collection with the given name already exists in the database
 	CONFLICT_MAX_TOTAL_COLLECTIONS         = "max_total_collections_reached"     // the maximum number of collections is reached for this user
 	CONFLICT_INVALID_CODE                  = "sms_code_ivalid"                   // the specified code is incorrect
+	CONFLICT_MAX_ATTEMPTS_EXCEEDED         = "max_attempts_exceeded"             // exceeded max number of attempts
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
