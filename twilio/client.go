@@ -55,7 +55,7 @@ func (c *Client) VerifyCode(phoneNumber string, code string) error {
 		inVerifyErrorCounter()
 		return errors.WithMessage(ErrFailedToVerifyCode, err.Error())
 	} else if *resp.Status != "approved" {
-		return errors.WithMessage(ErrCodeNotApproved, err.Error())
+		return errors.WithMessage(ErrCodeNotApproved, "verification status: "+*resp.Status)
 	}
 	incVerifyCounter()
 
