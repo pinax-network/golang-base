@@ -36,8 +36,10 @@ func (c *Client) RequestCode(phoneNumber string, channel string) error {
 
 	_, err := c.client.VerifyV2.CreateVerification(c.config.VerifyServiceSID, params)
 	if err != nil {
+		incRequestErrorCounter()
 		return errors.WithMessage(ErrFailedToRequestCode, err.Error())
 	}
+	incRequestCounter()
 
 	return nil
 }
@@ -50,10 +52,12 @@ func (c *Client) VerifyCode(phoneNumber string, code string) error {
 
 	resp, err := c.client.VerifyV2.CreateVerificationCheck(c.config.VerifyServiceSID, params)
 	if err != nil {
+		inVerifyErrorCounter()
 		return errors.WithMessage(ErrFailedToVerifyCode, err.Error())
 	} else if *resp.Status != "approved" {
 		return errors.WithMessage(ErrCodeNotApproved, err.Error())
 	}
+	incVerifyCounter()
 
 	return nil
 }
