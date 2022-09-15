@@ -30,7 +30,7 @@ func incRequestErrorCounter() {
 	promTwilioErrors.WithLabelValues("request").Inc()
 }
 
-func inVerifyErrorCounter() {
+func incVerifyErrorCounter() {
 	promTwilioErrors.WithLabelValues("verify").Inc()
 }
 

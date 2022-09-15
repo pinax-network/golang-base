@@ -52,7 +52,7 @@ func (c *Client) VerifyCode(phoneNumber string, code string) error {
 
 	resp, err := c.client.VerifyV2.CreateVerificationCheck(c.config.VerifyServiceSID, params)
 	if err != nil {
-		inVerifyErrorCounter()
+		incVerifyErrorCounter()
 		return errors.WithMessage(ErrFailedToVerifyCode, err.Error())
 	} else if *resp.Status != "approved" {
 		return errors.WithMessage(ErrCodeNotApproved, "verification status: "+*resp.Status)
