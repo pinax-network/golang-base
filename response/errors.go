@@ -51,7 +51,6 @@ const (
 	NOT_FOUND_USER_CHAIN_ACCOUNT      = "user_chain_account_not_found"      // there is no eosn chain account for the given eosn id
 	NOT_FOUND_USER_PROFILE            = "user_profile_not_found"            // the requested user profile was not found
 	NOT_FOUND_COLLECTION              = "collection_not_found"              // the requested collection was not found
-	NOT_FOUND_PHONE_NUMBER            = "phone_number_not_found"            // the specified phone number was not found
 
 	METHOD_NOT_ALLOWED = "method_not_allowed" // http method is not allowed on this endpoint
 
