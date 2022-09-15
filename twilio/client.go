@@ -11,6 +11,12 @@ type Client struct {
 	client *twilio.RestClient
 }
 
+var (
+	ErrFailedToRequestCode = errors.New("failed to request code")
+	ErrFailedToVerifyCode  = errors.New("failed to verify code")
+	ErrCodeNotApproved     = errors.New("code not approved")
+)
+
 func NewClient(config *Config) (*Client, error) {
 
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
@@ -30,7 +36,7 @@ func (c *Client) RequestCode(phoneNumber string, channel string) error {
 
 	_, err := c.client.VerifyV2.CreateVerification(c.config.VerifyServiceSID, params)
 	if err != nil {
-		return errors.WithMessage(err, "failed to request code")
+		return errors.WithMessage(ErrFailedToRequestCode, err.Error())
 	}
 
 	return nil
@@ -44,9 +50,9 @@ func (c *Client) VerifyCode(phoneNumber string, code string) error {
 
 	resp, err := c.client.VerifyV2.CreateVerificationCheck(c.config.VerifyServiceSID, params)
 	if err != nil {
-		return errors.WithMessage(err, "failed to verify code")
+		return errors.WithMessage(ErrFailedToVerifyCode, err.Error())
 	} else if *resp.Status != "approved" {
-		return errors.WithMessage(err, "invalid code")
+		return errors.WithMessage(ErrCodeNotApproved, err.Error())
 	}
 
 	return nil
