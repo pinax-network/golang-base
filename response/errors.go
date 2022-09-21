@@ -88,6 +88,8 @@ const (
 	CONFLICT_MAX_TOTAL_COLLECTIONS         = "max_total_collections_reached"     // the maximum number of collections is reached for this user
 	CONFLICT_INVALID_CODE                  = "sms_code_ivalid"                   // the specified code is incorrect
 	CONFLICT_MAX_ATTEMPTS_EXCEEDED         = "max_attempts_exceeded"             // exceeded max number of attempts
+	CONFLICT_INVALID_PHONE_NUMBER          = "invalid_phone_number"              // phone number not accepted by twilio
+	CONFLICT_DUPLICATE_PHONE_NUMBER        = "duplicate_phone_number"            // phone number already verified by another account
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 )
