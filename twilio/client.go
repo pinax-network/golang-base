@@ -1,6 +1,8 @@
 package twilio
 
 import (
+	"strings"
+
 	"github.com/friendsofgo/errors"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
@@ -12,9 +14,10 @@ type Client struct {
 }
 
 var (
-	ErrFailedToRequestCode = errors.New("failed to request code")
-	ErrFailedToVerifyCode  = errors.New("failed to verify code")
-	ErrCodeNotApproved     = errors.New("code not approved")
+	ErrCodeInvalid          = errors.New("code invalid")
+	ErrPhoneNumberInvalid   = errors.New("phone number invalid")
+	ErrCodeNotApproved      = errors.New("code not approved")
+	ErrVerificationNotFound = errors.New("verification not found")
 )
 
 func NewClient(config *Config) (*Client, error) {
@@ -37,7 +40,10 @@ func (c *Client) RequestCode(phoneNumber string, channel string) error {
 	_, err := c.client.VerifyV2.CreateVerification(c.config.VerifyServiceSID, params)
 	if err != nil {
 		incRequestErrorCounter()
-		return errors.WithMessage(ErrFailedToRequestCode, err.Error())
+		if strings.HasPrefix(err.Error(), "Status: 4") {
+			return ErrPhoneNumberInvalid
+		}
+		return err
 	}
 	incRequestCounter()
 
@@ -53,7 +59,13 @@ func (c *Client) VerifyCode(phoneNumber string, code string) error {
 	resp, err := c.client.VerifyV2.CreateVerificationCheck(c.config.VerifyServiceSID, params)
 	if err != nil {
 		incVerifyErrorCounter()
-		return errors.WithMessage(ErrFailedToVerifyCode, err.Error())
+		if strings.HasPrefix(err.Error(), "Status: 404") {
+			return ErrVerificationNotFound
+		}
+		if strings.HasPrefix(err.Error(), "Status: 4") {
+			return ErrCodeInvalid
+		}
+		return err
 	} else if *resp.Status != "approved" {
 		return errors.WithMessage(ErrCodeNotApproved, "verification status: "+*resp.Status)
 	}
