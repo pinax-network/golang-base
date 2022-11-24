@@ -8,6 +8,8 @@ var (
 	RouteNotFound       = NewApiError(http.StatusNotFound, NOT_FOUND_ROUTE)
 	MethodNotAllowed    = NewApiError(http.StatusMethodNotAllowed, METHOD_NOT_ALLOWED)
 	InternalServerError = NewApiError(http.StatusInternalServerError, INTERNAL_SERVER_ERROR)
+	BadGateway          = NewApiError(http.StatusBadGateway, BAD_GATEWAY)
+	GatewayTimeout      = NewApiError(http.StatusGatewayTimeout, GATEWAY_TIMEOUT)
 )
 
 const (
@@ -90,9 +92,12 @@ const (
 	CONFLICT_MAX_ATTEMPTS_EXCEEDED         = "max_attempts_exceeded"             // exceeded max number of attempts
 	CONFLICT_INVALID_PHONE_NUMBER          = "invalid_phone_number"              // phone number not accepted by twilio
 	CONFLICT_DUPLICATE_PHONE_NUMBER        = "duplicate_phone_number"            // phone number already verified by another account
-	CONFLICT_NEXT_SEASON_NOT_EXISTS        = "next_season_not_exists"            // next season does not exist in the database when closing the current one
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
+
+	BAD_GATEWAY = "bad_gateway" // invalid response from upstream service
+
+	GATEWAY_TIMEOUT = "gateway_timeout" // timeout while coinnecting to  upstream service
 )
 
 type ApiErrorResponse struct {
