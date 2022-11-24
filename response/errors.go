@@ -92,6 +92,7 @@ const (
 	CONFLICT_MAX_ATTEMPTS_EXCEEDED         = "max_attempts_exceeded"             // exceeded max number of attempts
 	CONFLICT_INVALID_PHONE_NUMBER          = "invalid_phone_number"              // phone number not accepted by twilio
 	CONFLICT_DUPLICATE_PHONE_NUMBER        = "duplicate_phone_number"            // phone number already verified by another account
+	CONFLICT_NEXT_SEASON_NOT_EXISTS        = "next_season_not_exists"            // next season does not exist in the database when closing the current one
 
 	INTERNAL_SERVER_ERROR = "internal_server_error" // an unknown error occurred on the backend
 
