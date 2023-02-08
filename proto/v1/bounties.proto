@@ -33,7 +33,7 @@ message BountyTransferData {
 }
 
 message UpdateBountyStateData {
-  Transaction transaction = 1;
+  IrreversibleTransaction transaction = 1;
   string bounty_id = 2;
   BountyState state = 3;
 }

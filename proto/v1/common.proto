@@ -10,6 +10,11 @@ message Transaction {
   google.protobuf.Timestamp time = 3;
 }
 
+message IrreversibleTransaction {
+  bytes trx_id = 1;
+  google.protobuf.Timestamp time = 2;
+}
+
 message EosTransfer {
   string From = 1;
   string Memo = 2;
