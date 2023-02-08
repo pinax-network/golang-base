@@ -13,6 +13,11 @@ message BountyContribution {
   BountyTransferData transfer = 2;
 }
 
+enum BountyState {
+  RELEASED = 0;
+  DONE = 1;
+}
+
 message BountyTransferData {
   uint64 transfer_id = 1;
   string bounty_id = 2;
@@ -27,6 +32,10 @@ message BountyTransferData {
   google.protobuf.Timestamp created_at = 11;
 }
 
+message UpdateBountyStateData {
+  string bounty_id = 1;
+  BountyState state = 2;
+}
 
 // Requests
 
@@ -34,4 +43,5 @@ message BountyTransferData {
 
 service PomeloBountiesInternalService {
   rpc AddBountyTransfer(BountyContribution) returns (google.protobuf.Empty) {};
+  rpc UpdateBountyState(UpdateBountyStateData) returns (google.protobuf.Empty) {};
 }
