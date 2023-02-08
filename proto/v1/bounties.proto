@@ -33,8 +33,9 @@ message BountyTransferData {
 }
 
 message UpdateBountyStateData {
-  string bounty_id = 1;
-  BountyState state = 2;
+  Transaction transaction = 1;
+  string bounty_id = 2;
+  BountyState state = 3;
 }
 
 // Requests
