@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-type Sanitizer interface {
+type FieldSanitizer interface {
 	SanitizeString(field reflect.StructField, value string) (string, error)
 	SanitizeNullString(field reflect.StructField, value null.String) (null.String, error)
 }
@@ -18,10 +18,37 @@ type TypeValue struct {
 
 const TagName = "sanitize"
 
-// SanitizeInput traverses any arbitrary struct, applies the given sanitizer on all fields of type string and returns a
-// deep copy of the given struct with its fields sanitized.
-// Note: this method panics if the given source is not a struct.
-func SanitizeInput[T any](source T, sanitizer Sanitizer) (res T, err error) {
+// SanitizeInput traverses a struct and applies the currently set Sanitizer to any field of type string or
+// null.String.
+//
+// Example:
+//
+//	type MyInput struct {
+//		MyTitle string `sanitize:"strict"`
+//		OptionalDescription null.String `sanitize:"html"`
+//	}
+//
+//	myInput := MyInput{
+//		MyTitle:             "<h1>Title</h1>",
+//		OptionalDescription: null.StringFrom("<p><a href=\"javascript:alert('XSS')\">Some Description</a></p>"),
+//	}
+//
+//	res, _ := sanitizer.SanitizeInput(myInput)
+//
+//	fmt.Println(res.MyTitle) // Title
+//	fmt.Println(res.OptionalDescription.String) // <p>Some Description</p>
+//
+// See Sanitizer on the default setting and how to override those. For applying a custom struct for just the given
+// input use SanitizeInputWithLocalSanitizer.
+func SanitizeInput[T any](source T) (res T, err error) {
+	return SanitizeInputWithLocalSanitizer(source, Sanitizer)
+}
+
+// SanitizeInputWithLocalSanitizer can be used to sanitize some input with a custom sanitizer. This can be useful
+// if you have input that you want to treat differently than other input.
+//
+// To apply a custom sanitizer globally you can just override Sanitizer instead.
+func SanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) (res T, err error) {
 
 	if reflect.TypeOf(source).Kind() == reflect.Struct {
 
@@ -46,7 +73,7 @@ func SanitizeInput[T any](source T, sanitizer Sanitizer) (res T, err error) {
 	return
 }
 
-func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) error {
+func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) error {
 
 	switch source.FieldValue.Kind() {
 
