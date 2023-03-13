@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-type TestSanitizer struct{}
+type TestFieldSanitizer struct{}
 
-func (t TestSanitizer) SanitizeString(field reflect.StructField, value string) (string, error) {
+func (t TestFieldSanitizer) SanitizeString(field reflect.StructField, value string) (string, error) {
 	if fieldTag := field.Tag.Get(TagName); fieldTag == "test" {
 		return t.SanitizeStringField(value), nil
 	}
@@ -19,7 +19,7 @@ func (t TestSanitizer) SanitizeString(field reflect.StructField, value string) (
 	return "", fmt.Errorf("invalid sanitizer")
 }
 
-func (t TestSanitizer) SanitizeNullString(field reflect.StructField, value null.String) (null.String, error) {
+func (t TestFieldSanitizer) SanitizeNullString(field reflect.StructField, value null.String) (null.String, error) {
 	if !value.Valid {
 		return value, nil
 	}
@@ -32,12 +32,16 @@ func (t TestSanitizer) SanitizeNullString(field reflect.StructField, value null.
 	return null.StringFrom(sanitizedString), nil
 }
 
-func (t TestSanitizer) SanitizeStringField(value string) string {
+func (t TestFieldSanitizer) SanitizeStringField(value string) string {
 	return value + "_sanitized"
 }
 
+func init() {
+	Sanitizer = TestFieldSanitizer{}
+}
+
 func TestStringField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testField := "test_field"
 	testStruct := struct {
@@ -46,7 +50,7 @@ func TestStringField(t *testing.T) {
 		TestField: testField,
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
@@ -54,7 +58,7 @@ func TestStringField(t *testing.T) {
 }
 
 func TestStringPtrField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testField := "test_field"
 	testStruct := struct {
@@ -63,7 +67,7 @@ func TestStringPtrField(t *testing.T) {
 		TestField: &testField,
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	sanitizedField := testSanitizer.SanitizeStringField(testField)
@@ -72,7 +76,7 @@ func TestStringPtrField(t *testing.T) {
 }
 
 func TestStringSliceField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testStruct := struct {
 		TestField []string `sanitize:"test"`
@@ -80,7 +84,7 @@ func TestStringSliceField(t *testing.T) {
 		TestField: []string{"test_entry_1", "test_entry_2", "test_entry_3"},
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	for i, f := range testStruct.TestField {
@@ -91,7 +95,7 @@ func TestStringSliceField(t *testing.T) {
 }
 
 func TestStringPtrSliceField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testString1 := "test_entry_1"
 	testString2 := "test_entry_2"
@@ -103,7 +107,7 @@ func TestStringPtrSliceField(t *testing.T) {
 		TestField: []*string{&testString1, &testString2, &testString3},
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	for i, f := range testStruct.TestField {
@@ -115,7 +119,7 @@ func TestStringPtrSliceField(t *testing.T) {
 }
 
 func TestStringSlicePtrField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testStruct := struct {
 		TestField *[]string `sanitize:"test"`
@@ -123,7 +127,7 @@ func TestStringSlicePtrField(t *testing.T) {
 		TestField: &[]string{"test_entry_1", "test_entry_2", "test_entry_3"},
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	for i, f := range *testStruct.TestField {
@@ -134,7 +138,7 @@ func TestStringSlicePtrField(t *testing.T) {
 }
 
 func TestStringPtrSlicePtrField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testString1 := "test_entry_1"
 	testString2 := "test_entry_2"
@@ -146,7 +150,7 @@ func TestStringPtrSlicePtrField(t *testing.T) {
 		TestField: &[]*string{&testString1, &testString2, &testString3},
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	for i, f := range *testStruct.TestField {
@@ -158,7 +162,7 @@ func TestStringPtrSlicePtrField(t *testing.T) {
 }
 
 func TestMapField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	testString1 := "test_entry_1"
 	testString2 := "test_entry_2"
@@ -174,7 +178,7 @@ func TestMapField(t *testing.T) {
 		},
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 
 	for i, f := range testStruct.TestMap {
@@ -188,7 +192,7 @@ func TestMapField(t *testing.T) {
 type StringType string
 
 func TestStringTypeField(t *testing.T) {
-	testSanitizer := TestSanitizer{}
+	testSanitizer := TestFieldSanitizer{}
 
 	var testField StringType
 	testField = "test_field"
@@ -198,14 +202,30 @@ func TestStringTypeField(t *testing.T) {
 		TestField: testField,
 	}
 
-	res, err := SanitizeInput(testStruct, testSanitizer)
+	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
 	testStruct.TestField = StringType(testSanitizer.SanitizeStringField(string(testField)))
 	assert.Equal(t, testStruct, res)
 }
 
+func TestLocalSanitizer(t *testing.T) {
+	testSanitizer := TestFieldSanitizer{}
+
+	testField := "test_field"
+	testStruct := struct {
+		TestField string `sanitize:"test"`
+	}{
+		TestField: testField,
+	}
+
+	res, err := SanitizeInputWithLocalSanitizer(testStruct, testSanitizer)
+	require.NoError(t, err)
+
+	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
+	assert.Equal(t, testStruct, res)
+}
+
 func TestInvalidSanitizer(t *testing.T) {
-	testSanitizer := TestSanitizer{}
 
 	testField := "test_field"
 	testStruct := struct {
@@ -214,6 +234,6 @@ func TestInvalidSanitizer(t *testing.T) {
 		TestField: testField,
 	}
 
-	_, err := SanitizeInput(testStruct, testSanitizer)
+	_, err := SanitizeInput(testStruct)
 	assert.Equal(t, err.Error(), "invalid sanitizer")
 }
