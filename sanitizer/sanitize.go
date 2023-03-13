@@ -1,11 +1,14 @@
 package sanitizer
 
 import (
+	"fmt"
+	"github.com/volatiletech/null/v8"
 	"reflect"
 )
 
 type Sanitizer interface {
-	SanitizeString(fieldName, fieldValue string) string
+	SanitizeString(field reflect.StructField, value string) (string, error)
+	SanitizeNullString(field reflect.StructField, value null.String) (null.String, error)
 }
 
 type TypeValue struct {
@@ -13,10 +16,12 @@ type TypeValue struct {
 	FieldValue reflect.Value
 }
 
-// SanitizeInput traverses any arbitary struct, applies the given sanitizer on all fields of type string and returns a
-// deep copy of the given struct with it's fields sanitized.
+const TagName = "sanitize"
+
+// SanitizeInput traverses any arbitrary struct, applies the given sanitizer on all fields of type string and returns a
+// deep copy of the given struct with its fields sanitized.
 // Note: this method panics if the given source is not a struct.
-func SanitizeInput[T any](source T, sanitizer Sanitizer) T {
+func SanitizeInput[T any](source T, sanitizer Sanitizer) (res T, err error) {
 
 	if reflect.TypeOf(source).Kind() == reflect.Struct {
 
@@ -28,28 +33,50 @@ func SanitizeInput[T any](source T, sanitizer Sanitizer) T {
 		sourceValue := reflect.ValueOf(source)
 		sourceCopy := reflect.New(sourceValue.Type()).Elem()
 
-		sanitize(sourceRef, sourceCopy, sanitizer)
+		err = sanitize(sourceRef, sourceCopy, sanitizer)
+		if err != nil {
+			return
+		}
 
-		return sourceCopy.Interface().(T)
+		res = sourceCopy.Interface().(T)
+		return
 	}
 
-	panic("invalid type given, needs to be a struct")
+	err = fmt.Errorf("invalid type %q given as source, the source needs to be a struct", reflect.TypeOf(source))
+	return
 }
 
-func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
+func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) error {
 
 	switch source.FieldValue.Kind() {
 
 	case reflect.String:
-		target.SetString(sanitizer.SanitizeString(source.FieldType.Name, source.FieldValue.String()))
+		sanitizedField, err := sanitizer.SanitizeString(source.FieldType, source.FieldValue.String())
+		if err != nil {
+			return err
+		}
+		target.SetString(sanitizedField)
 
 	case reflect.Struct:
-		for i := 0; i < source.FieldValue.NumField(); i += 1 {
-			embeddedTypeValue := TypeValue{
-				FieldType:  source.FieldValue.Type().Field(i),
-				FieldValue: source.FieldValue.Field(i),
+
+		// if this struct is a kind of null.String we sanitize it as well, otherwise we traverse further
+		if source.FieldValue.CanConvert(reflect.TypeOf(null.String{})) {
+			sanitizedField, err := sanitizer.SanitizeNullString(source.FieldType, source.FieldValue.Interface().(null.String))
+			if err != nil {
+				return err
 			}
-			sanitize(embeddedTypeValue, target.Field(i), sanitizer)
+			target.Set(reflect.ValueOf(sanitizedField))
+		} else {
+			for i := 0; i < source.FieldValue.NumField(); i += 1 {
+				embeddedTypeValue := TypeValue{
+					FieldType:  source.FieldValue.Type().Field(i),
+					FieldValue: source.FieldValue.Field(i),
+				}
+				err := sanitize(embeddedTypeValue, target.Field(i), sanitizer)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 	case reflect.Pointer:
@@ -57,7 +84,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 
 		// Check if the pointer is nil
 		if !sourceValue.IsValid() {
-			return
+			return nil
 		}
 		// Allocate a new object and set the pointer to it
 		target.Set(reflect.New(sourceValue.Type()))
@@ -70,7 +97,10 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 			FieldValue: sourceValue,
 		}
 
-		sanitize(extractedTypeValue, target.Elem(), sanitizer)
+		err := sanitize(extractedTypeValue, target.Elem(), sanitizer)
+		if err != nil {
+			return err
+		}
 
 	case reflect.Interface:
 		sourceValue := source.FieldValue.Elem()
@@ -87,7 +117,11 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 			FieldValue: sourceValue,
 		}
 
-		sanitize(extractedTypeValue, targetValue, sanitizer)
+		err := sanitize(extractedTypeValue, targetValue, sanitizer)
+		if err != nil {
+			return err
+		}
+
 		target.Set(targetValue)
 
 	case reflect.Slice:
@@ -103,7 +137,10 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 				FieldValue: elementValue,
 			}
 
-			sanitize(elementTypeValue, target.Index(i), sanitizer)
+			err := sanitize(elementTypeValue, target.Index(i), sanitizer)
+			if err != nil {
+				return err
+			}
 		}
 
 	case reflect.Map:
@@ -121,11 +158,17 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer Sanitizer) {
 				FieldValue: elementValue,
 			}
 
-			sanitize(elementTypeValue, targetValue, sanitizer)
+			err := sanitize(elementTypeValue, targetValue, sanitizer)
+			if err != nil {
+				return err
+			}
+
 			target.SetMapIndex(key, targetValue)
 		}
 
 	default:
 		target.Set(source.FieldValue)
 	}
+
+	return nil
 }
