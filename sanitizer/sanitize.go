@@ -44,6 +44,16 @@ func SanitizeInput[T any](source T) (res T, err error) {
 	return SanitizeInputWithLocalSanitizer(source, Sanitizer)
 }
 
+// MustSanitizeInput behaves like SanitizeInput but panics instead of returning an error.
+func MustSanitizeInput[T any](source T) (res T) {
+	res, err := SanitizeInputWithLocalSanitizer(source, Sanitizer)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
 // SanitizeInputWithLocalSanitizer can be used to sanitize some input with a custom sanitizer. This can be useful
 // if you have input that you want to treat differently than other input.
 //
@@ -71,6 +81,16 @@ func SanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) 
 
 	err = fmt.Errorf("invalid type %q given as source, the source needs to be a struct", reflect.TypeOf(source))
 	return
+}
+
+func MustSanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) T {
+
+	res, err := SanitizeInputWithLocalSanitizer(source, sanitizer)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }
 
 func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) error {
