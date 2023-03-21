@@ -31,7 +31,9 @@ func InitializeLogger(logDebug bool) error {
 		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		minLevel = zapcore.DebugLevel
 	} else {
-		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		cfg := zap.NewProductionEncoderConfig()
+		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		consoleEncoder = zapcore.NewConsoleEncoder(cfg)
 		minLevel = zapcore.InfoLevel
 	}
 
@@ -49,6 +51,31 @@ func InitializeLogger(logDebug bool) error {
 		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
 		zapcore.NewCore(consoleEncoder, consoleOut, lowPriority),
 	)
+
+	logger := zap.New(core)
+
+	ZapLogger = logger
+	SugaredLogger = logger.Sugar()
+
+	return nil
+}
+
+func InitializeFileLogger(logDebug bool, logLevel zapcore.Level, file *os.File) error {
+
+	var consoleEncoder zapcore.Encoder
+	var minLevel zapcore.Level
+
+	if logDebug {
+		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		minLevel = zapcore.DebugLevel
+	} else {
+		cfg := zap.NewProductionEncoderConfig()
+		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		consoleEncoder = zapcore.NewConsoleEncoder(cfg)
+		minLevel = logLevel
+	}
+
+	core := zapcore.NewCore(consoleEncoder, file, minLevel)
 
 	logger := zap.New(core)
 
