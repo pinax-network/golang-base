@@ -208,6 +208,76 @@ func TestStringTypeField(t *testing.T) {
 	assert.Equal(t, testStruct, res)
 }
 
+func TestEmbeddedStruct(t *testing.T) {
+	testSanitizer := TestFieldSanitizer{}
+
+	type EmbeddedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		EmbeddedTestStruct `sanitize:"dive"`
+	}{
+		EmbeddedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
+	assert.Equal(t, testStruct, res)
+}
+
+func TestEmbeddedStructWithoutDive(t *testing.T) {
+	type EmbeddedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		EmbeddedTestStruct
+	}{
+		EmbeddedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	assert.Equal(t, testStruct, res)
+}
+
+func TestNestedStruct(t *testing.T) {
+	testSanitizer := TestFieldSanitizer{}
+
+	type nestedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		Nested nestedTestStruct `sanitize:"dive"`
+	}{
+		nestedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	testStruct.Nested.TestField = testSanitizer.SanitizeStringField(testField)
+	assert.Equal(t, testStruct, res)
+}
+
+func TestNestedStructWithoutDive(t *testing.T) {
+	type nestedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		Nested nestedTestStruct
+	}{
+		nestedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	assert.Equal(t, testStruct, res)
+}
+
 func TestLocalSanitizer(t *testing.T) {
 	testSanitizer := TestFieldSanitizer{}
 
