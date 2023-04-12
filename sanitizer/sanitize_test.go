@@ -208,6 +208,25 @@ func TestStringTypeField(t *testing.T) {
 	assert.Equal(t, testStruct, res)
 }
 
+func TestEmbeddedStruct(t *testing.T) {
+	testSanitizer := TestFieldSanitizer{}
+
+	type embeddedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		Embedded embeddedTestStruct `sanitize:"dive"`
+	}{
+		embeddedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	testStruct.Embedded.TestField = testSanitizer.SanitizeStringField(testField)
+	assert.Equal(t, testStruct, res)
+}
+
 func TestLocalSanitizer(t *testing.T) {
 	testSanitizer := TestFieldSanitizer{}
 
