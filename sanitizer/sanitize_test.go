@@ -211,32 +211,67 @@ func TestStringTypeField(t *testing.T) {
 func TestEmbeddedStruct(t *testing.T) {
 	testSanitizer := TestFieldSanitizer{}
 
-	type embeddedTestStruct struct {
+	type EmbeddedTestStruct struct {
 		TestField string `sanitize:"test"`
 	}
 
 	testField := "test_field"
 	testStruct := struct {
-		Embedded embeddedTestStruct `sanitize:"dive"`
+		EmbeddedTestStruct `sanitize:"dive"`
 	}{
-		embeddedTestStruct{TestField: testField},
+		EmbeddedTestStruct{TestField: testField},
 	}
 	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
-	testStruct.Embedded.TestField = testSanitizer.SanitizeStringField(testField)
+	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
 	assert.Equal(t, testStruct, res)
 }
 
 func TestEmbeddedStructWithoutDive(t *testing.T) {
-	type embeddedTestStruct struct {
+	type EmbeddedTestStruct struct {
 		TestField string `sanitize:"test"`
 	}
 
 	testField := "test_field"
 	testStruct := struct {
-		Embedded embeddedTestStruct
+		EmbeddedTestStruct
 	}{
-		embeddedTestStruct{TestField: testField},
+		EmbeddedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	assert.Equal(t, testStruct, res)
+}
+
+func TestNestedStruct(t *testing.T) {
+	testSanitizer := TestFieldSanitizer{}
+
+	type nestedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		Nested nestedTestStruct `sanitize:"dive"`
+	}{
+		nestedTestStruct{TestField: testField},
+	}
+	res, err := SanitizeInput(testStruct)
+	require.NoError(t, err)
+	testStruct.Nested.TestField = testSanitizer.SanitizeStringField(testField)
+	assert.Equal(t, testStruct, res)
+}
+
+func TestNestedStructWithoutDive(t *testing.T) {
+	type nestedTestStruct struct {
+		TestField string `sanitize:"test"`
+	}
+
+	testField := "test_field"
+	testStruct := struct {
+		Nested nestedTestStruct
+	}{
+		nestedTestStruct{TestField: testField},
 	}
 	res, err := SanitizeInput(testStruct)
 	require.NoError(t, err)
