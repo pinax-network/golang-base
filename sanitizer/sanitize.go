@@ -17,6 +17,7 @@ type TypeValue struct {
 }
 
 const TagName = "sanitize"
+const TagDive = "dive"
 
 // SanitizeInput traverses a struct and applies the currently set Sanitizer to any field of type string or
 // null.String.
@@ -70,7 +71,7 @@ func SanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) 
 		sourceValue := reflect.ValueOf(source)
 		sourceCopy := reflect.New(sourceValue.Type()).Elem()
 
-		err = sanitize(sourceRef, sourceCopy, sanitizer)
+		err = sanitize(sourceRef, sourceCopy, sanitizer, true)
 		if err != nil {
 			return
 		}
@@ -93,7 +94,7 @@ func MustSanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitiz
 	return res
 }
 
-func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) error {
+func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer, isRoot bool) error {
 
 	switch source.FieldValue.Kind() {
 
@@ -105,7 +106,6 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 		target.SetString(sanitizedField)
 
 	case reflect.Struct:
-
 		// if this struct is a kind of null.String we sanitize it as well, otherwise we traverse further
 		if source.FieldValue.CanConvert(reflect.TypeOf(null.String{})) {
 			sanitizedField, err := sanitizer.SanitizeNullString(source.FieldType, source.FieldValue.Interface().(null.String))
@@ -113,17 +113,22 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 				return err
 			}
 			target.Set(reflect.ValueOf(sanitizedField))
-		} else {
+		} else if source.FieldType.Tag.Get(TagName) == TagDive || isRoot {
+			// if we get a 'sanitize="dive"' tag here, we traverse further into the struct fields. Unless this is the
+			// root struct, then we will sanitize always
 			for i := 0; i < source.FieldValue.NumField(); i += 1 {
 				embeddedTypeValue := TypeValue{
 					FieldType:  source.FieldValue.Type().Field(i),
 					FieldValue: source.FieldValue.Field(i),
 				}
-				err := sanitize(embeddedTypeValue, target.Field(i), sanitizer)
+				err := sanitize(embeddedTypeValue, target.Field(i), sanitizer, false)
 				if err != nil {
 					return err
 				}
 			}
+		} else {
+			// otherwise we just copy the original field without sanitizing
+			target.Set(source.FieldValue)
 		}
 
 	case reflect.Pointer:
@@ -144,7 +149,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 			FieldValue: sourceValue,
 		}
 
-		err := sanitize(extractedTypeValue, target.Elem(), sanitizer)
+		err := sanitize(extractedTypeValue, target.Elem(), sanitizer, false)
 		if err != nil {
 			return err
 		}
@@ -164,7 +169,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 			FieldValue: sourceValue,
 		}
 
-		err := sanitize(extractedTypeValue, targetValue, sanitizer)
+		err := sanitize(extractedTypeValue, targetValue, sanitizer, false)
 		if err != nil {
 			return err
 		}
@@ -184,7 +189,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 				FieldValue: elementValue,
 			}
 
-			err := sanitize(elementTypeValue, target.Index(i), sanitizer)
+			err := sanitize(elementTypeValue, target.Index(i), sanitizer, false)
 			if err != nil {
 				return err
 			}
@@ -205,7 +210,7 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer) 
 				FieldValue: elementValue,
 			}
 
-			err := sanitize(elementTypeValue, targetValue, sanitizer)
+			err := sanitize(elementTypeValue, targetValue, sanitizer, false)
 			if err != nil {
 				return err
 			}
