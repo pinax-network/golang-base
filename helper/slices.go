@@ -104,7 +104,7 @@ func InitSlice[T comparable](length int, defaultValue T) (result []T) {
 
 	result = make([]T, length)
 
-	for i, _ := range result {
+	for i := range result {
 		result[i] = defaultValue
 	}
 
