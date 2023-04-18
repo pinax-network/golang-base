@@ -98,3 +98,15 @@ func RemoveElement[T comparable](input []T, removeElement T) (result []T) {
 
 	return
 }
+
+// InitSlice initializes a new slice of the length and initializes each field with the given default value
+func InitSlice[T comparable](length int, defaultValue T) (result []T) {
+
+	result = make([]T, length)
+
+	for i := range result {
+		result[i] = defaultValue
+	}
+
+	return
+}
