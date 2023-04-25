@@ -35,8 +35,8 @@ const TagName = "sanitize"
 //
 //	_ = sanitizer.SanitizeInput(&myInput)
 //
-//	fmt.Println(res.MyTitle) // Title
-//	fmt.Println(res.OptionalDescription.String) // <p>Some Description</p>
+//	fmt.Println(myInput.MyTitle) // Title
+//	fmt.Println(myInput.OptionalDescription.String) // <p>Some Description</p>
 //
 // See Sanitizer on the default setting and how to override those. For applying a custom struct for just the given
 // input use SanitizeInputWithLocalSanitizer.

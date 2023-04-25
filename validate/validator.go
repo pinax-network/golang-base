@@ -19,7 +19,7 @@ type JsonValidator struct {
 func (v *JsonValidator) ValidateStruct(obj interface{}) error {
 	value := reflect.ValueOf(obj)
 	valueType := value.Kind()
-	if valueType == reflect.Ptr {
+	if valueType == reflect.Ptr && value.IsValid() {
 		valueType = value.Elem().Kind()
 	}
 	if valueType == reflect.Struct {

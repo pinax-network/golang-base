@@ -9,17 +9,19 @@ import (
 	"time"
 )
 
-type DBSink struct {
+type MysqlSink struct {
 	dbPool *database.MysqlConnectionPool
 }
 
-func NewDBSink(dbPool *database.MysqlConnectionPool) *DBSink {
-	return &DBSink{
+// NewMysqlSink initializes a new MySQL sink for audit logs. Note that an audit_log table needs to exist, see the
+// mysql_audit_log.up.sql migration file on how to set up the necessary table.
+func NewMysqlSink(dbPool *database.MysqlConnectionPool) *MysqlSink {
+	return &MysqlSink{
 		dbPool: dbPool,
 	}
 }
 
-func (d *DBSink) CreateResource(userId int, resourceId int, resource interface{}, time time.Time) {
+func (d *MysqlSink) CreateResource(userId int, resourceId int, resource interface{}, time time.Time) {
 
 	conn, err := d.dbPool.GetConnection()
 	if err != nil {
@@ -46,7 +48,7 @@ func (d *DBSink) CreateResource(userId int, resourceId int, resource interface{}
 	}
 }
 
-func (d *DBSink) UpdateResource(userId int, resourceId int, newData interface{}, prevData interface{}, time time.Time) {
+func (d *MysqlSink) UpdateResource(userId int, resourceId int, newData interface{}, prevData interface{}, time time.Time) {
 
 	conn, err := d.dbPool.GetConnection()
 	if err != nil {
@@ -79,7 +81,7 @@ func (d *DBSink) UpdateResource(userId int, resourceId int, newData interface{},
 	}
 }
 
-func (d *DBSink) DeleteResource(userId int, resourceId int, resource interface{}, time time.Time) {
+func (d *MysqlSink) DeleteResource(userId int, resourceId int, resource interface{}, time time.Time) {
 
 	conn, err := d.dbPool.GetConnection()
 	if err != nil {
