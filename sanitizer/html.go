@@ -61,8 +61,13 @@ func (h *HtmlSanitizer) SanitizeString(field reflect.StructField, fieldValue str
 
 	fieldTag := field.Tag.Get(TagName)
 
-	// if we don't have a value for the sanitize tag on this field, we just return the raw value
-	if field.Tag.Get(TagName) == "" {
+	// in case we received an empty tag and allowEmptyTag is not explicitly set we return an error
+	if field.Tag.Get(TagName) == "" && !h.allowEmptyTag {
+		return "", fmt.Errorf("received empty tag on field %q this is not allowed unless allowEmptyTag is explicitly set", field.Name)
+	}
+
+	// in case empty fields are allowed or we received an empty tag we just pass the raw value
+	if (field.Tag.Get(TagName) == "" && h.allowEmptyTag) || field.Tag.Get(TagName) == TagNone {
 		res = fieldValue
 		return
 	}

@@ -263,6 +263,21 @@ func TestInvalidSanitizer(t *testing.T) {
 	assert.Equal(t, err.Error(), "invalid sanitizer")
 }
 
+func TestMissingOrEmptyTag(t *testing.T) {
+
+	HtmlSanitizer := NewHtmlSanitizer(map[string]HtmlSanitizeOptions{}, false)
+
+	testField := "test_field"
+	testStruct := struct {
+		TestField string
+	}{
+		TestField: testField,
+	}
+
+	err := SanitizeInputWithLocalSanitizer(&testStruct, HtmlSanitizer)
+	require.Equal(t, err.Error(), "received empty tag on field \"TestField\" this is not allowed unless allowEmptyTag is explicitly set")
+}
+
 func TestInvalidMapField(t *testing.T) {
 	testString1 := "test_entry_1"
 	testString2 := "test_entry_2"
