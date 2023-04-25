@@ -12,14 +12,13 @@ type FieldSanitizer interface {
 }
 
 type TypeValue struct {
-	FieldType  reflect.StructField
-	FieldValue reflect.Value
+	FieldType  *reflect.StructField
+	FieldValue *reflect.Value
 }
 
 const TagName = "sanitize"
-const TagDive = "dive"
 
-// SanitizeInput traverses a struct and applies the currently set Sanitizer to any field of type string or
+// SanitizeInput traverses a given struct and applies the currently set Sanitizer to any field of type string or
 // null.String.
 //
 // Example:
@@ -34,150 +33,140 @@ const TagDive = "dive"
 //		OptionalDescription: null.StringFrom("<p><a href=\"javascript:alert('XSS')\">Some Description</a></p>"),
 //	}
 //
-//	res, _ := sanitizer.SanitizeInput(myInput)
+//	_ = sanitizer.SanitizeInput(&myInput)
 //
 //	fmt.Println(res.MyTitle) // Title
 //	fmt.Println(res.OptionalDescription.String) // <p>Some Description</p>
 //
 // See Sanitizer on the default setting and how to override those. For applying a custom struct for just the given
 // input use SanitizeInputWithLocalSanitizer.
-func SanitizeInput[T any](source T) (res T, err error) {
-	return SanitizeInputWithLocalSanitizer(source, Sanitizer)
+//
+// SanitizeInput expects a non-nil pointer to a struct, otherwise it will return an error. Note that due to map indexes
+// not being addressable passing any kind of embedded map types will fails as well.
+func SanitizeInput(obj any) error {
+	return SanitizeInputWithLocalSanitizer(obj, Sanitizer)
 }
 
 // MustSanitizeInput behaves like SanitizeInput but panics instead of returning an error.
-func MustSanitizeInput[T any](source T) (res T) {
-	res, err := SanitizeInputWithLocalSanitizer(source, Sanitizer)
+func MustSanitizeInput(obj any) {
+	err := SanitizeInputWithLocalSanitizer(obj, Sanitizer)
 	if err != nil {
 		panic(err)
 	}
-
-	return res
 }
 
 // SanitizeInputWithLocalSanitizer can be used to sanitize some input with a custom sanitizer. This can be useful
 // if you have input that you want to treat differently than other input.
 //
 // To apply a custom sanitizer globally you can just override Sanitizer instead.
-func SanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) (res T, err error) {
+func SanitizeInputWithLocalSanitizer(obj any, sanitizer FieldSanitizer) error {
 
-	if reflect.TypeOf(source).Kind() == reflect.Struct {
-
-		sourceRef := TypeValue{
-			FieldType:  reflect.TypeOf(source).Field(0),
-			FieldValue: reflect.ValueOf(source),
-		}
-
-		sourceValue := reflect.ValueOf(source)
-		sourceCopy := reflect.New(sourceValue.Type()).Elem()
-
-		err = sanitize(sourceRef, sourceCopy, sanitizer, true)
-		if err != nil {
-			return
-		}
-
-		res = sourceCopy.Interface().(T)
-		return
+	rv := reflect.ValueOf(obj)
+	if rv.Kind() != reflect.Pointer || rv.IsNil() || rv.Elem().Kind() != reflect.Struct {
+		panic(fmt.Errorf("invalid parameter given expected non-nil pointer to a struct got %q instead", reflect.TypeOf(obj)))
 	}
 
-	err = fmt.Errorf("invalid type %q given as source, the source needs to be a struct", reflect.TypeOf(source))
-	return
+	sourceValue := reflect.ValueOf(obj).Elem()
+	sourceType := sourceValue.Type().Field(0)
+
+	sourceRef := TypeValue{
+		FieldType:  &sourceType,
+		FieldValue: &sourceValue,
+	}
+
+	return sanitize(sourceRef, sanitizer)
 }
 
-func MustSanitizeInputWithLocalSanitizer[T any](source T, sanitizer FieldSanitizer) T {
-
-	res, err := SanitizeInputWithLocalSanitizer(source, sanitizer)
+// MustSanitizeInputWithLocalSanitizer behaves like SanitizeInputWithLocalSanitizer but panics instead of returning an error.
+func MustSanitizeInputWithLocalSanitizer(obj any, sanitizer FieldSanitizer) {
+	err := SanitizeInputWithLocalSanitizer(obj, sanitizer)
 	if err != nil {
 		panic(err)
 	}
-
-	return res
 }
 
-func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer, isRoot bool) error {
+// sanitize traverses data structures recursively and replaces the value of all string or null.String fields with the
+// results of the sanitizer.
+//
+// To pass on the field tags we use the TypeValue here containing both the fields reflect.Value and reflect.StructField.
+// When we dereference values (such as pointers or interfaces) we use a little hack here, we just pass the pointer's
+// reflect.StructField and overwrite the Type there with the one of the dereferenced field.
+func sanitize(source TypeValue, sanitizer FieldSanitizer) error {
 
 	switch source.FieldValue.Kind() {
 
 	case reflect.String:
-		sanitizedField, err := sanitizer.SanitizeString(source.FieldType, source.FieldValue.String())
+		// if it's a string we just replace it with the result of the sanitizer.
+		sanitizedField, err := sanitizer.SanitizeString(*source.FieldType, source.FieldValue.String())
 		if err != nil {
 			return err
 		}
-		target.SetString(sanitizedField)
+		source.FieldValue.SetString(sanitizedField)
 
 	case reflect.Struct:
-		// if this struct is a kind of null.String we sanitize it as well, otherwise we traverse further
+		// if this struct is of type null.String we just replace it with the sanitizer's result as well
 		if source.FieldValue.CanConvert(reflect.TypeOf(null.String{})) {
-			sanitizedField, err := sanitizer.SanitizeNullString(source.FieldType, source.FieldValue.Interface().(null.String))
+			sanitizedField, err := sanitizer.SanitizeNullString(*source.FieldType, source.FieldValue.Interface().(null.String))
 			if err != nil {
 				return err
 			}
-			target.Set(reflect.ValueOf(sanitizedField))
-		} else if source.FieldType.Tag.Get(TagName) == TagDive || isRoot {
-			// if we get a 'sanitize="dive"' tag here, we traverse further into the struct fields. Unless this is the
-			// root struct, then we will sanitize always
+			source.FieldValue.Set(reflect.ValueOf(sanitizedField))
+		} else {
+			// otherwise, we traverse through all the struct fields and apply the sanitizer on them as well
 			for i := 0; i < source.FieldValue.NumField(); i += 1 {
+
+				elementValue := source.FieldValue.Field(i)
+				elementType := source.FieldValue.Type().Field(i)
+
 				embeddedTypeValue := TypeValue{
-					FieldType:  source.FieldValue.Type().Field(i),
-					FieldValue: source.FieldValue.Field(i),
+					FieldType:  &elementType,
+					FieldValue: &elementValue,
 				}
-				err := sanitize(embeddedTypeValue, target.Field(i), sanitizer, false)
+				err := sanitize(embeddedTypeValue, sanitizer)
 				if err != nil {
 					return err
 				}
 			}
-		} else {
-			// otherwise we just copy the original field without sanitizing
-			target.Set(source.FieldValue)
 		}
 
 	case reflect.Pointer:
 		sourceValue := source.FieldValue.Elem()
 
-		// Check if the pointer is nil
+		// Break here on nil pointers
 		if !sourceValue.IsValid() {
 			return nil
 		}
-		// Allocate a new object and set the pointer to it
-		target.Set(reflect.New(sourceValue.Type()))
 
+		sourceValue.Type()
 		sourceType := source.FieldType
 		sourceType.Type = sourceValue.Type()
 
 		extractedTypeValue := TypeValue{
 			FieldType:  sourceType,
-			FieldValue: sourceValue,
+			FieldValue: &sourceValue,
 		}
 
-		err := sanitize(extractedTypeValue, target.Elem(), sanitizer, false)
+		err := sanitize(extractedTypeValue, sanitizer)
 		if err != nil {
 			return err
 		}
 
 	case reflect.Interface:
 		sourceValue := source.FieldValue.Elem()
-
-		// Create a new object. Now new gives us a pointer, but we want the value it
-		// points to, so we have to call Elem() to unwrap it
-		targetValue := reflect.New(sourceValue.Type()).Elem()
-
 		sourceType := source.FieldType
 		sourceType.Type = sourceValue.Type()
 
 		extractedTypeValue := TypeValue{
 			FieldType:  sourceType,
-			FieldValue: sourceValue,
+			FieldValue: &sourceValue,
 		}
 
-		err := sanitize(extractedTypeValue, targetValue, sanitizer, false)
+		err := sanitize(extractedTypeValue, sanitizer)
 		if err != nil {
 			return err
 		}
 
-		target.Set(targetValue)
-
 	case reflect.Slice:
-		target.Set(reflect.MakeSlice(source.FieldType.Type, source.FieldValue.Len(), source.FieldValue.Cap()))
 		for i := 0; i < source.FieldValue.Len(); i += 1 {
 
 			elementValue := source.FieldValue.Index(i)
@@ -186,40 +175,20 @@ func sanitize(source TypeValue, target reflect.Value, sanitizer FieldSanitizer, 
 
 			elementTypeValue := TypeValue{
 				FieldType:  elementType,
-				FieldValue: elementValue,
+				FieldValue: &elementValue,
 			}
 
-			err := sanitize(elementTypeValue, target.Index(i), sanitizer, false)
+			err := sanitize(elementTypeValue, sanitizer)
 			if err != nil {
 				return err
 			}
 		}
 
 	case reflect.Map:
-		target.Set(reflect.MakeMap(source.FieldType.Type))
-		for _, key := range source.FieldValue.MapKeys() {
-			elementValue := source.FieldValue.MapIndex(key)
-			// New gives us a pointer, but again we want the value
-			targetValue := reflect.New(elementValue.Type()).Elem()
-
-			elementType := source.FieldType
-			elementType.Type = elementValue.Type()
-
-			elementTypeValue := TypeValue{
-				FieldType:  elementType,
-				FieldValue: elementValue,
-			}
-
-			err := sanitize(elementTypeValue, targetValue, sanitizer, false)
-			if err != nil {
-				return err
-			}
-
-			target.SetMapIndex(key, targetValue)
-		}
-
-	default:
-		target.Set(source.FieldValue)
+		// Unfortunately in the current design we are not able to sanitize map values. This is as map index operations
+		// are not addressable, which means we are not able to replace values within a map (we only receive a copy of
+		// the map values but require a pointer).
+		return fmt.Errorf("cannot sanitize map inputs as they are not addressable")
 	}
 
 	return nil
