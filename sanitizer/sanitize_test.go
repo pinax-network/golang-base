@@ -2,7 +2,7 @@ package sanitizer
 
 import (
 	"fmt"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/volatiletech/null/v8"
 	"reflect"
@@ -50,11 +50,12 @@ func TestStringField(t *testing.T) {
 		TestField: testField,
 	}
 
-	res, err := SanitizeInput(testStruct)
+	res := testSanitizer.SanitizeStringField(testField)
+
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
 
-	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
-	assert.Equal(t, testStruct, res)
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestStringPtrField(t *testing.T) {
@@ -67,12 +68,12 @@ func TestStringPtrField(t *testing.T) {
 		TestField: &testField,
 	}
 
-	res, err := SanitizeInput(testStruct)
+	res := testSanitizer.SanitizeStringField(testField)
+
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
 
-	sanitizedField := testSanitizer.SanitizeStringField(testField)
-	testStruct.TestField = &sanitizedField
-	assert.Equal(t, testStruct, res)
+	assert.Equal(t, testStruct.TestField, &res)
 }
 
 func TestStringSliceField(t *testing.T) {
@@ -84,14 +85,15 @@ func TestStringSliceField(t *testing.T) {
 		TestField: []string{"test_entry_1", "test_entry_2", "test_entry_3"},
 	}
 
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-
+	res := make([]string, len(testStruct.TestField))
 	for i, f := range testStruct.TestField {
-		testStruct.TestField[i] = testSanitizer.SanitizeStringField(f)
+		res[i] = testSanitizer.SanitizeStringField(f)
 	}
 
-	assert.Equal(t, testStruct, res)
+	err := SanitizeInput(&testStruct)
+	require.NoError(t, err)
+
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestStringPtrSliceField(t *testing.T) {
@@ -107,15 +109,16 @@ func TestStringPtrSliceField(t *testing.T) {
 		TestField: []*string{&testString1, &testString2, &testString3},
 	}
 
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-
+	res := make([]*string, len(testStruct.TestField))
 	for i, f := range testStruct.TestField {
 		sanitizedString := testSanitizer.SanitizeStringField(*f)
-		testStruct.TestField[i] = &sanitizedString
+		res[i] = &sanitizedString
 	}
 
-	assert.Equal(t, testStruct, res)
+	err := SanitizeInput(&testStruct)
+	require.NoError(t, err)
+
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestStringSlicePtrField(t *testing.T) {
@@ -127,14 +130,15 @@ func TestStringSlicePtrField(t *testing.T) {
 		TestField: &[]string{"test_entry_1", "test_entry_2", "test_entry_3"},
 	}
 
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-
+	res := make([]string, len(*testStruct.TestField))
 	for i, f := range *testStruct.TestField {
-		(*testStruct.TestField)[i] = testSanitizer.SanitizeStringField(f)
+		res[i] = testSanitizer.SanitizeStringField(f)
 	}
 
-	assert.Equal(t, testStruct, res)
+	err := SanitizeInput(&testStruct)
+	require.NoError(t, err)
+
+	assert.Equal(t, testStruct.TestField, &res)
 }
 
 func TestStringPtrSlicePtrField(t *testing.T) {
@@ -150,43 +154,16 @@ func TestStringPtrSlicePtrField(t *testing.T) {
 		TestField: &[]*string{&testString1, &testString2, &testString3},
 	}
 
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-
+	res := make([]*string, len(*testStruct.TestField))
 	for i, f := range *testStruct.TestField {
 		sanitizedString := testSanitizer.SanitizeStringField(*f)
-		(*testStruct.TestField)[i] = &sanitizedString
+		res[i] = &sanitizedString
 	}
 
-	assert.Equal(t, testStruct, res)
-}
-
-func TestMapField(t *testing.T) {
-	testSanitizer := TestFieldSanitizer{}
-
-	testString1 := "test_entry_1"
-	testString2 := "test_entry_2"
-	testString3 := "test_entry_3"
-
-	testStruct := struct {
-		TestMap map[string]string `sanitize:"test"`
-	}{
-		TestMap: map[string]string{
-			"field1": testString1,
-			"field2": testString2,
-			"field3": testString3,
-		},
-	}
-
-	res, err := SanitizeInput(testStruct)
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
 
-	for i, f := range testStruct.TestMap {
-		sanitizedString := testSanitizer.SanitizeStringField(f)
-		testStruct.TestMap[i] = sanitizedString
-	}
-
-	assert.Equal(t, testStruct, res)
+	assert.Equal(t, testStruct.TestField, &res)
 }
 
 type StringType string
@@ -202,10 +179,13 @@ func TestStringTypeField(t *testing.T) {
 		TestField: testField,
 	}
 
-	res, err := SanitizeInput(testStruct)
+	var res StringType
+	res = StringType(testSanitizer.SanitizeStringField(string(testField)))
+
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
-	testStruct.TestField = StringType(testSanitizer.SanitizeStringField(string(testField)))
-	assert.Equal(t, testStruct, res)
+
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestEmbeddedStruct(t *testing.T) {
@@ -217,30 +197,17 @@ func TestEmbeddedStruct(t *testing.T) {
 
 	testField := "test_field"
 	testStruct := struct {
-		EmbeddedTestStruct `sanitize:"dive"`
-	}{
-		EmbeddedTestStruct{TestField: testField},
-	}
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
-	assert.Equal(t, testStruct, res)
-}
-
-func TestEmbeddedStructWithoutDive(t *testing.T) {
-	type EmbeddedTestStruct struct {
-		TestField string `sanitize:"test"`
-	}
-
-	testField := "test_field"
-	testStruct := struct {
 		EmbeddedTestStruct
 	}{
 		EmbeddedTestStruct{TestField: testField},
 	}
-	res, err := SanitizeInput(testStruct)
+
+	res := testSanitizer.SanitizeStringField(testField)
+
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
-	assert.Equal(t, testStruct, res)
+
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestNestedStruct(t *testing.T) {
@@ -252,30 +219,17 @@ func TestNestedStruct(t *testing.T) {
 
 	testField := "test_field"
 	testStruct := struct {
-		Nested nestedTestStruct `sanitize:"dive"`
-	}{
-		nestedTestStruct{TestField: testField},
-	}
-	res, err := SanitizeInput(testStruct)
-	require.NoError(t, err)
-	testStruct.Nested.TestField = testSanitizer.SanitizeStringField(testField)
-	assert.Equal(t, testStruct, res)
-}
-
-func TestNestedStructWithoutDive(t *testing.T) {
-	type nestedTestStruct struct {
-		TestField string `sanitize:"test"`
-	}
-
-	testField := "test_field"
-	testStruct := struct {
 		Nested nestedTestStruct
 	}{
 		nestedTestStruct{TestField: testField},
 	}
-	res, err := SanitizeInput(testStruct)
+
+	res := testSanitizer.SanitizeStringField(testField)
+
+	err := SanitizeInput(&testStruct)
 	require.NoError(t, err)
-	assert.Equal(t, testStruct, res)
+
+	assert.Equal(t, testStruct.Nested.TestField, res)
 }
 
 func TestLocalSanitizer(t *testing.T) {
@@ -288,22 +242,57 @@ func TestLocalSanitizer(t *testing.T) {
 		TestField: testField,
 	}
 
-	res, err := SanitizeInputWithLocalSanitizer(testStruct, testSanitizer)
+	res := testSanitizer.SanitizeStringField(testField)
+
+	err := SanitizeInputWithLocalSanitizer(&testStruct, testSanitizer)
 	require.NoError(t, err)
 
-	testStruct.TestField = testSanitizer.SanitizeStringField(testField)
-	assert.Equal(t, testStruct, res)
+	assert.Equal(t, testStruct.TestField, res)
 }
 
 func TestInvalidSanitizer(t *testing.T) {
 
 	testField := "test_field"
 	testStruct := struct {
-		TestField string `sanitize:"asdf"`
+		TestField string `sanitize:"invalid"`
 	}{
 		TestField: testField,
 	}
 
-	_, err := SanitizeInput(testStruct)
+	err := SanitizeInput(&testStruct)
 	assert.Equal(t, err.Error(), "invalid sanitizer")
+}
+
+func TestMissingOrEmptyTag(t *testing.T) {
+
+	HtmlSanitizer := NewHtmlSanitizer(map[string]HtmlSanitizeOptions{}, false)
+
+	testField := "test_field"
+	testStruct := struct {
+		TestField string
+	}{
+		TestField: testField,
+	}
+
+	err := SanitizeInputWithLocalSanitizer(&testStruct, HtmlSanitizer)
+	require.Equal(t, err.Error(), "received empty tag on field \"TestField\" this is not allowed unless allowEmptyTag is explicitly set")
+}
+
+func TestInvalidMapField(t *testing.T) {
+	testString1 := "test_entry_1"
+	testString2 := "test_entry_2"
+	testString3 := "test_entry_3"
+
+	testStruct := struct {
+		TestMap map[string]string `sanitize:"test"`
+	}{
+		TestMap: map[string]string{
+			"field1": testString1,
+			"field2": testString2,
+			"field3": testString3,
+		},
+	}
+
+	err := SanitizeInput(&testStruct)
+	require.Errorf(t, err, "cannot sanitize map inputs as they are not addressable")
 }

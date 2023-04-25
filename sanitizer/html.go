@@ -9,22 +9,25 @@ import (
 	"strings"
 )
 
-type SanitizeOptions struct {
+const TagNone = "none"
+
+// HtmlSanitizeOptions define the options on how to sanitize fields using bluemonday.Policy for removing html tags.
+type HtmlSanitizeOptions struct {
 	Policy           *bluemonday.Policy
-	UnescapeString   bool
-	CleanWhitespaces bool
+	UnescapeString   bool // unescapes special characters
+	CleanWhitespaces bool // removes leading and trailing whitespaces
 }
 
-func GetDefaultStrictOptions() SanitizeOptions {
-	return SanitizeOptions{
+func GetDefaultStrictOptions() HtmlSanitizeOptions {
+	return HtmlSanitizeOptions{
 		Policy:           bluemonday.StrictPolicy(),
 		UnescapeString:   true,
 		CleanWhitespaces: true,
 	}
 }
 
-func GetDefaultHtmlOptions() SanitizeOptions {
-	return SanitizeOptions{
+func GetDefaultHtmlOptions() HtmlSanitizeOptions {
+	return HtmlSanitizeOptions{
 		Policy:           bluemonday.UGCPolicy(),
 		UnescapeString:   false,
 		CleanWhitespaces: true,
@@ -32,12 +35,25 @@ func GetDefaultHtmlOptions() SanitizeOptions {
 }
 
 type HtmlSanitizer struct {
-	sanitizer map[string]SanitizeOptions
+	sanitizer     map[string]HtmlSanitizeOptions
+	allowEmptyTag bool
 }
 
-func NewHtmlSanitizer(sanitizer map[string]SanitizeOptions) *HtmlSanitizer {
+// NewHtmlSanitizer initializes a new HtmlSanitizer with the given HtmlSanitizeOptions mapped to a tag name. If
+// allowEmptyTag is set to false the sanitizer will return an error in case a string or null.String field does not have
+// a sanitize tag set (or the tag is empty). To explicitly allow fields not being sanitized "none" can be passed as
+// tag.
+//
+// Example initialization:
+//
+//	sanitizer := NewHtmlSanitizer(map[string]HtmlSanitizeOptions{
+//		"strict": GetDefaultStrictOptions(),
+//		"html":   GetDefaultHtmlOptions(),
+//	}, false)
+func NewHtmlSanitizer(sanitizer map[string]HtmlSanitizeOptions, allowEmptyTag bool) *HtmlSanitizer {
 	return &HtmlSanitizer{
-		sanitizer: sanitizer,
+		sanitizer:     sanitizer,
+		allowEmptyTag: allowEmptyTag,
 	}
 }
 
@@ -45,8 +61,13 @@ func (h *HtmlSanitizer) SanitizeString(field reflect.StructField, fieldValue str
 
 	fieldTag := field.Tag.Get(TagName)
 
-	// if we don't have a value for the sanitize tag on this field, we just return the raw value
-	if field.Tag.Get(TagName) == "" {
+	// in case we received an empty tag and allowEmptyTag is not explicitly set we return an error
+	if field.Tag.Get(TagName) == "" && !h.allowEmptyTag {
+		return "", fmt.Errorf("received empty tag on field %q this is not allowed unless allowEmptyTag is explicitly set", field.Name)
+	}
+
+	// in case empty fields are allowed or we received an empty tag we just pass the raw value
+	if (field.Tag.Get(TagName) == "" && h.allowEmptyTag) || field.Tag.Get(TagName) == TagNone {
 		res = fieldValue
 		return
 	}
