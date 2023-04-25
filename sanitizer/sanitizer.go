@@ -6,7 +6,7 @@ package sanitizer
 // 'html' policy (strips away dangerous html tags).
 //
 // To set your own sanitizer just override this variable with your own before calling SanitizeInput.
-var Sanitizer FieldSanitizer = NewHtmlSanitizer(map[string]SanitizeOptions{
+var Sanitizer FieldSanitizer = NewHtmlSanitizer(map[string]HtmlSanitizeOptions{
 	"strict": GetDefaultStrictOptions(),
 	"html":   GetDefaultHtmlOptions(),
-})
+}, false)
