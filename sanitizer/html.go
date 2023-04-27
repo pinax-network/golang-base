@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const TagNone = "none"
+const TagExclude = "-"
 
 // HtmlSanitizeOptions define the options on how to sanitize fields using bluemonday.Policy for removing html tags.
 type HtmlSanitizeOptions struct {
@@ -41,8 +41,7 @@ type HtmlSanitizer struct {
 
 // NewHtmlSanitizer initializes a new HtmlSanitizer with the given HtmlSanitizeOptions mapped to a tag name. If
 // allowEmptyTag is set to false the sanitizer will return an error in case a string or null.String field does not have
-// a sanitize tag set (or the tag is empty). To explicitly allow fields not being sanitized "none" can be passed as
-// tag.
+// a sanitize tag set (or the tag is empty). To explicitly allow fields not being sanitized use "-" for the tag.
 //
 // Example initialization:
 //
@@ -67,7 +66,7 @@ func (h *HtmlSanitizer) SanitizeString(field reflect.StructField, fieldValue str
 	}
 
 	// in case empty fields are allowed or we received an empty tag we just pass the raw value
-	if (field.Tag.Get(TagName) == "" && h.allowEmptyTag) || field.Tag.Get(TagName) == TagNone {
+	if (field.Tag.Get(TagName) == "" && h.allowEmptyTag) || field.Tag.Get(TagName) == TagExclude {
 		res = fieldValue
 		return
 	}
