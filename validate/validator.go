@@ -1,13 +1,14 @@
 package validate
 
 import (
-	"github.com/eosnationftw/eosn-base-api/log"
-	"github.com/go-playground/validator/v10"
-	"github.com/go-playground/validator/v10/non-standard/validators"
 	"reflect"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
 )
 
 type JsonValidator struct {
@@ -73,5 +74,11 @@ func (v *JsonValidator) lazyinit() {
 			return regex.MatchString(fl.Field().String())
 		})
 		log.FatalIfError("failed to initialize 'username' validation", err)
+
+		err = v.validate.RegisterValidation("githubissue", func(fl validator.FieldLevel) bool {
+			regex := regexp.MustCompile(`^https:\/\/github\.com\/[\w-]+\/[\w-]+\/issues\/\d+$`)
+			return regex.MatchString(fl.Field().String())
+		})
+		log.FatalIfError("failed to initialize 'githubissue' validation", err)
 	})
 }
