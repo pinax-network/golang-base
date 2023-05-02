@@ -80,5 +80,12 @@ func (v *JsonValidator) lazyinit() {
 			return regex.MatchString(fl.Field().String())
 		})
 		log.FatalIfError("failed to initialize 'githubissue' validation", err)
+
+		// validate whether link is a github repo or org
+		err = v.validate.RegisterValidation("githubrepo", func(fl validator.FieldLevel) bool {
+			regex := regexp.MustCompile(`^https:\/\/github\.com\/([a-zA-Z0-9_-]+)(\/[a-zA-Z0-9_-]+)?(\/)?$`)
+			return regex.MatchString(fl.Field().String())
+		})
+		log.FatalIfError("failed to initialize 'githubrepo' validation", err)
 	})
 }

@@ -163,3 +163,62 @@ func TestGithubIssueValidation(t *testing.T) {
 	})
 	assert.Error(t, err)
 }
+
+func TestGithubOrgRepoValidation(t *testing.T) {
+	v := &JsonValidator{}
+	err := v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com/org/repo",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com/org1",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com/org1/",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com/org/repo/issues/",
+	})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "http://github.com/org/repo",
+	})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "github.com/org/repo",
+	})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com",
+	})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://gitlab.com",
+	})
+	assert.Error(t, err)
+}
