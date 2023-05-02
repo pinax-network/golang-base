@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"github.com/volatiletech/null/v8"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -219,6 +220,24 @@ func TestGithubOrgRepoValidation(t *testing.T) {
 		Foo string `binding:"githubrepo"`
 	}{
 		Foo: "https://gitlab.com",
+	})
+	assert.Error(t, err)
+}
+
+func TestNullStringValidation(t *testing.T) {
+
+	v := &JsonValidator{}
+	err := v.ValidateStruct(struct {
+		Foo null.String `binding:"required,lt=10"`
+	}{
+		Foo: null.StringFrom("length_ok"),
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo null.String `binding:"required,lt=10"`
+	}{
+		Foo: null.StringFrom("way_to_long_of_a_string"),
 	})
 	assert.Error(t, err)
 }
