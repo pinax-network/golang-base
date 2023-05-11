@@ -7,6 +7,7 @@ import (
 	"fmt"
 	base_response "github.com/eosnationftw/eosn-base-api/response"
 	"github.com/mitchellh/mapstructure"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
@@ -26,7 +27,7 @@ func ReadResponseBody(response *http.Response, target interface{}) error {
 	}
 
 	// put the body content back as the response body is now empty
-	response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// unmarshal into the general api response format
 	var apiResponse base_response.ApiDataResponse

@@ -1,0 +1,48 @@
+syntax = "proto3";
+package eosn.protobuf.v1;
+option go_package = "./pb";
+
+import "common.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// Models
+
+message BountyContribution {
+  Transaction transaction = 1;
+  BountyTransferData transfer = 2;
+}
+
+enum BountyState {
+  RELEASED = 0;
+  DONE = 1;
+}
+
+message BountyTransferData {
+  uint64 transfer_id = 1;
+  string bounty_id = 2;
+  string funder_user_id = 3;
+  string from = 4;
+  string to = 5;
+  TokenData ext_quantity = 6;
+  string fee = 7;
+  string memo = 8;
+  double value = 9;
+  bytes trx_id = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+message UpdateBountyStateData {
+  IrreversibleTransaction transaction = 1;
+  string bounty_id = 2;
+  BountyState state = 3;
+}
+
+// Requests
+
+// Service
+
+service PomeloBountiesInternalService {
+  rpc AddBountyTransfer(BountyContribution) returns (google.protobuf.Empty) {};
+  rpc UpdateBountyState(UpdateBountyStateData) returns (google.protobuf.Empty) {};
+}
