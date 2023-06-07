@@ -61,6 +61,7 @@ const (
 	CONFLICT_ACCOUNT_DEACTIVATED           = "account_deactivated"               // the given account has been deactivated
 	CONFLICT_BOUNTY_APPLICATION_EXISTS     = "bounty_application_already_exists" // the user is trying to apply to a bounty he has already applied to
 	CONFLICT_BOUNTY_NAME_EXISTS            = "bounty_name_already_exists"        // the given bounty name has already been used
+	CONFLICT_BOUNTY_SKILL_EXISTS           = "bounty_skill_already_exists"       // a bounty skill with the given name already exists
 	CONFLICT_CANNOT_UNLINK_MAIN_SOCIAL     = "cannot_unlink_main_social"         // the user tried to unlink the social provider he has used to create the account
 	CONFLICT_COLLECTION_NAME_EXISTS        = "collection_already_exists"         // a collection with the given name already exists in the database
 	CONFLICT_DUPLICATE_PHONE_NUMBER        = "duplicate_phone_number"            // phone number already verified by another account
