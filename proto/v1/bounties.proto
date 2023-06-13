@@ -16,6 +16,7 @@ message BountyContribution {
 enum BountyState {
   RELEASED = 0;
   DONE = 1;
+  REFUNDED = 2;
 }
 
 message BountyTransferData {
