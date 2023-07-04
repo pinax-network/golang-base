@@ -4,7 +4,6 @@ option go_package = "./pb";
 
 import "common.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 // Models
 
@@ -33,8 +32,6 @@ message BountyTransferData {
   TokenData ext_quantity = 5;
   string fee = 6;
   double value = 7;
-  bytes trx_id = 8;
-  google.protobuf.Timestamp created_at = 10;
 }
 
 message UpdateBountyStateData {
