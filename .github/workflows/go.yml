@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup SSH Keys and known_hosts
         env:
@@ -23,19 +23,12 @@ jobs:
           git config --global url."git@github.com:eosnationftw".insteadOf "https://github.com/eosnationftw"
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.18
-
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          go-version: 1.20
+          check-latest: true
+          cache: true
+          cache-dependency-path: "**go.sum"
 
       - name: Format
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
