@@ -22,19 +22,64 @@ const (
 var ZapLogger *zap.Logger
 var SugaredLogger *zap.SugaredLogger
 
-func InitializeLogger(logDebug bool) error {
+// InitializeGlobalLogger initializes a global console logger with sane defaults.
+// If logDebug is set to true, we are going to log debug messages as well, otherwise the min level is going to be Info.
+//
+// The logger can then be used by calling the log functions directly. Example code:
+//
+//	// We only need to initialize the global logger once in our application
+//	_ = log.InitializeGlobalLogger(false)
+//	log.Info("successfully initialized the global logger!")
+func InitializeGlobalLogger(logDebug bool) (err error) {
 
-	var consoleEncoder zapcore.Encoder
-	var minLevel zapcore.Level
+	var logger *zap.Logger
 
 	if logDebug {
+		logger, err = InitializeConsoleLogger(zapcore.DebugLevel)
+	} else {
+		logger, err = InitializeConsoleLogger(zapcore.InfoLevel)
+	}
+
+	ZapLogger = logger
+	SugaredLogger = logger.Sugar()
+
+	return nil
+}
+
+// InitializeGlobalFileLogger works like InitializeGlobalLogger, but writes to a file instead of the console. Note that
+// calling this method will overwrite any global logger set by InitializeGlobalLogger.
+func InitializeGlobalFileLogger(logDebug bool, file *os.File) (err error) {
+
+	var logger *zap.Logger
+
+	if logDebug {
+		logger, err = InitializeFileLogger(zapcore.DebugLevel, file)
+	} else {
+		logger, err = InitializeFileLogger(zapcore.InfoLevel, file)
+	}
+
+	ZapLogger = logger
+	SugaredLogger = logger.Sugar()
+
+	return nil
+}
+
+// InitializeConsoleLogger initializes and returns a zap.Logger with sane defaults and the given min level. Note that
+// this will not set the global logger provided by this package. To use it you need to store it in a variable and call
+// the zap logging methods directly. Example:
+//
+//	logger, _ := InitializeConsoleLogger(zapcore.Info)
+//	logger.Info("initialized console logger!")
+func InitializeConsoleLogger(minLevel zapcore.Level) (logger *zap.Logger, err error) {
+
+	var consoleEncoder zapcore.Encoder
+
+	if minLevel <= zapcore.DebugLevel {
 		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-		minLevel = zapcore.DebugLevel
 	} else {
 		cfg := zap.NewProductionEncoderConfig()
 		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
 		consoleEncoder = zapcore.NewConsoleEncoder(cfg)
-		minLevel = zapcore.InfoLevel
 	}
 
 	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -52,37 +97,28 @@ func InitializeLogger(logDebug bool) error {
 		zapcore.NewCore(consoleEncoder, consoleOut, lowPriority),
 	)
 
-	logger := zap.New(core)
+	logger = zap.New(core)
 
-	ZapLogger = logger
-	SugaredLogger = logger.Sugar()
-
-	return nil
+	return
 }
 
-func InitializeFileLogger(logDebug bool, logLevel zapcore.Level, file *os.File) error {
+// InitializeFileLogger works like InitializeConsoleLogger, but returns a zap.Logger that writes to the given file.
+func InitializeFileLogger(minLevel zapcore.Level, file *os.File) (logger *zap.Logger, err error) {
 
 	var consoleEncoder zapcore.Encoder
-	var minLevel zapcore.Level
 
-	if logDebug {
+	if minLevel <= zapcore.DebugLevel {
 		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-		minLevel = zapcore.DebugLevel
 	} else {
 		cfg := zap.NewProductionEncoderConfig()
 		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
 		consoleEncoder = zapcore.NewConsoleEncoder(cfg)
-		minLevel = logLevel
 	}
 
 	core := zapcore.NewCore(consoleEncoder, file, minLevel)
+	logger = zap.New(core)
 
-	logger := zap.New(core)
-
-	ZapLogger = logger
-	SugaredLogger = logger.Sugar()
-
-	return nil
+	return
 }
 
 func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
