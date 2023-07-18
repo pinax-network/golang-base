@@ -4,11 +4,10 @@ option go_package = "./pb";
 
 import "common.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 // Models
 
-message BountyContribution {
+message BountyTransfer {
   Transaction transaction = 1;
   BountyTransferData transfer = 2;
 }
@@ -19,18 +18,20 @@ enum BountyState {
   REFUNDED = 2;
 }
 
+enum BountyTransferType {
+  DEPOSIT = 0;
+  WITHDRAWAL = 1;
+  CLAIM = 2;
+}
+
 message BountyTransferData {
-  uint64 transfer_id = 1;
+  BountyTransferType type = 1;
   string bounty_id = 2;
-  string funder_user_id = 3;
-  string from = 4;
-  string to = 5;
-  TokenData ext_quantity = 6;
-  string fee = 7;
-  string memo = 8;
-  double value = 9;
-  bytes trx_id = 10;
-  google.protobuf.Timestamp created_at = 11;
+  string user_id = 3;
+  string account_name = 4;
+  TokenData ext_quantity = 5;
+  string fee = 6;
+  double value = 7;
 }
 
 message UpdateBountyStateData {
@@ -44,6 +45,7 @@ message UpdateBountyStateData {
 // Service
 
 service PomeloBountiesInternalService {
-  rpc AddBountyTransfer(BountyContribution) returns (google.protobuf.Empty) {};
+  rpc AddBountyTransfer(BountyTransfer) returns (google.protobuf.Empty) {};
+  // deprecated
   rpc UpdateBountyState(UpdateBountyStateData) returns (google.protobuf.Empty) {};
 }
