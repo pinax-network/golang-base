@@ -1,0 +1,22 @@
+syntax = "proto3";
+package eosn.protobuf.v1;
+option go_package = "./pb";
+
+// Requests
+
+message AuthenticateByKeyRequest {
+  string api_key = 1;
+}
+
+// Responses
+
+message AuthenticateByKeyResponse {
+  string api_key = 1;
+  string eosn_id = 2;
+}
+
+// Services
+
+service PinaxInternalService {
+  rpc AuthenticateByKey(AuthenticateByKeyRequest) returns (AuthenticateByKeyResponse) {};
+}
