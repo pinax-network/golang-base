@@ -11,8 +11,8 @@ message AuthenticateByKeyRequest {
 // Responses
 
 message AuthenticateByKeyResponse {
-  string api_key = 1;
-  string eosn_id = 2;
+  string user_id = 1;
+  string api_key_id = 2;
 }
 
 // Services
