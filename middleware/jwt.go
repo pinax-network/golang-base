@@ -181,31 +181,31 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		c.Set(base_global.CONTEXT_AUTH0_ID, extractAuth0[1])
 
 		// extract user ID (currently this should always be the EOS Nation ID)
-		eosnId, ok := claims["https://account.eosnation.io/user_id"].(string)
+		eosnId, ok := claims[j.getNamespaceClaim("user_id")].(string)
 		if !ok || eosnId == "" {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id ('https://account.eosnation.io/user_id'): %s", tokenString))
+			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id (%q): %s", j.getNamespaceClaim("user_id"), tokenString))
 			return
 		}
 
-		c.Set(base_global.CONTEXT_USER_EOSN_ID, claims["https://account.eosnation.io/user_id"])
-		c.Set(base_global.CONTEXT_USER_EMAIL, claims["https://account.eosnation.io/email"])
-		c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims["https://account.eosnation.io/email_verified"])
+		c.Set(base_global.CONTEXT_USER_EOSN_ID, claims[j.getNamespaceClaim("user_id")])
+		c.Set(base_global.CONTEXT_USER_EMAIL, claims[j.getNamespaceClaim("email")])
+		c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims[j.getNamespaceClaim("email_verified")])
 
 		c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
 
 		// get the corresponding user from the database if requested
 		if extractUser {
-			user, apiErr := j.userService.ExtractUserByEosnId(c, eosnId)
+			user, apiErr := j.userService.ExtractUserByGUID(c, eosnId)
 			if apiErr != nil {
 				helper.ReportPrivateErrorAndAbort(c, apiErr, nil)
 				return
 			}
 
-			userEmail, ok := claims["https://account.eosnation.io/email"].(string)
+			userEmail, ok := claims[j.getNamespaceClaim("email")].(string)
 			if ok {
 				user.Email = userEmail
 			}
-			userEmailVerified, ok := claims["https://account.eosnation.io/email_verified"].(bool)
+			userEmailVerified, ok := claims[j.getNamespaceClaim("email_verified")].(bool)
 			if ok {
 				user.EmailVerified = userEmailVerified
 			}
@@ -309,4 +309,14 @@ func (j *JwksMiddleware) verifyAudience(auds []string, req bool) bool {
 	}
 
 	return false
+}
+
+func (j *JwksMiddleware) getNamespaceClaim(claim string) string {
+
+	namespace := j.config.Namespace
+	if !strings.HasSuffix(namespace, "/") {
+		namespace = namespace + "/"
+	}
+
+	return namespace + claim
 }
