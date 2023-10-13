@@ -39,7 +39,6 @@ type JwksMiddleware struct {
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 	certHandler   *CertHandler
 	config        *JwtMiddlewareConfig
-	namespace     string
 }
 
 type CertHandler struct {
@@ -48,7 +47,7 @@ type CertHandler struct {
 	refreshMu   *sync.Mutex
 }
 
-func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewareConfig, namespace string) (*JwksMiddleware, error) {
+func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewareConfig) (*JwksMiddleware, error) {
 
 	j := &JwksMiddleware{
 		config:      config,
@@ -56,7 +55,6 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 		certHandler: &CertHandler{
 			refreshMu: &sync.Mutex{},
 		},
-		namespace: namespace,
 	}
 
 	err := j.refreshCerts()
@@ -315,8 +313,8 @@ func (j *JwksMiddleware) verifyAudience(auds []string, req bool) bool {
 
 func (j *JwksMiddleware) getNamespaceClaim(claim string) string {
 
-	namespace := j.namespace
-	if !strings.HasSuffix(j.namespace, "/") {
+	namespace := j.config.Namespace
+	if !strings.HasSuffix(namespace, "/") {
 		namespace = namespace + "/"
 	}
 
