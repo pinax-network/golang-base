@@ -3,7 +3,7 @@ module github.com/eosnationftw/eosn-base-api/gin_helper
 go 1.21.3
 
 require (
-	github.com/eosnationftw/eosn-base-api v0.0.0-20231016134039-7deb54ff3bc4
+	github.com/eosnationftw/eosn-base-api v0.0.0-20231016155447-30a1dd485f0a
 	github.com/eosnationftw/eosn-base-api/sanitizer v0.0.0-20231013144046-840ab0a1e938
 	github.com/gin-gonic/gin v1.9.1
 	github.com/stretchr/testify v1.8.4
