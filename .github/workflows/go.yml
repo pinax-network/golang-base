@@ -44,3 +44,4 @@ jobs:
       - name: Tests
         run: |
           go test -v ./...
+          find . -name go.mod -execdir go test ./... \;
