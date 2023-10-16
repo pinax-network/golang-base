@@ -47,7 +47,7 @@ func GetUserEmailFromContext(ctx context.Context) (email string, err error) {
 
 // GetUserGUIDFromContext returns the user's guid from the context, ErrMissingContextValue if no guid is found, or
 // ErrInvalidContextType if a guid key is available, but cannot be cast into a string.
-func GetUserGUIDFromContext(ctx context.Context) (email string, err error) {
+func GetUserGUIDFromContext(ctx context.Context) (guid string, err error) {
 	return extractStringFromContext(ctx, base_global.CONTEXT_USER_GUID)
 }
 

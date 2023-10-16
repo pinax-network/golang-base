@@ -20,6 +20,7 @@ var testUser = &base_models.User{
 }
 
 var testEmail = "test@example.org"
+var testGUID = "999"
 
 func TestGetAuthenticatedUserFromContext(t *testing.T) {
 
@@ -73,4 +74,14 @@ func TestGetUserEmailFromContext(t *testing.T) {
 	email, err := GetUserEmailFromContext(c)
 	assert.NoError(t, err)
 	assert.Equal(t, testEmail, email)
+}
+
+func TestGetUserGUIDFromContext(t *testing.T) {
+
+	c := &gin.Context{}
+	c.Set(base_global.CONTEXT_USER_GUID, testGUID)
+
+	guid, err := GetUserGUIDFromContext(c)
+	assert.NoError(t, err)
+	assert.Equal(t, testGUID, guid)
 }
