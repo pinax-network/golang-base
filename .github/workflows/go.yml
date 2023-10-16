@@ -47,5 +47,5 @@ jobs:
 
       - name: Run tests in submodules
         run: |
-          find . -name go.mod -execdir go test ./... \;
+          find . -name go.mod -execdir go test -v ./... \;
 
