@@ -187,7 +187,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			return
 		}
 
-		c.Set(base_global.CONTEXT_USER_EOSN_ID, claims[j.getNamespaceClaim("user_id")])
+		c.Set(base_global.CONTEXT_USER_GUID, claims[j.getNamespaceClaim("user_id")])
 		c.Set(base_global.CONTEXT_USER_EMAIL, claims[j.getNamespaceClaim("email")])
 		c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims[j.getNamespaceClaim("email_verified")])
 
