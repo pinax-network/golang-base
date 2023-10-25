@@ -193,6 +193,15 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 
 		c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
 
+		// set the Github namespaces if available
+		if githubId, ok := claims[j.getNamespaceClaim("github_id")]; ok {
+			c.Set(base_global.CONTEXT_USER_GITHUB_ID, githubId)
+
+			if githubUsername, ok := claims[j.getNamespaceClaim("github_username")]; ok {
+				c.Set(base_global.CONTEXT_USER_GITHUB_USERNAME, githubUsername)
+			}
+		}
+
 		// get the corresponding user from the database if requested
 		if extractUser {
 			user, apiErr := j.userService.ExtractUserByGUID(c, eosnId)
