@@ -51,6 +51,18 @@ func GetUserGUIDFromContext(ctx context.Context) (guid string, err error) {
 	return extractStringFromContext(ctx, base_global.CONTEXT_USER_GUID)
 }
 
+// GetUserGithubIdFromContext returns the user's GitHub id, ErrMissingContextValue if no id is found, or
+// ErrInvalidContextType if a GitHub id key is available, but cannot be cast into a string.
+func GetUserGithubIdFromContext(ctx context.Context) (githubId string, err error) {
+	return extractStringFromContext(ctx, base_global.CONTEXT_USER_GITHUB_ID)
+}
+
+// GetUserGithubUsernameFromContext returns the user's GitHub username, ErrMissingContextValue if no username is found,
+// or ErrInvalidContextType if a GitHub username key is available, but cannot be cast into a string.
+func GetUserGithubUsernameFromContext(ctx context.Context) (githubUsername string, err error) {
+	return extractStringFromContext(ctx, base_global.CONTEXT_USER_GITHUB_USERNAME)
+}
+
 func extractStringFromContext(ctx context.Context, key string) (value string, err error) {
 
 	var ok bool
