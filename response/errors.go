@@ -33,6 +33,7 @@ const (
 	NOT_FOUND_BOUNTY_CATEGORY         = "bounty_category_not_found"         // the requested bounty category was not found
 	NOT_FOUND_BOUNTY_EXPERIENCE_LEVEL = "bounty_experience_level_not_found" // the requested bounty experience level was not found
 	NOT_FOUND_BOUNTY_SKILL            = "bounty_skill_not_found"            // the requested bounty skill was not found
+	NOT_FOUND_BOUNTY_GITHUB_URL       = "bounty_github_url_not_found"       // the specified bounty github url was not found
 	NOT_FOUND_COLLECTION              = "collection_not_found"              // the requested collection was not found
 	NOT_FOUND_FILE                    = "file_not_found"                    // the requested file was not found
 	NOT_FOUND_FUNDING_ADDRESS         = "funding_address_not_found"         // the eos account for the funding address could not be found on chain
