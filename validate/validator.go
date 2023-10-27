@@ -19,8 +19,8 @@ type JsonValidator struct {
 
 var (
 	EosAccountRegex  = regexp.MustCompile("^[a-z1-5.]{1,11}[a-z1-5]$")
-	GithubIssueRegex = regexp.MustCompile(`^https:\/\/github\.com\/[\w-]+\/[\w-]+\/issues\/\d+$`)
-	GithubRepoRegex  = regexp.MustCompile(`^https:\/\/github\.com\/([a-zA-Z0-9_-]+)(\/[a-zA-Z0-9_-]+)?(\/)?$`)
+	GithubIssueRegex = regexp.MustCompile(`^https:\/\/github\.com\/[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+\/issues\/\d+$`)
+	GithubRepoRegex  = regexp.MustCompile(`^https:\/\/github\.com\/([a-zA-Z0-9_\-\.]+)(\/[a-zA-Z0-9_\-\.]+)?(\/)?$`)
 	SortPairRegex    = regexp.MustCompile("^([A-Za-z_]+)(:(asc|desc))?$")
 	UsernameRegex    = regexp.MustCompile("^[a-z\\d]([a-z\\d]|\\.([a-z\\d])){2,38}$")
 )

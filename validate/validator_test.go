@@ -1,8 +1,9 @@
 package validate
 
 import (
-	"github.com/volatiletech/null/v8"
 	"testing"
+
+	"github.com/volatiletech/null/v8"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -125,6 +126,13 @@ func TestGithubIssueValidation(t *testing.T) {
 	err = v.ValidateStruct(struct {
 		Foo string `binding:"githubissue"`
 	}{
+		Foo: "https://github.com/org-dash.dot_underscore1/2repo-dash3.dot_underscore4/issues/6",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubissue"`
+	}{
 		Foo: "https://github.com/org/repo/invalid/123",
 	})
 	assert.Error(t, err)
@@ -171,6 +179,13 @@ func TestGithubOrgRepoValidation(t *testing.T) {
 		Foo string `binding:"githubrepo"`
 	}{
 		Foo: "https://github.com/org/repo",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"githubrepo"`
+	}{
+		Foo: "https://github.com/org-dash.dot_underscore1/2repo-dash3.dot_underscore4",
 	})
 	assert.NoError(t, err)
 
