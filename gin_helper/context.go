@@ -63,6 +63,27 @@ func GetUserGithubUsernameFromContext(ctx context.Context) (githubUsername strin
 	return extractStringFromContext(ctx, base_global.CONTEXT_USER_GITHUB_USERNAME)
 }
 
+// GetFullAuth0IdFromContext returns the full auth0 id from the context (in the form of '<provider>|<id>'),
+// ErrMissingContextValue if no auth0 id is found, or ErrInvalidContextType if an auth0 key is available,
+// but cannot be cast into a string.
+func GetFullAuth0IdFromContext(ctx context.Context) (githubUsername string, err error) {
+	return extractStringFromContext(ctx, base_global.CONTEXT_AUTH0_FULLID)
+}
+
+// GetAuth0IdFromContext returns the user's auth0 id from the context (without the provider),
+// ErrMissingContextValue if no auth0 id is found, or ErrInvalidContextType if an auth0 id key is available,
+// but cannot be cast into a string.
+func GetAuth0IdFromContext(ctx context.Context) (githubUsername string, err error) {
+	return extractStringFromContext(ctx, base_global.CONTEXT_AUTH0_ID)
+}
+
+// GetAuth0ProviderFromContext returns the user's auth0 provider from the context (without the auth0 id),
+// ErrMissingContextValue if no auth0 provider is found, or ErrInvalidContextType if an auth0 provider key is available,
+// but cannot be cast into a string.
+func GetAuth0ProviderFromContext(ctx context.Context) (githubUsername string, err error) {
+	return extractStringFromContext(ctx, base_global.CONTEXT_AUTH0_PROVIDER)
+}
+
 func extractStringFromContext(ctx context.Context, key string) (value string, err error) {
 
 	var ok bool
