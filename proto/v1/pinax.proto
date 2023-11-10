@@ -13,6 +13,7 @@ message AuthenticateByKeyRequest {
 message AuthenticateByKeyResponse {
   string user_id = 1;
   string api_key_id = 2;
+  string meta = 3;
 }
 
 // Services
