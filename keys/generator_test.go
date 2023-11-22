@@ -49,8 +49,8 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	// test with hmac signature and hex encoding
 	gen = NewGenerator(
 		WithRand(testKeyRand),
-		WithSigner(HmacSigner(sha256.New, []byte("test_signing_key"))),
-		WithVerifier(HmacVerifier(sha256.New, []byte("test_signing_key"))),
+		WithSigner(HmacSigner(sha256.New, []byte("test_signing_key"), -1)),
+		WithVerifier(HmacVerifier(sha256.New, []byte("test_signing_key"), -1)),
 		WithEncoding(HexEncoding()),
 	)
 	key, err = gen.GenerateKey()
@@ -63,11 +63,45 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, true, valid)
 
+	// test with hmac signature with prefix length and hex encoding
+	gen = NewGenerator(
+		WithRand(testKeyRand),
+		WithSigner(HmacSigner(sha256.New, []byte("test_signing_key"), 12)),
+		WithVerifier(HmacVerifier(sha256.New, []byte("test_signing_key"), 12)),
+		WithEncoding(HexEncoding()),
+	)
+	key, err = gen.GenerateKey()
+	assert.NoError(t, err)
+	// key is 746573746b65796c656e6774685f3136
+	// hmac is 42876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa (capped at the first 12 bytes)
+	assert.Equal(t, "746573746b65796c656e6774685f313642876f7915ca22838f7718a1", string(key))
+
+	valid, err = gen.VerifySignature(key)
+	assert.NoError(t, err)
+	assert.Equal(t, true, valid)
+
+	// ensure we don't accept a shorter prefix
+	gen = NewGenerator(
+		WithRand(testKeyRand),
+		WithSigner(HmacSigner(sha256.New, []byte("test_signing_key"), 12)),
+		WithVerifier(HmacVerifier(sha256.New, []byte("test_signing_key"), 10)),
+		WithEncoding(HexEncoding()),
+	)
+	key, err = gen.GenerateKey()
+	assert.NoError(t, err)
+	// key is 746573746b65796c656e6774685f3136
+	// hmac is 42876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa (capped at the first 12 bytes)
+	assert.Equal(t, "746573746b65796c656e6774685f313642876f7915ca22838f7718a1", string(key))
+
+	valid, err = gen.VerifySignature(key)
+	assert.NoError(t, err)
+	assert.Equal(t, false, valid)
+
 	// test with hmac signature and base64 encoding
 	gen = NewGenerator(
 		WithRand(testKeyRand),
-		WithSigner(HmacSigner(sha1.New, []byte("test_signing_key"))),
-		WithVerifier(HmacVerifier(sha1.New, []byte("test_signing_key"))),
+		WithSigner(HmacSigner(sha1.New, []byte("test_signing_key"), -1)),
+		WithVerifier(HmacVerifier(sha1.New, []byte("test_signing_key"), -1)),
 		WithEncoding(Base64Encoding()),
 	)
 	key, err = gen.GenerateKey()

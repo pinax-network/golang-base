@@ -15,13 +15,16 @@ func NoopVerifier() Verifier {
 	}
 }
 
-func HmacVerifier(h func() hash.Hash, signingKey []byte) Verifier {
+func HmacVerifier(h func() hash.Hash, signingKey []byte, prefixLength int) Verifier {
 	return func(key []byte, signature []byte) (bool, error) {
 		hmacSigner := hmac.New(h, signingKey)
 		hmacSigner.Write(key)
 		resSig := hmacSigner.Sum(nil)
+		if prefixLength <= 0 || prefixLength >= len(resSig) {
+			return subtle.ConstantTimeCompare(resSig, signature) == 1, nil
+		}
 
-		return subtle.ConstantTimeCompare(resSig, signature) == 1, nil
+		return subtle.ConstantTimeCompare(resSig[:prefixLength], signature) == 1, nil
 	}
 }
 
