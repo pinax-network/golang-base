@@ -55,7 +55,7 @@ func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, err error)
 		entry, err := c.updateFunc(ctx, key)
 
 		// In case we receive an *UpdateFunc* error here, we won't store the result and just return the error here.
-		// In this case we want to retry loading the entry again on the next Get call.
+		// In this case, we want to retry loading the entry again on the next Get call.
 		if err != nil {
 			return res, err
 		}
