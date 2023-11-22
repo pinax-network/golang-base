@@ -14,12 +14,14 @@ func WithKeyLength(keyLength int) Option {
 	}
 }
 
+// WithRand allows setting a custom random generator.
 func WithRand(rand Rand) Option {
 	return func(g *Generator) {
 		g.rand = rand
 	}
 }
 
+// WithEncoding sets the given Encoder and Decoder to be used to handle key codings.
 func WithEncoding(encoder Encoder, decoder Decoder) Option {
 	return func(g *Generator) {
 		g.encoder = encoder
@@ -27,12 +29,14 @@ func WithEncoding(encoder Encoder, decoder Decoder) Option {
 	}
 }
 
+// WithSigner sets a key signer.
 func WithSigner(signer Signer) Option {
 	return func(g *Generator) {
 		g.signer = signer
 	}
 }
 
+// WithVerifier sets a key verifier
 func WithVerifier(verifier Verifier) Option {
 	return func(g *Generator) {
 		g.verifier = verifier
