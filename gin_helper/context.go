@@ -45,6 +45,13 @@ func GetUserEmailFromContext(ctx context.Context) (email string, err error) {
 	return extractStringFromContext(ctx, base_global.CONTEXT_USER_EMAIL)
 }
 
+// GetUserEmailVerifiedFromContext returns if the user's email has been marked as verified, ErrMissingContextValue if no
+// email verification is found, or ErrInvalidContextType if an email verification key is available, but cannot be cast
+// into a bool.
+func GetUserEmailVerifiedFromContext(ctx context.Context) (emailVerified bool, err error) {
+	return extractBoolFromContext(ctx, base_global.CONTEXT_USER_EMAIL_VERIFIED)
+}
+
 // GetUserGUIDFromContext returns the user's guid from the context, ErrMissingContextValue if no guid is found, or
 // ErrInvalidContextType if a guid key is available, but cannot be cast into a string.
 func GetUserGUIDFromContext(ctx context.Context) (guid string, err error) {
@@ -90,6 +97,18 @@ func extractStringFromContext(ctx context.Context, key string) (value string, er
 	if ctx.Value(key) == nil {
 		err = ErrMissingContextValue
 	} else if value, ok = ctx.Value(key).(string); !ok {
+		err = ErrInvalidContextType
+	}
+
+	return
+}
+
+func extractBoolFromContext(ctx context.Context, key string) (value bool, err error) {
+
+	var ok bool
+	if ctx.Value(key) == nil {
+		err = ErrMissingContextValue
+	} else if value, ok = ctx.Value(key).(bool); !ok {
 		err = ErrInvalidContextType
 	}
 
