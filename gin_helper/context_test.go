@@ -76,6 +76,16 @@ func TestGetUserEmailFromContext(t *testing.T) {
 	assert.Equal(t, testEmail, email)
 }
 
+func TestGetUserEmailVerifiedFromContext(t *testing.T) {
+
+	c := &gin.Context{}
+	c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, true)
+
+	emailVerified, err := GetUserEmailVerifiedFromContext(c)
+	assert.NoError(t, err)
+	assert.Equal(t, true, emailVerified)
+}
+
 func TestGetUserGUIDFromContext(t *testing.T) {
 
 	c := &gin.Context{}
