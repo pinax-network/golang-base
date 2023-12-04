@@ -59,8 +59,7 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	// hmac is 42876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa
 	assert.Equal(t, "746573746b65796c656e6774685f313642876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa", string(key))
 
-	valid, err := gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid := gen.VerifySignature(key)
 	assert.Equal(t, true, valid)
 
 	// test with hmac signature with prefix length and hex encoding
@@ -76,8 +75,7 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	// hmac is 42876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa (capped at the first 12 bytes)
 	assert.Equal(t, "746573746b65796c656e6774685f313642876f7915ca22838f7718a1", string(key))
 
-	valid, err = gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid = gen.VerifySignature(key)
 	assert.Equal(t, true, valid)
 
 	// ensure we don't accept a shorter prefix
@@ -93,8 +91,7 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	// hmac is 42876f7915ca22838f7718a18c072652a15d42f783afd2a46553c6d7e58a73fa (capped at the first 12 bytes)
 	assert.Equal(t, "746573746b65796c656e6774685f313642876f7915ca22838f7718a1", string(key))
 
-	valid, err = gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid = gen.VerifySignature(key)
 	assert.Equal(t, false, valid)
 
 	// test with hmac signature and base64 encoding
@@ -109,8 +106,7 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 
 	assert.Equal(t, "dGVzdGtleWxlbmd0aF8xNpsqgAhQp5G9cGJ4jfMYTEY9y68r", string(key))
 
-	valid, err = gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid = gen.VerifySignature(key)
 	assert.Equal(t, true, valid)
 
 	// test with ed25519 signature and hex encoding
@@ -132,8 +128,7 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	// hmac is 59d676a27dfa5496097f0476f7646946f6dde9a03fcb5c94c19b66913587b02a0f898eb92ffe1707dad5597ded66e6d1877b8d11b1fb34f15dfb656ffdc7c808
 	assert.Equal(t, "746573746b65796c656e6774685f313659d676a27dfa5496097f0476f7646946f6dde9a03fcb5c94c19b66913587b02a0f898eb92ffe1707dad5597ded66e6d1877b8d11b1fb34f15dfb656ffdc7c808", string(key))
 
-	valid, err = gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid = gen.VerifySignature(key)
 	assert.Equal(t, true, valid)
 
 	// test with ed25519 signature and base64 encoding
@@ -147,7 +142,6 @@ func TestDecoder_GenerateSecureKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "dGVzdGtleWxlbmd0aF8xNlnWdqJ9+lSWCX8EdvdkaUb23emgP8tclMGbZpE1h7AqD4mOuS/+Fwfa1Vl97Wbm0Yd7jRGx+zTxXftlb/3HyAg=", string(key))
 
-	valid, err = gen.VerifySignature(key)
-	assert.NoError(t, err)
+	valid = gen.VerifySignature(key)
 	assert.Equal(t, true, valid)
 }

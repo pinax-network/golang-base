@@ -53,12 +53,14 @@ func (g *Generator) GenerateKey() ([]byte, error) {
 
 // VerifySignature returns true if the signature embedded in the key is valid. It uses the Verifier that has been
 // set using the WithVerifier option.
-func (g *Generator) VerifySignature(key []byte) (bool, error) {
+//
+// Note that this might also return false due to decoding issues.
+func (g *Generator) VerifySignature(key []byte) bool {
 
 	decodedKey, err := g.decoder(key)
 	if err != nil {
-		return false, err
+		return false
 	}
 
-	return g.verifier(decodedKey[:g.keyLength], decodedKey[g.keyLength:]), nil
+	return g.verifier(decodedKey[:g.keyLength], decodedKey[g.keyLength:])
 }
