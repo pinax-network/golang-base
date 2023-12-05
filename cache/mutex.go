@@ -13,3 +13,7 @@ func (m *keyedMutex) Lock(key string) func() {
 
 	return func() { mtx.Unlock() }
 }
+
+func (m *keyedMutex) Delete(key string) {
+	m.mutexes.Delete(key)
+}
