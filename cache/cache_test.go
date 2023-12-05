@@ -182,3 +182,59 @@ func TestCache_GetParallelErrors(t *testing.T) {
 	wg.Wait()
 	assert.Equal(t, 3, updateCnt)
 }
+
+func TestCache_Prune(t *testing.T) {
+
+	notImplementedError := errors.New("not implemented")
+
+	testCache := New(1*time.Minute, func(ctx context.Context, key string) (EntryUpdate[string], error) {
+		return EntryUpdate[string]{}, notImplementedError
+	})
+	testCache.entries["test_key"] = &Entry[string]{
+		Value:     "test_result",
+		Error:     nil,
+		ExpiresAt: time.Now().Add(5 * time.Minute),
+	}
+	testCache.entries["test_key_expired"] = &Entry[string]{
+		Value:     "test_result_expired",
+		Error:     nil,
+		ExpiresAt: time.Now().Add(5 * time.Minute),
+	}
+
+	// we load it first to initialize the locks
+	res, hit, err := testCache.Get(context.Background(), "test_key_expired")
+	assert.Equal(t, true, hit)
+	assert.NoError(t, err)
+	assert.Equal(t, "test_result_expired", res)
+
+	_, hasValue := testCache.entries["test_key_expired"]
+	assert.Equal(t, true, hasValue)
+	_, hasLock := testCache.keyLocks.mutexes.Load("test_key_expired")
+	assert.Equal(t, true, hasLock)
+
+	// now we set it expired
+	testCache.entries["test_key_expired"].ExpiresAt = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// prune the cache to remove test_key_expired
+	testCache.Prune()
+
+	// the expired entry should be gone now
+	_, hasValue = testCache.entries["test_key_expired"]
+	assert.Equal(t, false, hasValue)
+	_, hasLock = testCache.keyLocks.mutexes.Load("test_key_expired")
+	assert.Equal(t, false, hasLock)
+	_, hit, err = testCache.Get(context.Background(), "test_key_expired")
+	assert.Equal(t, false, hit)
+	assert.Equal(t, notImplementedError, err)
+
+	// the test_key should be still available
+	res, hit, err = testCache.Get(context.Background(), "test_key")
+	assert.Equal(t, true, hit)
+	assert.NoError(t, err)
+	assert.Equal(t, "test_result", res)
+
+	_, hasValue = testCache.entries["test_key"]
+	assert.Equal(t, true, hasValue)
+	_, hasLock = testCache.keyLocks.mutexes.Load("test_key")
+	assert.Equal(t, true, hasLock)
+}

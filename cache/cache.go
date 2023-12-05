@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -21,7 +22,8 @@ type UpdateFunc[T any] func(ctx context.Context, key string) (EntryUpdate[T], er
 // UpdateCache is an in-memory cache that provides only a Get method to retrieve values from a given key. In case the
 // entry is missing or expired, it will be updated within the Get method from the UpdateFunc.
 type UpdateCache[T any] struct {
-	locks      *keyedMutex
+	keyLocks   *keyedMutex
+	fullLock   *sync.RWMutex
 	ttl        time.Duration
 	entries    map[string]*Entry[T]
 	updateFunc UpdateFunc[T]
@@ -33,7 +35,8 @@ type UpdateCache[T any] struct {
 // The UpdateCache is thread-safe and can be called from multiple goroutines.
 func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 	return &UpdateCache[T]{
-		locks:      &keyedMutex{},
+		keyLocks:   &keyedMutex{},   // key locks providing a locking mechanism for each key
+		fullLock:   &sync.RWMutex{}, // full locks
 		ttl:        ttl,
 		entries:    make(map[string]*Entry[T]),
 		updateFunc: updateFunc,
@@ -46,7 +49,14 @@ func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 // This method is thread-safe and can be called from multiple goroutines.
 func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, err error) {
 
-	unlock := c.locks.Lock(key)
+	// We acquire a read lock here on the full cache. This does not prevent other goroutines to call Get and read
+	// different entries, but will block Prune from deleting entries until no more readers have locks.
+	c.fullLock.RLock()
+	defer c.fullLock.RUnlock()
+
+	// We acquire a read/write lock on the specific key here, which is going to block all other goroutines from reading
+	// or updating the entry until we are done here.
+	unlock := c.keyLocks.Lock(key)
 	defer unlock()
 
 	if entry, exists := c.entries[key]; exists && entry.ExpiresAt.After(time.Now()) {
@@ -70,5 +80,21 @@ func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, 
 		}
 
 		return entry.Value, false, entry.Error
+	}
+}
+
+// Prune removes all expired entries from the cache.
+func (c *UpdateCache[T]) Prune() {
+
+	// We acquire a write lock on the full cache. This means we can safely delete all expired keys from the cache,
+	// as all calls to Get will block until we are done here.
+	c.fullLock.Lock()
+	defer c.fullLock.Unlock()
+
+	for key, value := range c.entries {
+		if value.ExpiresAt.Before(time.Now()) {
+			delete(c.entries, key) // delete the cache entry
+			c.keyLocks.Delete(key) // delete the key lock
+		}
 	}
 }
