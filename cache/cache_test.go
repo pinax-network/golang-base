@@ -27,15 +27,17 @@ func TestCache_Get(t *testing.T) {
 	})
 
 	// test we get a valid response
-	res, err := testCache.Get(context.Background(), "test_key")
+	res, hit, err := testCache.Get(context.Background(), "test_key")
 	assert.NoError(t, err)
 	assert.Equal(t, "test_result", res)
+	assert.Equal(t, false, hit)
 	assert.Equal(t, 1, updateCnt)
 
 	// test the same key to ensure it's cached and UpdateFunc isn't called again
-	res, err = testCache.Get(context.Background(), "test_key")
+	res, hit, err = testCache.Get(context.Background(), "test_key")
 	assert.NoError(t, err)
 	assert.Equal(t, "test_result", res)
+	assert.Equal(t, true, hit)
 	assert.Equal(t, 1, updateCnt)
 }
 
@@ -57,7 +59,7 @@ func TestCache_GetParallel(t *testing.T) {
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
 		go func() {
-			res, err := testCache.Get(context.Background(), "test_key")
+			res, _, err := testCache.Get(context.Background(), "test_key")
 			assert.NoError(t, err)
 			assert.Equal(t, "test_result", res)
 			wg.Done()
@@ -86,16 +88,18 @@ func TestCache_GetExpires(t *testing.T) {
 	}
 
 	// test we get a cached response
-	res, err := testCache.Get(context.Background(), "test_key")
+	res, hit, err := testCache.Get(context.Background(), "test_key")
 	assert.NoError(t, err)
 	assert.Equal(t, "test_result", res)
+	assert.Equal(t, true, hit)
 	assert.Equal(t, 0, updateCnt)
 
 	// test we update the expired entry
 	testCache.entries["test_key"].ExpiresAt = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
-	res, err = testCache.Get(context.Background(), "test_key")
+	res, hit, err = testCache.Get(context.Background(), "test_key")
 	assert.NoError(t, err)
 	assert.Equal(t, "test_result", res)
+	assert.Equal(t, false, hit)
 	assert.Equal(t, 1, updateCnt)
 }
 
@@ -110,14 +114,16 @@ func TestCache_GetError(t *testing.T) {
 	})
 
 	// we should get a test error
-	_, err := testCache.Get(context.Background(), "test_key")
+	_, hit, err := testCache.Get(context.Background(), "test_key")
 	assert.Equal(t, testError, err)
 	assert.Equal(t, 1, updateCnt)
+	assert.Equal(t, false, hit)
 
 	// no entry should be cached, so calling Get() again should trigger the UpdateFunc
-	_, err = testCache.Get(context.Background(), "test_key")
+	_, hit, err = testCache.Get(context.Background(), "test_key")
 	assert.Equal(t, testError, err)
 	assert.Equal(t, 2, updateCnt)
+	assert.Equal(t, false, hit)
 }
 
 func TestCache_GetEmbeddedError(t *testing.T) {
@@ -131,14 +137,16 @@ func TestCache_GetEmbeddedError(t *testing.T) {
 	})
 
 	// we should get a test error
-	_, err := testCache.Get(context.Background(), "test_key")
+	_, hit, err := testCache.Get(context.Background(), "test_key")
 	assert.Equal(t, testError, err)
 	assert.Equal(t, 1, updateCnt)
+	assert.Equal(t, false, hit)
 
 	// as the error is embedded, it should be cached
-	_, err = testCache.Get(context.Background(), "test_key")
+	_, hit, err = testCache.Get(context.Background(), "test_key")
 	assert.Equal(t, testError, err)
 	assert.Equal(t, 1, updateCnt)
+	assert.Equal(t, true, hit)
 }
 
 func TestCache_GetParallelErrors(t *testing.T) {
@@ -166,7 +174,7 @@ func TestCache_GetParallelErrors(t *testing.T) {
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
 		go func() {
-			_, _ = testCache.Get(context.Background(), "test_key")
+			_, _, _ = testCache.Get(context.Background(), "test_key")
 			wg.Done()
 		}()
 	}

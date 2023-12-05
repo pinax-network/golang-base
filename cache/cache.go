@@ -44,20 +44,20 @@ func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 // from the cache. Otherwise, Get will try to update the entry using the UpdateFunc.
 //
 // This method is thread-safe and can be called from multiple goroutines.
-func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, err error) {
+func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, err error) {
 
 	unlock := c.locks.Lock(key)
 	defer unlock()
 
 	if entry, exists := c.entries[key]; exists && entry.ExpiresAt.After(time.Now()) {
-		return entry.Value, entry.Error
+		return entry.Value, true, entry.Error
 	} else {
 		entry, err := c.updateFunc(ctx, key)
 
 		// In case we receive an *UpdateFunc* error here, we won't store the result and just return the error here.
 		// In this case, we want to retry loading the entry again on the next Get call.
 		if err != nil {
-			return res, err
+			return res, false, err
 		}
 
 		// In case the error is embedded within the EntryUpdate, we still return it as the error below, but also update
@@ -69,6 +69,6 @@ func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, err error)
 			ExpiresAt: time.Now().Add(c.ttl),
 		}
 
-		return entry.Value, entry.Error
+		return entry.Value, false, entry.Error
 	}
 }
