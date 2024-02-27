@@ -86,7 +86,7 @@ func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPoo
 
 func GetMysqlDsn(connection *MysqlConnectionOptions, multiStatements bool) string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=%t",
+		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&multiStatements=%t",
 		connection.User,
 		connection.Password,
 		connection.Host,
