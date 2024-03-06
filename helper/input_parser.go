@@ -2,9 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/global"
-	"github.com/eosnationftw/eosn-base-api/input"
-	"github.com/eosnationftw/eosn-base-api/validate"
+	"github.com/pinax-network/golang-base/validate"
 	"strings"
 )
 

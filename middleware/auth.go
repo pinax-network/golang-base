@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/global"
-	"github.com/eosnationftw/eosn-base-api/helper"
-	"github.com/eosnationftw/eosn-base-api/response"
+	"github.com/pinax-network/golang-base/global"
+	"github.com/pinax-network/golang-base/helper"
+	"github.com/pinax-network/golang-base/response"
 	"github.com/gin-gonic/gin"
 )
 

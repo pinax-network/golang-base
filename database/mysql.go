@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	"github.com/friendsofgo/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/volatiletech/sqlboiler/v4/boil"

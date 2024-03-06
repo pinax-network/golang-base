@@ -3,7 +3,7 @@ package dfuse
 import (
 	"bytes"
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/tidwall/gjson"

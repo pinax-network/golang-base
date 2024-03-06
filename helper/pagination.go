@@ -1,7 +1,7 @@
 package helper
 
 import (
-	base_models "github.com/eosnationftw/eosn-base-api/models"
+	base_models "github.com/pinax-network/golang-base/models"
 	"math"
 )
 

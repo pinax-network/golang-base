@@ -2,8 +2,8 @@ package base_service
 
 import (
 	"context"
-	base_models "github.com/eosnationftw/eosn-base-api/models"
-	"github.com/eosnationftw/eosn-base-api/response"
+	base_models "github.com/pinax-network/golang-base/models"
+	"github.com/pinax-network/golang-base/response"
 )
 
 type UserService interface {

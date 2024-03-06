@@ -3,7 +3,7 @@ package file_sink
 import (
 	"context"
 	"fmt"
-	base_repositories "github.com/eosnationftw/eosn-base-api/repositories"
+	base_repositories "github.com/pinax-network/golang-base/repositories"
 	"golang.org/x/sys/unix"
 	"net/url"
 	"os"

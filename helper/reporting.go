@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"github.com/eosnationftw/eosn-base-api/response"
+	"github.com/pinax-network/golang-base/response"
 	"github.com/gin-gonic/gin"
 )
 

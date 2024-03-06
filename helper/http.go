@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	base_response "github.com/eosnationftw/eosn-base-api/response"
+	base_response "github.com/pinax-network/golang-base/response"
 	"github.com/mitchellh/mapstructure"
 	"io"
 	"io/ioutil"

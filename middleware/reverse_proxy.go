@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"

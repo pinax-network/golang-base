@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esutil"
-	"github.com/eosnationftw/eosn-base-api/log"
 	"github.com/friendsofgo/errors"
+	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
 )
 

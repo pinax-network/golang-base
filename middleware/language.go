@@ -2,11 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/global"
-	"github.com/eosnationftw/eosn-base-api/helper"
-	"github.com/eosnationftw/eosn-base-api/response"
-	"github.com/eosnationftw/eosn-base-api/service"
 	"github.com/gin-gonic/gin"
+	"github.com/pinax-network/golang-base/helper"
+	"github.com/pinax-network/golang-base/response"
 )
 
 type LanguageMiddleware struct {
