@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/pinax-network/golang-base/helper"
-	"github.com/pinax-network/golang-base/response"
 	"github.com/friendsofgo/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/pinax-network/golang-base/helper"
+	"github.com/pinax-network/golang-base/response"
 	"io/ioutil"
 )
 

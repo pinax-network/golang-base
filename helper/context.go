@@ -2,9 +2,9 @@ package helper
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pinax-network/golang-base/global"
 	"github.com/pinax-network/golang-base/models"
-	"github.com/gin-gonic/gin"
 )
 
 func ExtractLanguageFromContext(c *gin.Context) (language *base_models.Language, err error) {

@@ -2,10 +2,10 @@ package database
 
 import (
 	"fmt"
-	"github.com/pinax-network/golang-base/log"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
 )
 

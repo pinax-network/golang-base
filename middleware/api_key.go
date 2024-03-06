@@ -3,9 +3,9 @@ package middleware
 import (
 	"crypto/subtle"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/pinax-network/golang-base/helper"
 	"github.com/pinax-network/golang-base/response"
-	"github.com/gin-gonic/gin"
 )
 
 type ApiKeyMiddleware struct {

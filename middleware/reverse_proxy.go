@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/pinax-network/golang-base/log"
 	"github.com/gin-gonic/gin"
+	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/httputil"
