@@ -3,10 +3,9 @@ package file_sink
 import (
 	"context"
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/log"
-	"github.com/eosnationftw/eosn-base-api/repositories"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
 	"net/url"
 	"path"

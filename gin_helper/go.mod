@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api/gin_helper
+module github.com/pinax-network/golang-base/gin_helper
 
 go 1.21.3
 
@@ -49,4 +49,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/eosnationftw/eosn-base-api => ../
+replace github.com/pinax-network/golang-base => ../

@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api/cache
+module github.com/pinax-network/golang-base/cache
 
 go 1.21.4
 

@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"

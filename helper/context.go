@@ -2,8 +2,8 @@ package helper
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/global"
-	"github.com/eosnationftw/eosn-base-api/models"
+	"github.com/pinax-network/golang-base/global"
+	"github.com/pinax-network/golang-base/models"
 	"github.com/gin-gonic/gin"
 )
 

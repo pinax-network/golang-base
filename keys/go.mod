@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api/keys
+module github.com/pinax-network/golang-base/keys
 
 go 1.21.4
 

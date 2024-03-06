@@ -2,7 +2,7 @@ package audit
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
 	"time"
 )

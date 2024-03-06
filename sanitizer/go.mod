@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api/sanitizer
+module github.com/pinax-network/golang-base/sanitizer
 
 go 1.20
 

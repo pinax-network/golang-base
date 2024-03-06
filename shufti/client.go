@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/helper"
+	"github.com/pinax-network/golang-base/helper"
 	"io/ioutil"
 	"net/http"
 	"strings"

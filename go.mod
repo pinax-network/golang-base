@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api
+module github.com/pinax-network/golang-base
 
 go 1.20
 

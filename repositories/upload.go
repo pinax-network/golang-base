@@ -3,7 +3,7 @@ package base_repositories
 import (
 	"context"
 	"fmt"
-	base_models "github.com/eosnationftw/eosn-base-api/models"
+	base_models "github.com/pinax-network/golang-base/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/sys/unix"

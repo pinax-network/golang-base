@@ -2,7 +2,7 @@ package base_service
 
 import (
 	"context"
-	"github.com/eosnationftw/eosn-base-api/models"
+	"github.com/pinax-network/golang-base/models"
 	"github.com/friendsofgo/errors"
 )
 

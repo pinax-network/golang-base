@@ -1,4 +1,4 @@
-module github.com/eosnationftw/eosn-base-api/log
+module github.com/pinax-network/golang-base/log
 
 go 1.20
 
