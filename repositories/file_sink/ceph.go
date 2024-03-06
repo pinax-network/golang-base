@@ -6,6 +6,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/pinax-network/golang-base/log"
+	base_repositories "github.com/pinax-network/golang-base/repositories"
 	"go.uber.org/zap"
 	"net/url"
 	"path"

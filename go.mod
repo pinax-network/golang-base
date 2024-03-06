@@ -6,7 +6,6 @@ require (
 	github.com/Depado/ginprom v1.7.11
 	github.com/auth0/go-jwt-middleware v1.0.1
 	github.com/elastic/go-elasticsearch/v8 v8.8.2
-	github.com/eosnationftw/eosn-base-api/log v0.0.0-20230718174645-1cc69e78987b
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
 	github.com/friendsofgo/errors v0.9.2
 	github.com/gabriel-vasile/mimetype v1.4.2
@@ -23,6 +22,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.25
 	github.com/minio/minio-go/v7 v7.0.61
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/pinax-network/golang-base/log v0.0.0-20240306164640-afa6f2d9efd6
 	github.com/prometheus/client_golang v1.16.0
 	github.com/sendgrid/rest v2.6.9+incompatible
 	github.com/sendgrid/sendgrid-go v3.12.0+incompatible

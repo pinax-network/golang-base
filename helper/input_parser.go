@@ -2,6 +2,8 @@ package helper
 
 import (
 	"fmt"
+	base_global "github.com/pinax-network/golang-base/global"
+	base_input "github.com/pinax-network/golang-base/input"
 	"github.com/pinax-network/golang-base/validate"
 	"strings"
 )
