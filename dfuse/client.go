@@ -3,9 +3,9 @@ package dfuse
 import (
 	"bytes"
 	"fmt"
-	"github.com/pinax-network/golang-base/log"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/pinax-network/golang-base/log"
 	"github.com/tidwall/gjson"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"

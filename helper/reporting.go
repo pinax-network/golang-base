@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"github.com/pinax-network/golang-base/response"
 	"github.com/gin-gonic/gin"
+	"github.com/pinax-network/golang-base/response"
 )
 
 func ReportPublicError(c *gin.Context, apiError *response.ApiError, meta interface{}) {

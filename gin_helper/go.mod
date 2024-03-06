@@ -3,9 +3,9 @@ module github.com/pinax-network/golang-base/gin_helper
 go 1.21.3
 
 require (
-	github.com/eosnationftw/eosn-base-api v0.0.0-20231016162246-4af7430cc31e
-	github.com/eosnationftw/eosn-base-api/sanitizer v0.0.0-20231016162246-4af7430cc31e
 	github.com/gin-gonic/gin v1.9.1
+	github.com/pinax-network/golang-base v0.0.0-20240306164640-afa6f2d9efd6
+	github.com/pinax-network/golang-base/sanitizer v0.0.0-20240306164640-afa6f2d9efd6
 	github.com/stretchr/testify v1.8.4
 )
 

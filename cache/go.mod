@@ -3,7 +3,7 @@ module github.com/pinax-network/golang-base/cache
 go 1.21.4
 
 require (
-	github.com/eosnationftw/eosn-base-api/log v0.0.0-20231110132916-787ea3020b33
+	github.com/pinax-network/golang-base/log v0.0.0-20240306164640-afa6f2d9efd6
 	github.com/stretchr/testify v1.8.4
 )
 

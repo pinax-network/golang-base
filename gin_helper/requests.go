@@ -2,8 +2,8 @@ package gin_helper
 
 import (
 	"fmt"
-	"github.com/eosnationftw/eosn-base-api/sanitizer"
 	"github.com/gin-gonic/gin"
+	"github.com/pinax-network/golang-base/sanitizer"
 	"reflect"
 )
 

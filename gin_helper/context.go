@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	base_global "github.com/eosnationftw/eosn-base-api/global"
-	base_models "github.com/eosnationftw/eosn-base-api/models"
+	base_global "github.com/pinax-network/golang-base/global"
+	base_models "github.com/pinax-network/golang-base/models"
 )
 
 var (
