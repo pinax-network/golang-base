@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
-	"github.com/eosnationftw/eosn-base-api/log"
+	"github.com/pinax-network/golang-base/log"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"

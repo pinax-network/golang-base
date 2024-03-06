@@ -1,9 +1,9 @@
 package gin_helper
 
 import (
-	base_global "github.com/eosnationftw/eosn-base-api/global"
-	base_models "github.com/eosnationftw/eosn-base-api/models"
 	"github.com/gin-gonic/gin"
+	base_global "github.com/pinax-network/golang-base/global"
+	base_models "github.com/pinax-network/golang-base/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
