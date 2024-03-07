@@ -33,7 +33,7 @@ type StaticFileRepository interface {
 func NewUploadRepository(fileRepository StaticFileRepository, config *UploadRepositoryConfig) (*UploadRepository, error) {
 
 	if err := writeable(config.TempUploadDir); err != nil {
-		err = fmt.Errorf("temp upload dir ('%s') not writable: '%e'", config.TempUploadDir, err)
+		return nil, fmt.Errorf("temp upload dir ('%s') not writable: '%e'", config.TempUploadDir, err)
 	}
 
 	return &UploadRepository{

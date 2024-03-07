@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pinax-network/golang-base/helper"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -78,7 +78,7 @@ func (c *Client) GetVerificationUrl(reference, email, redirectUrl string) (strin
 	}
 	defer res.Body.Close()
 
-	bodyData, err := ioutil.ReadAll(res.Body)
+	bodyData, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}
