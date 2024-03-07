@@ -76,11 +76,9 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 			switch token.Claims.(jwt.MapClaims)["aud"].(type) {
 			case []interface{}:
 				aud = token.Claims.(jwt.MapClaims)["aud"].([]interface{})
-				break
 			case interface{}:
 				aud = make([]interface{}, 0)
-				aud = append(aud, token.Claims.(jwt.MapClaims)["aud"].(interface{}))
-				break
+				aud = append(aud, token.Claims.(jwt.MapClaims)["aud"])
 			default:
 				return token, errors.New("invalid audience")
 			}
