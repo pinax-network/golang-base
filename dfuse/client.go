@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/keepalive"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -92,7 +92,7 @@ func getToken(apiKey string) (token string, expiration time.Time, err error) {
 		return
 	}
 
-	if body, err := ioutil.ReadAll(resp.Body); err == nil {
+	if body, err := io.ReadAll(resp.Body); err == nil {
 		token = gjson.GetBytes(body, "token").String()
 		expiration = time.Unix(gjson.GetBytes(body, "expires_at").Int(), 0)
 	}

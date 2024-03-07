@@ -8,7 +8,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	base_response "github.com/pinax-network/golang-base/response"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -16,7 +15,7 @@ import (
 func ReadResponseBody(response *http.Response, target interface{}) error {
 
 	// read the current body
-	bodyBytes, err := ioutil.ReadAll(response.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}

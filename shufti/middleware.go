@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pinax-network/golang-base/helper"
 	"github.com/pinax-network/golang-base/response"
-	"io/ioutil"
+	"io"
 )
 
 type ShuftiAuthMiddleware struct {
@@ -34,14 +34,14 @@ func (s *ShuftiAuthMiddleware) VerifySignature() gin.HandlerFunc {
 			return
 		}
 
-		rawBody, err := ioutil.ReadAll(c.Request.Body)
+		rawBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Errorf("failed to read request body: %v", err))
 			return
 		}
 
 		// write back request body
-		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(rawBody))
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(rawBody))
 
 		if !s.verifySignatureHeader(signature, string(rawBody)) {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid signature given")
