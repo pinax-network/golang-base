@@ -22,7 +22,7 @@ func ReportPrivateErrorAndAbort(c *gin.Context, apiError *response.ApiError, met
 }
 
 func reportError(c *gin.Context, apiError *response.ApiError, meta interface{}, errType gin.ErrorType, abort bool) {
-	c.Error(apiError).SetMeta(meta).SetType(errType)
+	_ = c.Error(apiError).SetMeta(meta).SetType(errType)
 	if abort {
 		c.Abort()
 	}

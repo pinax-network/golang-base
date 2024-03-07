@@ -53,19 +53,14 @@ func Errors() gin.HandlerFunc {
 			switch v := metaInterface.(type) {
 			case string:
 				httpErr.Detail = v
-				break
 			case validator.ValidationErrors:
 				resultErrs = parseValidationErrors(httpErr, v)
-				break
 			case *validate.SortValidationError:
 				resultErrs = parseSortValidationErrors(httpErr, v)
-				break
 			case *strconv.NumError:
 				httpErr.Detail = fmt.Sprintf("failed to parse value '%s': %s", v.Num, v.Err.Error())
-				break
 			case error:
 				httpErr.Detail = v.Error()
-				break
 			default:
 				log.Error("received unknown type for error meta", zap.Any("meta_interface", metaInterface))
 			}
