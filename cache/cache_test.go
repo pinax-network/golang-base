@@ -209,7 +209,7 @@ func TestCache_Prune(t *testing.T) {
 
 	_, hasValue := testCache.entries["test_key_expired"]
 	assert.Equal(t, true, hasValue)
-	_, hasLock := testCache.keyLocks.mutexes.Load("test_key_expired")
+	_, hasLock := testCache.keyLocks.locks["test_key_expired"]
 	assert.Equal(t, true, hasLock)
 
 	// now we set it expired
@@ -221,7 +221,7 @@ func TestCache_Prune(t *testing.T) {
 	// the expired entry should be gone now
 	_, hasValue = testCache.entries["test_key_expired"]
 	assert.Equal(t, false, hasValue)
-	_, hasLock = testCache.keyLocks.mutexes.Load("test_key_expired")
+	_, hasLock = testCache.keyLocks.locks["test_key_expired"]
 	assert.Equal(t, false, hasLock)
 	_, hit, err = testCache.Get(context.Background(), "test_key_expired")
 	assert.Equal(t, false, hit)
@@ -235,6 +235,6 @@ func TestCache_Prune(t *testing.T) {
 
 	_, hasValue = testCache.entries["test_key"]
 	assert.Equal(t, true, hasValue)
-	_, hasLock = testCache.keyLocks.mutexes.Load("test_key")
+	_, hasLock = testCache.keyLocks.locks["test_key"]
 	assert.Equal(t, true, hasLock)
 }

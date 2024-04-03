@@ -35,7 +35,7 @@ type UpdateCache[T any] struct {
 // The UpdateCache is thread-safe and can be called from multiple goroutines.
 func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 	return &UpdateCache[T]{
-		keyLocks:   &keyedMutex{},   // key locks providing a locking mechanism for each key
+		keyLocks:   newKeyedMutex(), // key locks providing a locking mechanism for each key
 		fullLock:   &sync.RWMutex{}, // full locks
 		ttl:        ttl,
 		entries:    make(map[string]*Entry[T]),

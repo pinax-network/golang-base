@@ -3,17 +3,31 @@ package cache
 import "sync"
 
 type keyedMutex struct {
-	mutexes sync.Map
+	locks   map[string]*sync.Mutex
+	mapLock *sync.Mutex
+}
+
+func newKeyedMutex() *keyedMutex {
+	return &keyedMutex{locks: make(map[string]*sync.Mutex), mapLock: &sync.Mutex{}}
 }
 
 func (m *keyedMutex) Lock(key string) func() {
-	value, _ := m.mutexes.LoadOrStore(key, &sync.Mutex{})
-	mtx := value.(*sync.Mutex)
-	mtx.Lock()
+	m.mapLock.Lock()
+	defer m.mapLock.Unlock()
 
-	return func() { mtx.Unlock() }
+	lock, found := m.locks[key]
+	if !found {
+		lock = &sync.Mutex{}
+		m.locks[key] = lock
+	}
+
+	lock.Lock()
+	return func() { lock.Unlock() }
 }
 
 func (m *keyedMutex) Delete(key string) {
-	m.mutexes.Delete(key)
+	m.mapLock.Lock()
+	defer m.mapLock.Unlock()
+
+	delete(m.locks, key)
 }
