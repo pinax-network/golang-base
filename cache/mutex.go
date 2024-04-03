@@ -1,6 +1,8 @@
 package cache
 
-import "sync"
+import (
+	"sync"
+)
 
 type keyedMutex struct {
 	locks   map[string]*sync.Mutex
@@ -13,13 +15,12 @@ func newKeyedMutex() *keyedMutex {
 
 func (m *keyedMutex) Lock(key string) func() {
 	m.mapLock.Lock()
-	defer m.mapLock.Unlock()
-
 	lock, found := m.locks[key]
 	if !found {
 		lock = &sync.Mutex{}
 		m.locks[key] = lock
 	}
+	m.mapLock.Unlock()
 
 	lock.Lock()
 	return func() { lock.Unlock() }
