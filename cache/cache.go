@@ -22,11 +22,11 @@ type UpdateFunc[T any] func(ctx context.Context, key string) (EntryUpdate[T], er
 // UpdateCache is an in-memory cache that provides only a Get method to retrieve values from a given key. In case the
 // entry is missing or expired, it will be updated within the Get method from the UpdateFunc.
 type UpdateCache[T any] struct {
-	keyLocks   *keyedMutex
-	fullLock   *sync.RWMutex
-	ttl        time.Duration
-	entries    map[string]*Entry[T]
-	updateFunc UpdateFunc[T]
+	keyLocks    *keyedMutex
+	entriesLock *sync.Mutex
+	ttl         time.Duration
+	entries     map[string]*Entry[T]
+	updateFunc  UpdateFunc[T]
 }
 
 // New returns a new UpdateCache that sets the entry's expiration based on the given ttl. Whenever an entry is not
@@ -35,11 +35,11 @@ type UpdateCache[T any] struct {
 // The UpdateCache is thread-safe and can be called from multiple goroutines.
 func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 	return &UpdateCache[T]{
-		keyLocks:   newKeyedMutex(), // key locks providing a locking mechanism for each key
-		fullLock:   &sync.RWMutex{}, // full locks
-		ttl:        ttl,
-		entries:    make(map[string]*Entry[T]),
-		updateFunc: updateFunc,
+		keyLocks:    newKeyedMutex(), // key locks providing a locking mechanism for each key
+		entriesLock: &sync.Mutex{},
+		ttl:         ttl,
+		entries:     make(map[string]*Entry[T]),
+		updateFunc:  updateFunc,
 	}
 }
 
@@ -49,13 +49,7 @@ func New[T any](ttl time.Duration, updateFunc UpdateFunc[T]) *UpdateCache[T] {
 // This method is thread-safe and can be called from multiple goroutines.
 func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, err error) {
 
-	// We acquire a read lock here on the full cache. This does not prevent other goroutines to call Get and read
-	// different entries, but will block Prune from deleting entries until no more readers have locks.
-	c.fullLock.RLock()
-	defer c.fullLock.RUnlock()
-
-	// We acquire a read/write lock on the specific key here, which is going to block all other goroutines from reading
-	// or updating the entry until we are done here.
+	// We acquire a lock on the specific key here, to avoid having multiple concurrent misses on the same key.
 	unlock := c.keyLocks.Lock(key)
 	defer unlock()
 
@@ -69,6 +63,10 @@ func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, 
 		if err != nil {
 			return res, false, err
 		}
+
+		// acquire a write lock on the cache to update the entry
+		c.entriesLock.Lock()
+		defer c.entriesLock.Unlock()
 
 		// In case the error is embedded within the EntryUpdate, we still return it as the error below, but also update
 		// the cache. This allows us to cache persistent errors and reduce the load on any underlying datasource by not
@@ -86,10 +84,9 @@ func (c *UpdateCache[T]) Get(ctx context.Context, key string) (res T, hit bool, 
 // Prune removes all expired entries from the cache.
 func (c *UpdateCache[T]) Prune() {
 
-	// We acquire a write lock on the full cache. This means we can safely delete all expired keys from the cache,
-	// as all calls to Get will block until we are done here.
-	c.fullLock.Lock()
-	defer c.fullLock.Unlock()
+	// acquire a write lock on the cache to delete expired keys
+	c.entriesLock.Lock()
+	defer c.entriesLock.Unlock()
 
 	for key, value := range c.entries {
 		if value.ExpiresAt.Before(time.Now()) {
