@@ -22,6 +22,7 @@ var (
 	GithubIssueRegex = regexp.MustCompile(`^https:\/\/github\.com\/[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+\/issues\/\d+$`)
 	GithubRepoRegex  = regexp.MustCompile(`^https:\/\/github\.com\/([a-zA-Z0-9_\-\.]+)(\/[a-zA-Z0-9_\-\.]+)?(\/)?$`)
 	SortPairRegex    = regexp.MustCompile(`^([A-Za-z_]+)(:(asc|desc))?$`)
+	SearchPairRegex  = regexp.MustCompile(`^([a-zA-Z0-9_\-\.]+)(:([a-zA-Z0-9_\-\.]+))?$`)
 	UsernameRegex    = regexp.MustCompile(`^[a-z\d]([a-z\d]|\.([a-z\d])){2,38}$`)
 )
 
@@ -71,6 +72,11 @@ func (v *JsonValidator) lazyinit() {
 			return SortPairRegex.MatchString(fl.Field().String())
 		})
 		log.FatalIfError("failed to initialize 'sortpair' validation", err)
+
+		err = v.validate.RegisterValidation("searchpair", func(fl validator.FieldLevel) bool {
+			return SearchPairRegex.MatchString(fl.Field().String())
+		})
+		log.FatalIfError("failed to initialize 'searchpair' validation", err)
 
 		err = v.validate.RegisterValidation("eosaccount", func(fl validator.FieldLevel) bool {
 			return EosAccountRegex.MatchString(fl.Field().String())
