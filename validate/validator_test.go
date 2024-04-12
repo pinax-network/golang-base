@@ -86,6 +86,13 @@ func TestSearchPairValidation(t *testing.T) {
 		Foo: "invalid:",
 	})
 	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
+		Foo: "invalid",
+	})
+	assert.Error(t, err)
 }
 
 func TestEosAccountValidation(t *testing.T) {
