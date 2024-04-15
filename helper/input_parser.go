@@ -2,10 +2,11 @@ package helper
 
 import (
 	"fmt"
+	"strings"
+
 	base_global "github.com/pinax-network/golang-base/global"
 	base_input "github.com/pinax-network/golang-base/input"
 	"github.com/pinax-network/golang-base/validate"
-	"strings"
 )
 
 func ParsePaginationInput(input *base_input.Pagination) {
@@ -60,6 +61,36 @@ func ParseSortInput(inputSortPairs []string, allowedSortFields []string, default
 			Attribute: defaultField,
 			Direction: defaultDir,
 		})
+	}
+
+	return
+}
+
+func ParseSearchInput(inputSearchPairs []string, allowedSearchFields []string) (searchPairs []base_input.SearchPair, err error) {
+
+	errors := []error{}
+	searchPairs = []base_input.SearchPair{}
+
+	for _, p := range inputSearchPairs {
+		split := strings.Split(p, ":")
+		if len(split) != 2 {
+			errors = append(errors, fmt.Errorf("invalid search pair given: '%s', needs to be of format 'field:value'", p))
+			continue
+		}
+
+		if contains(allowedSearchFields, split[0]) {
+			searchPairs = append(searchPairs, base_input.SearchPair{
+				Attribute: split[0],
+				Value:     split[1],
+			})
+		} else {
+			errors = append(errors, fmt.Errorf("invalid search field given: '%s', needs to be one of %v", p, allowedSearchFields))
+			continue
+		}
+	}
+
+	if len(errors) > 0 {
+		err = &validate.SearchValidationError{Errors: errors}
 	}
 
 	return

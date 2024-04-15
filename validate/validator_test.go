@@ -59,6 +59,42 @@ func TestSortPairValidation(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestSearchPairValidation(t *testing.T) {
+	v := &JsonValidator{}
+	err := v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
+		Foo: "field:test123-124ASAD_PASD",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
+		Foo: "field:desc",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
+		Foo: "invalid:",
+	})
+	assert.Error(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
+		Foo: "invalid",
+	})
+	assert.Error(t, err)
+}
+
 func TestEosAccountValidation(t *testing.T) {
 	v := &JsonValidator{}
 	err := v.ValidateStruct(struct {

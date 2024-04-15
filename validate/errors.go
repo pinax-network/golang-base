@@ -19,3 +19,18 @@ func (s *SortValidationError) Error() string {
 
 	return strings.TrimSpace(buff.String())
 }
+
+type SearchValidationError struct {
+	Errors []error
+}
+
+func (s *SearchValidationError) Error() string {
+	buff := bytes.NewBufferString("")
+
+	for _, e := range s.Errors {
+		buff.WriteString(e.Error())
+		buff.WriteString("\n")
+	}
+
+	return strings.TrimSpace(buff.String())
+}
