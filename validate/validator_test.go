@@ -76,6 +76,13 @@ func TestSearchPairValidation(t *testing.T) {
 	err = v.ValidateStruct(struct {
 		Foo string `binding:"searchpair"`
 	}{
+		Foo: "field:search with spaces",
+	})
+	assert.NoError(t, err)
+
+	err = v.ValidateStruct(struct {
+		Foo string `binding:"searchpair"`
+	}{
 		Foo: "field:desc",
 	})
 	assert.NoError(t, err)
