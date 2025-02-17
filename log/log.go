@@ -22,10 +22,12 @@ const (
 var ZapLogger *zap.Logger
 var SugaredLogger *zap.SugaredLogger
 
-// InitializeGlobalLogger initializes a global console logger with sane defaults.
+// InitializeGlobalLogger initializes a global json logger with sane defaults.
 // If logDebug is set to true, we are going to log debug messages as well, otherwise the min level is going to be Info.
 //
-// The logger can then be used by calling the log functions directly. Example code:
+// Note: This is the preferred
+//
+// Example code:
 //
 //	// We only need to initialize the global logger once in our application
 //	_ = log.InitializeGlobalLogger(false)
@@ -35,9 +37,37 @@ func InitializeGlobalLogger(logDebug bool) (err error) {
 	var logger *zap.Logger
 
 	if logDebug {
+		logger, err = InitializeJsonLogger(zapcore.DebugLevel)
+	} else {
+		logger, err = InitializeJsonLogger(zapcore.InfoLevel)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	ZapLogger = logger
+	SugaredLogger = logger.Sugar()
+
+	return nil
+}
+
+// InitializeGlobalConsoleLogger works like InitializeGlobalLogger, but uses a console encoding format which is designed
+// for human consumption. This is useful for local development. For Kubernetes environments, InitializeGlobalLogger
+// should be used instead.
+// Note that calling this method will overwrite any global logger set by InitializeGlobalLogger.
+func InitializeGlobalConsoleLogger(logDebug bool) (err error) {
+
+	var logger *zap.Logger
+
+	if logDebug {
 		logger, err = InitializeConsoleLogger(zapcore.DebugLevel)
 	} else {
 		logger, err = InitializeConsoleLogger(zapcore.InfoLevel)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	ZapLogger = logger
@@ -56,6 +86,10 @@ func InitializeGlobalFileLogger(logDebug bool, file *os.File) (err error) {
 		logger, err = InitializeFileLogger(zapcore.DebugLevel, file)
 	} else {
 		logger, err = InitializeFileLogger(zapcore.InfoLevel, file)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	ZapLogger = logger
@@ -81,6 +115,36 @@ func InitializeConsoleLogger(minLevel zapcore.Level) (logger *zap.Logger, err er
 		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
 		consoleEncoder = zapcore.NewConsoleEncoder(cfg)
 	}
+
+	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.ErrorLevel
+	})
+	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl < zapcore.ErrorLevel && lvl >= minLevel
+	})
+
+	consoleOut := zapcore.Lock(os.Stdout)
+	consoleErrors := zapcore.Lock(os.Stderr)
+
+	core := zapcore.NewTee(
+		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
+		zapcore.NewCore(consoleEncoder, consoleOut, lowPriority),
+	)
+
+	logger = zap.New(core)
+
+	return
+}
+
+// InitializeJsonLogger works like InitializeConsoleLogger but uses structured json output only. This should be the
+// preferred way for logging in Kubernetes environments.
+func InitializeJsonLogger(minLevel zapcore.Level) (logger *zap.Logger, err error) {
+
+	var consoleEncoder zapcore.Encoder
+
+	cfg := zap.NewProductionEncoderConfig()
+	cfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	consoleEncoder = zapcore.NewJSONEncoder(cfg)
 
 	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.ErrorLevel
