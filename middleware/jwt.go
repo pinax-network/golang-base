@@ -63,11 +63,13 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 		if err != nil {
 			return nil, err
 		}
+		log.Info("loaded Auth0 JWKS from file", zap.String("file", config.JwksFile))
 	} else {
 		err := j.refreshCerts()
 		if err != nil {
 			return nil, err
 		}
+		log.Info("loaded Auth0 JWKS from url", zap.String("url", "https://"+j.config.Auth0Domain+"/.well-known/jwks.json"))
 
 		go j.startRefreshCertTimer()
 	}
