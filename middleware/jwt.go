@@ -16,6 +16,7 @@ import (
 	base_service "github.com/pinax-network/golang-base/service"
 	"go.uber.org/zap"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -57,12 +58,19 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 		},
 	}
 
-	err := j.refreshCerts()
-	if err != nil {
-		return nil, err
-	}
+	if config.JwksFile != "" {
+		err := j.loadCertsFromFile(config.JwksFile)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := j.refreshCerts()
+		if err != nil {
+			return nil, err
+		}
 
-	go j.startRefreshCertTimer()
+		go j.startRefreshCertTimer()
+	}
 
 	j.jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
@@ -249,6 +257,45 @@ func (j *JwksMiddleware) refreshCerts() error {
 	return nil
 }
 
+func (j *JwksMiddleware) loadCertsFromFile(path string) error {
+	certs := make(map[string]*rsa.PublicKey)
+
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	var jwks = Jwks{}
+	err = json.NewDecoder(file).Decode(&jwks)
+	if err != nil {
+		return err
+	}
+
+	if len(jwks.Keys) == 0 {
+		return errors.New("no keys available at " + path)
+	}
+
+	for _, key := range jwks.Keys {
+		certs[key.Kid], err = jwt.ParseRSAPublicKeyFromPEM([]byte("-----BEGIN CERTIFICATE-----\n" + key.X5c[0] + "\n-----END CERTIFICATE-----"))
+		log.Debug("loaded cert", zap.String("kid", key.Kid))
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(certs) == 0 {
+		err := errors.New("unable to find appropriate key")
+		return err
+	}
+
+	j.certHandler.refreshMu.Lock()
+	j.certHandler.certs = certs
+	j.certHandler.lastRefresh = time.Now()
+	j.certHandler.refreshMu.Unlock()
+
+	return nil
+}
+
 func (j *JwksMiddleware) startRefreshCertTimer() {
 
 	ticker := time.NewTicker(10 * time.Minute)
@@ -275,7 +322,6 @@ func (j *JwksMiddleware) loadCerts() (map[string]*rsa.PublicKey, error) {
 
 	var jwks = Jwks{}
 	err = json.NewDecoder(resp.Body).Decode(&jwks)
-
 	if err != nil {
 		return nil, err
 	}
