@@ -42,8 +42,8 @@ var (
 	ErrUnsupportedBalancingMode = errors.New("unsupported balancing mode")
 )
 
-func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPool, err error) {
-	connPool = &MysqlConnectionPool{}
+func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error) {
+	connPool := &MysqlConnectionPool{}
 	connPool.Connections = make([]*MysqlConnection, 0, len(config.Connections))
 	connPool.Mutex = &sync.Mutex{}
 	connPool.Config = config
@@ -72,16 +72,14 @@ func NewMysqlConnectionPool(config *ClusterConfig) (connPool *MysqlConnectionPoo
 		connPool.Connections = append(connPool.Connections, conn)
 	}
 
+	connPool.startDatabasePinging()
 	for _, connection := range connPool.Connections {
 		if connection.IsActive {
-			connPool.startDatabasePinging()
-			err = nil
-			return
+			return connPool, nil
 		}
 	}
 
-	err = ErrNoHealthyConn
-	return
+	return connPool, ErrNoHealthyConn
 }
 
 func GetMysqlDsn(connection *MysqlConnectionOptions, multiStatements bool) string {
@@ -229,15 +227,14 @@ func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
 
 	switch m.Config.BalancingMode {
 	case Random:
-		rand.Seed(time.Now().UnixNano())
 		randConn := rand.Intn(len(m.Connections))
 
-		// check if random connection is active
+		// check if this random connection is active
 		if m.Connections[randConn].IsActive {
 			return m.Connections[randConn], nil
 		}
 
-		// if the random connection is not active we fall through here and get the first active one
+		// if the random connection is not active, we fall through here and get the first active one
 		fallthrough
 
 	case Ordered:
