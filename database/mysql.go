@@ -72,7 +72,9 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 		connPool.Connections = append(connPool.Connections, conn)
 	}
 
-	connPool.startDatabasePinging()
+	connPool.PingsTicker = time.NewTicker(10 * time.Second)
+	connPool.PingsDone = make(chan bool)
+	go connPool.startDatabasePinging()
 	for _, connection := range connPool.Connections {
 		if connection.IsActive {
 			return connPool, nil
@@ -127,62 +129,56 @@ func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 }
 
 func (m *MysqlConnectionPool) startDatabasePinging() {
+	for {
+		select {
+		case <-m.PingsDone:
+			log.Log(log.INFO, "stop pinging database connections")
+			return
+		case <-m.PingsTicker.C:
 
-	m.PingsTicker = time.NewTicker(10 * time.Second)
-	m.PingsDone = make(chan bool)
+			numHealthy := 0
+			numUnhealthy := 0
 
-	go func() {
-		for {
-			select {
-			case <-m.PingsDone:
-				log.Log(log.INFO, "stop pinging database connections")
-				return
-			case <-m.PingsTicker.C:
+			for _, conn := range m.Connections {
+				isReachable := true
 
-				numHealthy := 0
-				numUnhealthy := 0
-
-				for _, conn := range m.Connections {
-					isReachable := true
-
-					if conn.DB != nil {
-						if !m.checkIsReachable(conn) {
-							isReachable = false
-						} else if !conn.IsActive { // conn was previously not reachable but now is again
-							log.Info("successfully reconnected to database", zap.String("name", conn.Name))
-							m.Mutex.Lock()
-							conn.IsActive = isReachable
-							m.Mutex.Unlock()
-						}
-					}
-					// try to reconnect to database
-					if conn.DB == nil || !isReachable {
-						db, err := connect(conn.Dsn)
-						if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
-							isReachable = false
-						} else {
-							if !m.checkIsReachable(conn) {
-								isReachable = false
-							}
-						}
-
+				if conn.DB != nil {
+					if !m.checkIsReachable(conn) {
+						isReachable = false
+					} else if !conn.IsActive { // conn was previously not reachable but now is again
+						log.Info("successfully reconnected to database", zap.String("name", conn.Name))
 						m.Mutex.Lock()
-						conn.DB = db
 						conn.IsActive = isReachable
 						m.Mutex.Unlock()
 					}
-
-					if isReachable {
-						numHealthy++
+				}
+				// try to reconnect to database
+				if conn.DB == nil || !isReachable {
+					db, err := connect(conn.Dsn)
+					if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
+						isReachable = false
 					} else {
-						numUnhealthy++
+						if !m.checkIsReachable(conn) {
+							isReachable = false
+						}
 					}
+
+					m.Mutex.Lock()
+					conn.DB = db
+					conn.IsActive = isReachable
+					m.Mutex.Unlock()
 				}
 
-				recordConnStats(numHealthy, numUnhealthy)
+				if isReachable {
+					numHealthy++
+				} else {
+					numUnhealthy++
+				}
 			}
+
+			recordConnStats(numHealthy, numUnhealthy)
 		}
-	}()
+	}
 }
 
 // MustGetConnection returns an active connection of panics if none of the connections from the pool is healthy
