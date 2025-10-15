@@ -2,8 +2,8 @@ package sanitizer
 
 import (
 	"fmt"
+	"github.com/aarondl/null/v9"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/volatiletech/null/v8"
 	"html"
 	"reflect"
 	"strings"

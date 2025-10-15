@@ -6,6 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -15,11 +21,6 @@ import (
 	"github.com/pinax-network/golang-base/response"
 	base_service "github.com/pinax-network/golang-base/service"
 	"go.uber.org/zap"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 type Jwks struct {

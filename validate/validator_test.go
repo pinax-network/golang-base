@@ -3,7 +3,7 @@ package validate
 import (
 	"testing"
 
-	"github.com/volatiletech/null/v8"
+	"github.com/aarondl/null/v9"
 
 	"github.com/stretchr/testify/assert"
 )

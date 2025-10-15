@@ -3,14 +3,15 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/friendsofgo/errors"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pinax-network/golang-base/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"go.uber.org/zap"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/friendsofgo/errors"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/pinax-network/golang-base/log"
+	"go.uber.org/zap"
 )
 
 type MysqlConnectionPool struct {

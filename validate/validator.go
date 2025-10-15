@@ -6,10 +6,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/aarondl/null/v9"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/validator/v10/non-standard/validators"
 	"github.com/pinax-network/golang-base/log"
-	"github.com/volatiletech/null/v8"
 )
 
 type JsonValidator struct {
