@@ -2,7 +2,7 @@ package sanitizer
 
 import (
 	"fmt"
-	"github.com/volatiletech/null/v8"
+	"github.com/aarondl/null/v9"
 	"reflect"
 )
 

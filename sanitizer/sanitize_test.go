@@ -2,9 +2,9 @@ package sanitizer
 
 import (
 	"fmt"
+	"github.com/aarondl/null/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/volatiletech/null/v8"
 	"reflect"
 	"testing"
 )
