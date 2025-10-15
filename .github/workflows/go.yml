@@ -14,10 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_EOSN_DEPLOY_KEY }}"
+          git config --global url."git@github.com:pinax-network".insteadOf "https://github.com/pinax-network"
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.x
+          go-version: "1.25.x"
           check-latest: true
           cache: true
           cache-dependency-path: "**go.sum"
