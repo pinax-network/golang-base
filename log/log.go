@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -193,7 +192,7 @@ func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
 		log.Println(message)
 
 		for _, f := range additionalFields {
-			log.Println(fmt.Sprintf("'%s': %+v", f.Key, f))
+			log.Printf("'%s': %+v", f.Key, f)
 		}
 		if logLevel == FATAL {
 			os.Exit(1)
@@ -207,26 +206,20 @@ func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
 	switch logLevel {
 	case DEBUG:
 		ZapLogger.Debug(message, additionalFields...)
-		break
 	case INFO:
 		ZapLogger.Info(message, additionalFields...)
-		break
 	case WARNING:
 		incWarnCounter()
 		ZapLogger.Warn(message, additionalFields...)
-		break
 	case ERROR:
 		incErrorCounter()
 		ZapLogger.Error(message, additionalFields...)
-		break
 	case PANIC:
 		incPanicCounter()
 		ZapLogger.Panic(message, additionalFields...)
-		break
 	case FATAL:
 		incFatalCounter()
 		ZapLogger.Fatal(message, additionalFields...)
-		break
 	}
 }
 
