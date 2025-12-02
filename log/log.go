@@ -1,11 +1,11 @@
 package log
 
 import (
-	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type LogLevel int
@@ -192,7 +192,7 @@ func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
 		log.Println(message)
 
 		for _, f := range additionalFields {
-			log.Println(fmt.Sprintf("'%s': %+v", f.Key, f))
+			log.Printf("'%s': %+v", f.Key, f)
 		}
 		if logLevel == FATAL {
 			os.Exit(1)
@@ -206,26 +206,20 @@ func Log(logLevel LogLevel, message string, additionalFields ...zap.Field) {
 	switch logLevel {
 	case DEBUG:
 		ZapLogger.Debug(message, additionalFields...)
-		break
 	case INFO:
 		ZapLogger.Info(message, additionalFields...)
-		break
 	case WARNING:
 		incWarnCounter()
 		ZapLogger.Warn(message, additionalFields...)
-		break
 	case ERROR:
 		incErrorCounter()
 		ZapLogger.Error(message, additionalFields...)
-		break
 	case PANIC:
 		incPanicCounter()
 		ZapLogger.Panic(message, additionalFields...)
-		break
 	case FATAL:
 		incFatalCounter()
 		ZapLogger.Fatal(message, additionalFields...)
-		break
 	}
 }
 
@@ -234,7 +228,7 @@ func Debug(message string, additionalFields ...zap.Field) {
 }
 
 func Debugf(template string, args ...interface{}) {
-	SugaredLogger.Debugf(template, args)
+	SugaredLogger.Debugf(template, args...)
 }
 
 func Info(message string, additionalFields ...zap.Field) {
@@ -242,7 +236,7 @@ func Info(message string, additionalFields ...zap.Field) {
 }
 
 func Infof(template string, args ...interface{}) {
-	SugaredLogger.Infof(template, args)
+	SugaredLogger.Infof(template, args...)
 }
 
 func Warn(message string, additionalFields ...zap.Field) {
@@ -250,7 +244,7 @@ func Warn(message string, additionalFields ...zap.Field) {
 }
 
 func Warnf(template string, args ...interface{}) {
-	SugaredLogger.Warnf(template, args)
+	SugaredLogger.Warnf(template, args...)
 }
 
 func Error(message string, additionalFields ...zap.Field) {
@@ -258,7 +252,7 @@ func Error(message string, additionalFields ...zap.Field) {
 }
 
 func Errorf(template string, args ...interface{}) {
-	SugaredLogger.Errorf(template, args)
+	SugaredLogger.Errorf(template, args...)
 }
 
 func Panic(message string, additionalFields ...zap.Field) {
@@ -266,7 +260,7 @@ func Panic(message string, additionalFields ...zap.Field) {
 }
 
 func Panicf(template string, args ...interface{}) {
-	SugaredLogger.Panicf(template, args)
+	SugaredLogger.Panicf(template, args...)
 }
 
 func Fatal(message string, additionalFields ...zap.Field) {
@@ -274,7 +268,7 @@ func Fatal(message string, additionalFields ...zap.Field) {
 }
 
 func Fatalf(template string, args ...interface{}) {
-	SugaredLogger.Fatalf(template, args)
+	SugaredLogger.Fatalf(template, args...)
 }
 
 func LogIfError(logLevel LogLevel, message string, err error, additionalFields ...zap.Field) bool {
