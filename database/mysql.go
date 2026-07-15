@@ -1,10 +1,12 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
@@ -12,6 +14,24 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pinax-network/golang-base/log"
 	"go.uber.org/zap"
+)
+
+const (
+	// dialTimeout bounds how long establishing a TCP connection to a node may take.
+	// Without it a dial to a dead/blackholed node blocks until the OS TCP timeout
+	// (minutes), which stalls both queries and the health-check loop.
+	dialTimeout = 5 * time.Second
+	// ioTimeout bounds individual read/write operations on an established connection.
+	ioTimeout = 5 * time.Second
+	// healthCheckTimeout bounds a single node health check so the ping loop can never
+	// block indefinitely on an unresponsive node.
+	healthCheckTimeout = 3 * time.Second
+	// maxConnLifetime recycles pooled connections so a broken connection to a node that
+	// went away is not reused indefinitely.
+	maxConnLifetime = 5 * time.Minute
+	// maxConnIdleTime closes idle connections, forcing a fresh (timeout-bounded) dial
+	// on the next use rather than reusing a possibly-dead idle connection.
+	maxConnIdleTime = 1 * time.Minute
 )
 
 type MysqlConnectionPool struct {
@@ -87,13 +107,16 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 
 func GetMysqlDsn(connection *MysqlConnectionOptions, multiStatements bool) string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&multiStatements=%t",
+		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&multiStatements=%t&timeout=%s&readTimeout=%s&writeTimeout=%s",
 		connection.User,
 		connection.Password,
 		connection.Host,
 		connection.Port,
 		connection.Database,
 		multiStatements,
+		dialTimeout,
+		ioTimeout,
+		ioTimeout,
 	)
 }
 
@@ -104,14 +127,24 @@ func connect(dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database %v", err)
 	}
 
+	// Recycle connections so a stale/broken connection to a node that went away is not
+	// reused indefinitely; the next use then triggers a fresh, timeout-bounded dial.
+	db.SetConnMaxLifetime(maxConnLifetime)
+	db.SetConnMaxIdleTime(maxConnIdleTime)
+
 	return db, nil
 }
 
 func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 
+	// Bound the health check so the ping loop can never block indefinitely on an
+	// unresponsive node, even if the DSN-level timeouts were somehow not applied.
+	ctx, cancel := context.WithTimeout(context.Background(), healthCheckTimeout)
+	defer cancel()
+
 	// if it's not a cluster we can just ping the database
 	if !*m.Config.IsGaleraCluster {
-		err := conn.DB.Ping()
+		err := conn.DB.PingContext(ctx)
 		log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name))
 		return err == nil
 	} else {
@@ -119,7 +152,7 @@ func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 		var variableName string
 		var wsrepStatus string
 
-		err := conn.DB.QueryRow("SHOW GLOBAL STATUS LIKE 'wsrep_ready'").Scan(&variableName, &wsrepStatus)
+		err := conn.DB.QueryRowContext(ctx, "SHOW GLOBAL STATUS LIKE 'wsrep_ready'").Scan(&variableName, &wsrepStatus)
 		if err != nil {
 			log.Warn("failed to check database connection", zap.Error(err), zap.String("name", conn.Name))
 			return false
@@ -137,49 +170,67 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 			return
 		case <-m.PingsTicker.C:
 
-			numHealthy := 0
-			numUnhealthy := 0
+			// Refresh all connections concurrently so a single slow/dead node cannot
+			// stall detection for the others (health checks are individually bounded).
+			var wg sync.WaitGroup
+			var numHealthy, numUnhealthy int64
 
 			for _, conn := range m.Connections {
-				isReachable := true
-
-				if conn.DB != nil {
-					if !m.checkIsReachable(conn) {
-						isReachable = false
-					} else if !conn.IsActive { // conn was previously not reachable but now is again
-						log.Info("successfully reconnected to database", zap.String("name", conn.Name))
-						m.Mutex.Lock()
-						conn.IsActive = isReachable
-						m.Mutex.Unlock()
-					}
-				}
-				// try to reconnect to database
-				if conn.DB == nil || !isReachable {
-					db, err := connect(conn.Dsn)
-					if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
-						isReachable = false
+				wg.Add(1)
+				go func(conn *MysqlConnection) {
+					defer wg.Done()
+					if m.refreshConnection(conn) {
+						atomic.AddInt64(&numHealthy, 1)
 					} else {
-						if !m.checkIsReachable(conn) {
-							isReachable = false
-						}
+						atomic.AddInt64(&numUnhealthy, 1)
 					}
-
-					m.Mutex.Lock()
-					conn.DB = db
-					conn.IsActive = isReachable
-					m.Mutex.Unlock()
-				}
-
-				if isReachable {
-					numHealthy++
-				} else {
-					numUnhealthy++
-				}
+				}(conn)
 			}
+			wg.Wait()
 
-			recordConnStats(numHealthy, numUnhealthy)
+			recordConnStats(int(numHealthy), int(numUnhealthy))
 		}
 	}
+}
+
+// refreshConnection checks a single connection's health, rebuilding the underlying
+// handle if it is not reachable, and updates its IsActive flag under the pool mutex.
+// It returns whether the connection is currently reachable.
+func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
+	// Fast path: an existing, healthy connection needs no churn.
+	if conn.DB != nil && m.checkIsReachable(conn) {
+		if !conn.IsActive { // conn was previously not reachable but now is again
+			log.Info("successfully reconnected to database", zap.String("name", conn.Name))
+			m.Mutex.Lock()
+			conn.IsActive = true
+			m.Mutex.Unlock()
+		}
+		return true
+	}
+
+	// Not reachable (or no handle yet): rebuild the handle and re-check it. The fresh
+	// handle is swapped in before the check so we validate the new one, not the old.
+	newDB, err := connect(conn.Dsn)
+	log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name))
+
+	m.Mutex.Lock()
+	oldDB := conn.DB
+	conn.DB = newDB
+	m.Mutex.Unlock()
+
+	// Close the old handle to avoid leaking it across reconnects; it pointed at a node
+	// we already deemed unreachable, so in-flight use is not expected.
+	if oldDB != nil {
+		log.WarnIfError("failed to close stale database connection", oldDB.Close(), zap.String("name", conn.Name))
+	}
+
+	isReachable := newDB != nil && m.checkIsReachable(conn)
+
+	m.Mutex.Lock()
+	conn.IsActive = isReachable
+	m.Mutex.Unlock()
+
+	return isReachable
 }
 
 // MustGetConnection returns an active connection of panics if none of the connections from the pool is healthy
