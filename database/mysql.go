@@ -43,11 +43,14 @@ type MysqlConnectionPool struct {
 }
 
 type MysqlConnection struct {
-	Name     string
-	Dsn      string
-	DB       *sql.DB
-	Config   *MysqlConnectionOptions
-	IsActive bool
+	Name   string
+	Dsn    string
+	Config *MysqlConnectionOptions
+	// DB and IsActive are written by the health-check goroutine and read concurrently
+	// by request goroutines via GetConnection/getActive, so both are accessed atomically
+	// rather than under Mutex to stay race-free without holding a lock across network I/O.
+	DB       atomic.Pointer[sql.DB]
+	IsActive atomic.Bool
 }
 
 type MysqlConnectionOptions struct {
@@ -82,24 +85,33 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 		conn.Dsn = GetMysqlDsn(conn.Config, false)
 
 		db, err := connect(conn.Dsn)
-		conn.DB = db
-		conn.IsActive = true
+		conn.DB.Store(db)
+		conn.IsActive.Store(true)
 
 		if err != nil || !connPool.checkIsReachable(conn) {
-			log.Error("could not connect to database", zap.Any("conn", conn))
-			conn.IsActive = false
+			log.Error("could not connect to database", zap.String("name", conn.Name))
+			conn.IsActive.Store(false)
 		}
 
 		connPool.Connections = append(connPool.Connections, conn)
 	}
 
+	// Determine whether any node is healthy before starting the background pinger, so the
+	// initial IsActive reads below don't race with the pinger's writes.
+	hasHealthyConn := false
+	for _, connection := range connPool.Connections {
+		if connection.IsActive.Load() {
+			hasHealthyConn = true
+			break
+		}
+	}
+
 	connPool.PingsTicker = time.NewTicker(10 * time.Second)
 	connPool.PingsDone = make(chan bool)
 	go connPool.startDatabasePinging()
-	for _, connection := range connPool.Connections {
-		if connection.IsActive {
-			return connPool, nil
-		}
+
+	if hasHealthyConn {
+		return connPool, nil
 	}
 
 	return connPool, ErrNoHealthyConn
@@ -137,6 +149,11 @@ func connect(dsn string) (*sql.DB, error) {
 
 func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 
+	db := conn.DB.Load()
+	if db == nil {
+		return false
+	}
+
 	// Bound the health check so the ping loop can never block indefinitely on an
 	// unresponsive node, even if the DSN-level timeouts were somehow not applied.
 	ctx, cancel := context.WithTimeout(context.Background(), healthCheckTimeout)
@@ -144,7 +161,7 @@ func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 
 	// if it's not a cluster we can just ping the database
 	if !*m.Config.IsGaleraCluster {
-		err := conn.DB.PingContext(ctx)
+		err := db.PingContext(ctx)
 		log.WarnIfError("failed to ping database", err, zap.String("name", conn.Name))
 		return err == nil
 	} else {
@@ -152,7 +169,7 @@ func (m *MysqlConnectionPool) checkIsReachable(conn *MysqlConnection) bool {
 		var variableName string
 		var wsrepStatus string
 
-		err := conn.DB.QueryRowContext(ctx, "SHOW GLOBAL STATUS LIKE 'wsrep_ready'").Scan(&variableName, &wsrepStatus)
+		err := db.QueryRowContext(ctx, "SHOW GLOBAL STATUS LIKE 'wsrep_ready'").Scan(&variableName, &wsrepStatus)
 		if err != nil {
 			log.Warn("failed to check database connection", zap.Error(err), zap.String("name", conn.Name))
 			return false
@@ -198,12 +215,10 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 // It returns whether the connection is currently reachable.
 func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
 	// Fast path: an existing, healthy connection needs no churn.
-	if conn.DB != nil && m.checkIsReachable(conn) {
-		if !conn.IsActive { // conn was previously not reachable but now is again
+	if m.checkIsReachable(conn) {
+		if !conn.IsActive.Load() { // conn was previously not reachable but now is again
 			log.Info("successfully reconnected to database", zap.String("name", conn.Name))
-			m.Mutex.Lock()
-			conn.IsActive = true
-			m.Mutex.Unlock()
+			conn.IsActive.Store(true)
 		}
 		return true
 	}
@@ -211,9 +226,7 @@ func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
 	// The connection just failed its health check (or has no handle yet). Mark it
 	// inactive right away so getActive() stops routing to it while we rebuild and
 	// re-validate the handle below.
-	m.Mutex.Lock()
-	conn.IsActive = false
-	m.Mutex.Unlock()
+	conn.IsActive.Store(false)
 
 	// Rebuild the handle. connect() only fails on a malformed DSN; if it ever does,
 	// keep the existing handle in place rather than replacing it with a nil one.
@@ -222,26 +235,18 @@ func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
 		return false
 	}
 
-	// Swap in the fresh handle, validating the new one rather than the old.
-	m.Mutex.Lock()
-	oldDB := conn.DB
-	conn.DB = newDB
-	m.Mutex.Unlock()
-
-	// Close the old handle to avoid leaking it across reconnects. Close() waits for
-	// in-flight queries, so do it asynchronously to avoid stalling the ping cycle; the
-	// handle pointed at a node we already deemed unreachable.
-	if oldDB != nil {
+	// Swap in the fresh handle, validating the new one rather than the old. Close the
+	// old handle to avoid leaking it across reconnects; Close() waits for in-flight
+	// queries, so do it asynchronously to avoid stalling the ping cycle (it pointed at
+	// a node we already deemed unreachable).
+	if oldDB := conn.DB.Swap(newDB); oldDB != nil {
 		go func() {
 			log.WarnIfError("failed to close stale database connection", oldDB.Close(), zap.String("name", conn.Name))
 		}()
 	}
 
 	isReachable := m.checkIsReachable(conn)
-
-	m.Mutex.Lock()
-	conn.IsActive = isReachable
-	m.Mutex.Unlock()
+	conn.IsActive.Store(isReachable)
 
 	return isReachable
 }
@@ -267,7 +272,7 @@ func (m *MysqlConnectionPool) GetConnection() (*sql.DB, error) {
 		return nil, err
 	}
 
-	return active.DB, err
+	return active.DB.Load(), err
 }
 
 func (m *MysqlConnectionPool) GetActiveConfig() (*MysqlConnectionOptions, error) {
@@ -283,15 +288,14 @@ func (m *MysqlConnectionPool) GetActiveConfig() (*MysqlConnectionOptions, error)
 
 func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
 
-	m.Mutex.Lock()
-	defer m.Mutex.Unlock()
-
+	// IsActive is read atomically, so no pool-level lock is needed here; this keeps
+	// connection selection off the hot path's lock while remaining race-free.
 	switch m.Config.BalancingMode {
 	case Random:
 		randConn := rand.Intn(len(m.Connections))
 
 		// check if this random connection is active
-		if m.Connections[randConn].IsActive {
+		if m.Connections[randConn].IsActive.Load() {
 			return m.Connections[randConn], nil
 		}
 
@@ -302,7 +306,7 @@ func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
 
 		// get the first active connection and return it
 		for _, db := range m.Connections {
-			if db.IsActive {
+			if db.IsActive.Load() {
 				return db, nil
 			}
 		}
@@ -371,8 +375,8 @@ func (m *MysqlConnectionPool) Close() {
 	close(m.PingsDone)
 
 	for _, conn := range m.Connections {
-		if conn.IsActive && conn.DB != nil {
-			err := conn.DB.Close()
+		if db := conn.DB.Load(); conn.IsActive.Load() && db != nil {
+			err := db.Close()
 			log.CriticalIfError("failed to close database connection", err, zap.String("connection_name", conn.Name))
 		}
 	}
