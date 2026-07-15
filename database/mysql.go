@@ -208,23 +208,36 @@ func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
 		return true
 	}
 
-	// Not reachable (or no handle yet): rebuild the handle and re-check it. The fresh
-	// handle is swapped in before the check so we validate the new one, not the old.
-	newDB, err := connect(conn.Dsn)
-	log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name))
+	// The connection just failed its health check (or has no handle yet). Mark it
+	// inactive right away so getActive() stops routing to it while we rebuild and
+	// re-validate the handle below.
+	m.Mutex.Lock()
+	conn.IsActive = false
+	m.Mutex.Unlock()
 
+	// Rebuild the handle. connect() only fails on a malformed DSN; if it ever does,
+	// keep the existing handle in place rather than replacing it with a nil one.
+	newDB, err := connect(conn.Dsn)
+	if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
+		return false
+	}
+
+	// Swap in the fresh handle, validating the new one rather than the old.
 	m.Mutex.Lock()
 	oldDB := conn.DB
 	conn.DB = newDB
 	m.Mutex.Unlock()
 
-	// Close the old handle to avoid leaking it across reconnects; it pointed at a node
-	// we already deemed unreachable, so in-flight use is not expected.
+	// Close the old handle to avoid leaking it across reconnects. Close() waits for
+	// in-flight queries, so do it asynchronously to avoid stalling the ping cycle; the
+	// handle pointed at a node we already deemed unreachable.
 	if oldDB != nil {
-		log.WarnIfError("failed to close stale database connection", oldDB.Close(), zap.String("name", conn.Name))
+		go func() {
+			log.WarnIfError("failed to close stale database connection", oldDB.Close(), zap.String("name", conn.Name))
+		}()
 	}
 
-	isReachable := newDB != nil && m.checkIsReachable(conn)
+	isReachable := m.checkIsReachable(conn)
 
 	m.Mutex.Lock()
 	conn.IsActive = isReachable
