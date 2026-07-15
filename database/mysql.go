@@ -66,6 +66,15 @@ var (
 	ErrUnsupportedBalancingMode = errors.New("unsupported balancing mode")
 )
 
+// NewMysqlConnectionPool builds a connection pool for the configured cluster and starts
+// a background goroutine that periodically re-checks node health.
+//
+// If no node is reachable at startup it returns a non-nil pool together with
+// ErrNoHealthyConn: this is a recoverable condition, not a fatal one. The background
+// pinger keeps running and will mark nodes active again once they come back, so callers
+// that want degraded/emergency operation can keep using the returned pool. Because the
+// pinger owns a ticker and a goroutine, the caller must call Close() on the returned pool
+// even when it received ErrNoHealthyConn.
 func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error) {
 	connPool := &MysqlConnectionPool{}
 	connPool.Connections = make([]*MysqlConnection, 0, len(config.Connections))
@@ -101,8 +110,9 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 		connPool.Connections = append(connPool.Connections, conn)
 	}
 
-	// Determine whether any node is healthy before starting the background pinger, so the
-	// initial IsActive reads below don't race with the pinger's writes.
+	// Snapshot construction-time reachability to decide the returned error. IsActive is
+	// atomic, so this remains correct regardless of the pinger; we read it here so the
+	// result reflects startup state rather than a value the first tick may have changed.
 	hasHealthyConn := false
 	for _, connection := range connPool.Connections {
 		if connection.IsActive.Load() {
