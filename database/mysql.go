@@ -86,12 +86,17 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 
 		db, err := connect(conn.Dsn)
 		conn.DB.Store(db)
-		conn.IsActive.Store(true)
 
-		if err != nil || !connPool.checkIsReachable(conn) {
-			log.Error("could not connect to database", zap.String("name", conn.Name), zap.Error(err))
-			conn.IsActive.Store(false)
+		var isReachable bool
+		switch {
+		case err != nil:
+			log.Error("failed to open database handle", zap.String("name", conn.Name), zap.Error(err))
+		case !connPool.checkIsReachable(conn):
+			log.Warn("database node is not reachable at startup", zap.String("name", conn.Name))
+		default:
+			isReachable = true
 		}
+		conn.IsActive.Store(isReachable)
 
 		connPool.Connections = append(connPool.Connections, conn)
 	}
@@ -280,6 +285,11 @@ func (m *MysqlConnectionPool) getActive() (*MysqlConnection, error) {
 
 	// IsActive is read atomically, so no pool-level lock is needed here; this keeps
 	// connection selection off the hot path's lock while remaining race-free.
+	if len(m.Connections) == 0 {
+		incNoHealthyConnError()
+		return nil, ErrNoHealthyConn
+	}
+
 	switch m.Config.BalancingMode {
 	case Random:
 		randConn := rand.Intn(len(m.Connections))
