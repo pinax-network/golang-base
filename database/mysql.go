@@ -89,7 +89,7 @@ func NewMysqlConnectionPool(config *ClusterConfig) (*MysqlConnectionPool, error)
 		conn.IsActive.Store(true)
 
 		if err != nil || !connPool.checkIsReachable(conn) {
-			log.Error("could not connect to database", zap.String("name", conn.Name))
+			log.Error("could not connect to database", zap.String("name", conn.Name), zap.Error(err))
 			conn.IsActive.Store(false)
 		}
 
@@ -210,44 +210,34 @@ func (m *MysqlConnectionPool) startDatabasePinging() {
 	}
 }
 
-// refreshConnection checks a single connection's health, rebuilding the underlying
-// handle if it is not reachable, and updates its IsActive flag under the pool mutex.
-// It returns whether the connection is currently reachable.
+// refreshConnection re-checks a single connection's health and updates its IsActive
+// flag accordingly. It returns whether the connection is currently reachable.
+//
+// The underlying *sql.DB is created once (at pool construction, or lazily here if that
+// ever failed) and reused across outages: database/sql owns its own connection pool and
+// transparently re-dials when a node recovers, so the handle is never rebuilt on a mere
+// health-check failure -- doing so would churn connection-pool goroutines every tick for
+// the duration of an outage.
 func (m *MysqlConnectionPool) refreshConnection(conn *MysqlConnection) bool {
-	// Fast path: an existing, healthy connection needs no churn.
-	if m.checkIsReachable(conn) {
-		if !conn.IsActive.Load() { // conn was previously not reachable but now is again
-			log.Info("successfully reconnected to database", zap.String("name", conn.Name))
-			conn.IsActive.Store(true)
+	// Ensure a handle exists. connect() only fails on a malformed DSN, so this is a
+	// one-off cost that effectively never recurs during normal operation.
+	if conn.DB.Load() == nil {
+		db, err := connect(conn.Dsn)
+		if log.WarnIfError("failed to open database handle", err, zap.String("name", conn.Name)) {
+			conn.IsActive.Store(false)
+			return false
 		}
-		return true
+		conn.DB.Store(db)
 	}
 
-	// The connection just failed its health check (or has no handle yet). Mark it
-	// inactive right away so getActive() stops routing to it while we rebuild and
-	// re-validate the handle below.
-	conn.IsActive.Store(false)
-
-	// Rebuild the handle. connect() only fails on a malformed DSN; if it ever does,
-	// keep the existing handle in place rather than replacing it with a nil one.
-	newDB, err := connect(conn.Dsn)
-	if log.WarnIfError("failed to (re-)connect to database", err, zap.String("name", conn.Name)) {
-		return false
-	}
-
-	// Swap in the fresh handle, validating the new one rather than the old. Close the
-	// old handle to avoid leaking it across reconnects; Close() waits for in-flight
-	// queries, so do it asynchronously to avoid stalling the ping cycle (it pointed at
-	// a node we already deemed unreachable).
-	if oldDB := conn.DB.Swap(newDB); oldDB != nil {
-		go func() {
-			log.WarnIfError("failed to close stale database connection", oldDB.Close(), zap.String("name", conn.Name))
-		}()
-	}
-
+	wasActive := conn.IsActive.Load()
 	isReachable := m.checkIsReachable(conn)
-	conn.IsActive.Store(isReachable)
 
+	if isReachable && !wasActive { // conn was previously not reachable but now is again
+		log.Info("successfully reconnected to database", zap.String("name", conn.Name))
+	}
+
+	conn.IsActive.Store(isReachable)
 	return isReachable
 }
 
@@ -375,7 +365,9 @@ func (m *MysqlConnectionPool) Close() {
 	close(m.PingsDone)
 
 	for _, conn := range m.Connections {
-		if db := conn.DB.Load(); conn.IsActive.Load() && db != nil {
+		// Close every handle we hold, not only the active ones: a node that is down at
+		// shutdown still has an open *sql.DB whose pool goroutines would otherwise leak.
+		if db := conn.DB.Load(); db != nil {
 			err := db.Close()
 			log.CriticalIfError("failed to close database connection", err, zap.String("connection_name", conn.Name))
 		}
