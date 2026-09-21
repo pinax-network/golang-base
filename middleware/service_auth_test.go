@@ -161,7 +161,10 @@ func TestServiceJWTRejectsInvalidTokens(t *testing.T) {
 			require.NotContains(t, w.Body.String(), token)
 		})
 	}
-	require.Equal(t, 401, requestJWT(r, "").Code)
+	anonymous := requestJWT(r, "")
+	require.Equal(t, 401, anonymous.Code)
+	require.Equal(t, "1", anonymous.Header().Get("X-Pinax-Admin-Service-Auth"))
+	require.Equal(t, "no-store", anonymous.Header().Get("Cache-Control"))
 	unsigned := jwt.NewWithClaims(jwt.SigningMethodNone, serviceClaims())
 	unsigned.Header["kid"] = "test-key"
 	token, err := unsigned.SignedString(jwt.UnsafeAllowNoneSignatureType)

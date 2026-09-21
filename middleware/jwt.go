@@ -154,7 +154,14 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 // The supplied user service must reject inactive principals and verify that the
 // mapped account belongs to this machine identity when extractUser is true.
 func (j *JwksMiddleware) AuthenticateWithServiceClients(extractUser bool, clients []ServiceClientConfig) gin.HandlerFunc {
-	return j.authenticate(extractUser, false, copyServiceClients(clients))
+	authenticate := j.authenticate(extractUser, false, copyServiceClients(clients))
+	return func(c *gin.Context) {
+		// A credential-free probe can distinguish this safe service-auth path
+		// from older servers that reject and log machine tokens as user errors.
+		c.Header("X-Pinax-Admin-Service-Auth", "1")
+		c.Header("Cache-Control", "no-store")
+		authenticate(c)
+	}
 }
 
 func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients map[string]string) gin.HandlerFunc {

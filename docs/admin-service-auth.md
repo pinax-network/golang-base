@@ -5,6 +5,12 @@ install `AuthenticateWithServiceClients(extractUser, config.AdminServiceClients)
 on their administrative route group, followed by the existing `CheckPermissions`
 handler. Other route groups must keep the existing user-only middleware.
 
+This entry point sets `X-Pinax-Admin-Service-Auth: 1` and `Cache-Control: no-store`
+even on a missing-token 401. A frontend can probe an administrative auth-check
+route without credentials before sending its first machine token, avoiding
+legacy servers that do not yet implement service authentication and redaction.
+This advertises protocol support only, not any client's authorization.
+
 Configure an Auth0 client grant for the API's `admin` scope. Tokens must pass the
 configured RS256/JWKS signature, issuer, audience and time validation. Machine
 access additionally requires `gty: client-credentials`, a future `exp`, exactly
