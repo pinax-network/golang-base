@@ -9,7 +9,6 @@ import (
 	"github.com/pinax-network/golang-base/response"
 	"github.com/pinax-network/golang-base/validate"
 	"go.uber.org/zap"
-	"net/http/httputil"
 	"strconv"
 	"strings"
 	"time"
@@ -31,17 +30,19 @@ func Errors() gin.HandlerFunc {
 			log.Error("error middleware received error that is not of type *ApiError", zap.Any("error", err))
 			httpErr = response.InternalServerError
 		}
+		// Response templates are shared; never mutate one across requests.
+		copy := *httpErr
+		httpErr = &copy
 
 		// log internal server errors in detail
 		if httpErr.Is(response.InternalServerError) {
 			user, _ := helper.ExtractUserFromContext(c)
-			httpRequest, _ := httputil.DumpRequest(c.Request, false)
 			log.Error("[Internal server error]",
 				zap.Time("time", time.Now()),
 				zap.Any("error", err),
 				zap.Any("meta", err.Meta),
 				zap.Any("user", user),
-				zap.String("request", string(httpRequest)),
+				zap.String("request", safeRequestSummary(c)),
 			)
 		}
 
