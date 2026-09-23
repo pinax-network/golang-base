@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -41,13 +41,28 @@ type JwksMiddleware struct {
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 	certHandler   *CertHandler
 	config        *JwtMiddlewareConfig
+	// certLoader replaces the JWKS URL fetch in tests; nil uses loadCerts.
+	certLoader func() (map[string]*rsa.PublicKey, error)
 }
 
 type CertHandler struct {
 	certs       map[string]*rsa.PublicKey
 	lastRefresh time.Time
 	refreshMu   *sync.Mutex
+	// demandMu serializes refreshes triggered by unknown signing keys, so a
+	// burst of such tokens shares a single JWKS request. It is held while
+	// fetching; refreshMu only guards the key map and timestamps.
+	demandMu     sync.Mutex
+	nextOnDemand time.Time
+	failures     int
 }
+
+const (
+	// An unknown key can trigger at most one JWKS fetch per interval...
+	onDemandRefreshInterval = time.Minute
+	// ...and consecutive failures back off exponentially up to this limit.
+	onDemandRefreshMaxBackoff = 10 * time.Minute
+)
 
 func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewareConfig) (*JwksMiddleware, error) {
 
@@ -76,61 +91,54 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 	}
 
 	j.jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+		// This middleware protects handlers, including any explicitly registered
+		// OPTIONS handler. Public CORS preflights must be handled before it.
+		EnableAuthOnOptions: true,
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
 			// we do not write anything to the ResponseWriter here, this will be done in Authenticate()
 		},
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			// Verify 'aud' claim
-			var aud []interface{}
-
-			// we need to manually parse the aud array/string from the token, see https://github.com/form3tech-oss/jwt-go/issues/7
-			switch token.Claims.(jwt.MapClaims)["aud"].(type) {
+			var audiences []string
+			switch aud := token.Claims.(jwt.MapClaims)["aud"].(type) {
+			case string:
+				audiences = []string{aud}
 			case []interface{}:
-				aud = token.Claims.(jwt.MapClaims)["aud"].([]interface{})
-			case interface{}:
-				aud = make([]interface{}, 0)
-				aud = append(aud, token.Claims.(jwt.MapClaims)["aud"])
+				for _, value := range aud {
+					audience, ok := value.(string)
+					if !ok {
+						return nil, errors.New("invalid audience")
+					}
+					audiences = append(audiences, audience)
+				}
 			default:
-				return token, errors.New("invalid audience")
+				return nil, errors.New("invalid audience")
 			}
-
-			s := make([]string, len(aud))
-			for i, v := range aud {
-				s[i] = fmt.Sprint(v)
-			}
-			token.Claims.(jwt.MapClaims)["aud"] = s
-
-			checkAud := j.verifyAudience(s, true)
+			checkAud := j.verifyAudience(audiences, true)
 			if !checkAud {
 				return token, errors.New("invalid audience")
 			}
 
 			// Verify 'iss' claim
 			iss := "https://" + j.config.Auth0Domain + "/"
-			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, true)
 			if !checkIss {
 				return token, errors.New("invalid issuer")
 			}
 
-			cert, ok := j.certHandler.certs[token.Header["kid"].(string)]
-
+			kid, ok := token.Header["kid"].(string)
+			if !ok || kid == "" {
+				return nil, errors.New("missing signing key identifier")
+			}
+			cert, ok, _ := j.signingKey(kid)
+			if !ok && j.config.JwksFile == "" {
+				// An unknown key usually means Auth0 rotated its signing keys.
+				// Refresh (coalesced and rate limited), then look the key up again.
+				j.refreshForUnknownKey()
+				cert, ok, _ = j.signingKey(kid)
+			}
 			if !ok {
-				// occasionally make sure we still have up to date certs if we receive a "kid not found" issue for a token
-				// which could have happened due to signing key rotations
-				if time.Since(j.certHandler.lastRefresh) > 1*time.Minute {
-					log.Debug("kid not found, refreshing certs", zap.Any("kid", token.Header["kid"]))
-
-					err := j.refreshCerts()
-					log.CriticalIfError("failed to reload jwt certs from auth0", err)
-
-					if err == nil {
-						cert, ok := j.certHandler.certs[token.Header["kid"].(string)]
-						if ok {
-							return cert, nil
-						}
-					}
-				}
-				return token, errors.New("no cert available for kid " + token.Header["kid"].(string))
+				return nil, errors.New("unknown signing key")
 			}
 
 			return cert, nil
@@ -142,12 +150,32 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 }
 
 func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.HandlerFunc {
+	return j.authenticate(extractUser, allowAnonymous, nil)
+}
+
+// AuthenticateWithServiceClients explicitly enables administrative machine access
+// on the routes where it is installed. It maps exact Auth0 client IDs to
+// server-configured service principal GUIDs. User tokens keep the existing path.
+// The supplied user service must reject inactive principals and verify that the
+// mapped account belongs to this machine identity when extractUser is true.
+func (j *JwksMiddleware) AuthenticateWithServiceClients(extractUser bool, clients []ServiceClientConfig) gin.HandlerFunc {
+	authenticate := j.authenticate(extractUser, false, copyServiceClients(clients))
+	return func(c *gin.Context) {
+		// A credential-free probe can distinguish this safe service-auth path
+		// from older servers that reject and log machine tokens as user errors.
+		c.Header("X-Pinax-Admin-Service-Auth", "1")
+		c.Header("Cache-Control", "no-store")
+		authenticate(c)
+	}
+}
+
+func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// extract JWT from header
 		tokenString, err := jwtmiddleware.FromAuthHeader(c.Request)
 		if err != nil {
-			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, err)
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid authorization header")
 			return
 		}
 
@@ -160,7 +188,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		// validate JWT
 		err = j.jwtMiddleware.CheckJWT(c.Writer, c.Request)
 		if err != nil {
-			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, err)
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid access token")
 			return
 		}
 
@@ -168,20 +196,26 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		claims := jwt.MapClaims{}
 		_, _, err = new(jwt.Parser).ParseUnverified(tokenString, &claims)
 		if err != nil {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, err)
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid access token")
 			return
 		}
 
 		// extract and parse auth0 subject
 		subject, ok := claims["sub"].(string)
 		if !ok {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("jwt subject expected to be string, instead got: '%T', %v", claims["sub"], claims["sub"]))
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid token subject")
+			return
+		}
+		if strings.HasSuffix(subject, "@clients") || claims["gty"] == "client-credentials" {
+			j.authenticateService(c, claims, subject, extractUser, clients)
 			return
 		}
 
-		extractAuth0 := strings.Split(subject, "|")
-		if len(extractAuth0) < 2 {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("invalid jwt subject given, needs to be of type 'auth_provider|user_id': %s", tokenString))
+		// Split at the first separator only: SAML and custom-database subjects
+		// such as "samlp|connection|user" keep the identity suffix intact.
+		extractAuth0 := strings.SplitN(subject, "|", 2)
+		if len(extractAuth0) != 2 || extractAuth0[0] == "" || extractAuth0[1] == "" {
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid user subject")
 			return
 		}
 
@@ -192,7 +226,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		// extract user ID (currently this should always be the EOS Nation ID)
 		eosnId, ok := claims[j.getNamespaceClaim("user_id")].(string)
 		if !ok || eosnId == "" {
-			helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, fmt.Sprintf("missing claim for the user id (%q): %s", j.getNamespaceClaim("user_id"), tokenString))
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "missing user identifier")
 			return
 		}
 
@@ -200,7 +234,12 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 		c.Set(base_global.CONTEXT_USER_EMAIL, claims[j.getNamespaceClaim("email")])
 		c.Set(base_global.CONTEXT_USER_EMAIL_VERIFIED, claims[j.getNamespaceClaim("email_verified")])
 
-		c.Set(base_global.CONTEXT_USER_PERMISIONS, claims["permissions"])
+		permissions, valid := permissionClaims(claims["permissions"])
+		if !valid {
+			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid token permissions")
+			return
+		}
+		c.Set(base_global.CONTEXT_USER_PERMISIONS, permissions)
 
 		// set the Github namespaces if available
 		if githubId, ok := claims[j.getNamespaceClaim("github_id")]; ok {
@@ -213,11 +252,21 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 
 		// get the corresponding user from the database if requested
 		if extractUser {
+			if j.userService == nil {
+				helper.ReportPrivateErrorAndAbort(c, response.InternalServerError, "user lookup unavailable")
+				return
+			}
 			user, apiErr := j.userService.ExtractUserByGUID(c, eosnId)
 			if apiErr != nil {
 				helper.ReportPrivateErrorAndAbort(c, apiErr, nil)
 				return
 			}
+			if user == nil {
+				helper.ReportPublicErrorAndAbort(c, response.Forbidden, nil)
+				return
+			}
+			userCopy := *user
+			user = &userCopy
 
 			userEmail, ok := claims[j.getNamespaceClaim("email")].(string)
 			if ok {
@@ -229,8 +278,7 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 			}
 
 			// convert permission list to string array
-			permissions, ok := claims["permissions"].([]interface{})
-			if ok {
+			if permissions != nil {
 				permissionStrings := make([]string, len(permissions))
 				for i, p := range permissions {
 					permissionStrings[i] = p.(string)
@@ -245,8 +293,50 @@ func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.Hand
 	}
 }
 
+func (j *JwksMiddleware) signingKey(kid string) (*rsa.PublicKey, bool, time.Time) {
+	j.certHandler.refreshMu.Lock()
+	defer j.certHandler.refreshMu.Unlock()
+	key, ok := j.certHandler.certs[kid]
+	return key, ok, j.certHandler.lastRefresh
+}
+
+// refreshForUnknownKey fetches the JWKS at most once per interval however many
+// concurrent requests carry unknown signing keys. Waiting callers re-check after
+// acquiring the guard, so they reuse a refresh that finished meanwhile, and a
+// failed fetch backs off instead of retrying on every unauthenticated request.
+func (j *JwksMiddleware) refreshForUnknownKey() {
+	h := j.certHandler
+	h.demandMu.Lock()
+	defer h.demandMu.Unlock()
+	_, _, lastRefresh := j.signingKey("")
+	now := time.Now()
+	if now.Sub(lastRefresh) <= onDemandRefreshInterval || now.Before(h.nextOnDemand) {
+		return
+	}
+	log.Debug("signing key not found, refreshing certs")
+	if err := j.refreshCerts(); err != nil {
+		h.failures++
+		backoff := onDemandRefreshInterval
+		for i := 1; i < h.failures && backoff < onDemandRefreshMaxBackoff; i++ {
+			backoff *= 2
+		}
+		if backoff > onDemandRefreshMaxBackoff {
+			backoff = onDemandRefreshMaxBackoff
+		}
+		h.nextOnDemand = now.Add(backoff)
+		log.CriticalIfError("failed to reload jwt certs from auth0", err, zap.Duration("retry_after", backoff))
+		return
+	}
+	h.failures = 0
+	h.nextOnDemand = time.Time{}
+}
+
 func (j *JwksMiddleware) refreshCerts() error {
-	certs, err := j.loadCerts()
+	load := j.loadCerts
+	if j.certLoader != nil {
+		load = j.certLoader
+	}
+	certs, err := load()
 
 	if err != nil {
 		return err
@@ -267,6 +357,7 @@ func (j *JwksMiddleware) loadCertsFromFile(path string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	var jwks = Jwks{}
 	err = json.NewDecoder(file).Decode(&jwks)
@@ -279,6 +370,9 @@ func (j *JwksMiddleware) loadCertsFromFile(path string) error {
 	}
 
 	for _, key := range jwks.Keys {
+		if len(key.X5c) == 0 {
+			return errors.New("signing key has no certificate")
+		}
 		certs[key.Kid], err = jwt.ParseRSAPublicKeyFromPEM([]byte("-----BEGIN CERTIFICATE-----\n" + key.X5c[0] + "\n-----END CERTIFICATE-----"))
 		log.Debug("loaded cert", zap.String("kid", key.Kid))
 		if err != nil {
@@ -316,15 +410,21 @@ func (j *JwksMiddleware) loadCerts() (map[string]*rsa.PublicKey, error) {
 	certs := make(map[string]*rsa.PublicKey)
 
 	certsUrl := "https://" + j.config.Auth0Domain + "/.well-known/jwks.json"
-	resp, err := http.Get(certsUrl)
+	client := &http.Client{Timeout: 5 * time.Second, CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+		return errors.New("JWKS redirects are not allowed")
+	}}
+	resp, err := client.Get(certsUrl)
 
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("JWKS request failed")
+	}
 
 	var jwks = Jwks{}
-	err = json.NewDecoder(resp.Body).Decode(&jwks)
+	err = json.NewDecoder(io.LimitReader(resp.Body, 1024*1024)).Decode(&jwks)
 	if err != nil {
 		return nil, err
 	}
@@ -334,6 +434,9 @@ func (j *JwksMiddleware) loadCerts() (map[string]*rsa.PublicKey, error) {
 	}
 
 	for _, key := range jwks.Keys {
+		if len(key.X5c) == 0 {
+			return nil, errors.New("signing key has no certificate")
+		}
 		certs[key.Kid], err = jwt.ParseRSAPublicKeyFromPEM([]byte("-----BEGIN CERTIFICATE-----\n" + key.X5c[0] + "\n-----END CERTIFICATE-----"))
 		log.Debug("loaded cert", zap.String("kid", key.Kid))
 

@@ -7,7 +7,6 @@ import (
 	"github.com/pinax-network/golang-base/response"
 	"go.uber.org/zap"
 	"net"
-	"net/http/httputil"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -29,9 +28,9 @@ func Recovery(stack bool) gin.HandlerFunc {
 					}
 				}
 
-				httpRequest, _ := httputil.DumpRequest(c.Request, false)
+				httpRequest := safeRequestSummary(c)
 				if brokenPipe {
-					log.Error(c.Request.URL.Path, zap.Any("error", err), zap.String("request", string(httpRequest)))
+					log.Error("broken connection", zap.Any("error", err), zap.String("request", httpRequest))
 					// If the connection is dead, we can't write a status to it.
 					c.Error(err.(error)) // nolint: errcheck
 					c.Abort()
@@ -57,7 +56,8 @@ func Recovery(stack bool) gin.HandlerFunc {
 					)
 				}
 
-				errInternal := response.InternalServerError
+				copy := *response.InternalServerError
+				errInternal := &copy
 				errResponse := response.ApiErrorResponse{Errors: []*response.ApiError{errInternal}}
 
 				// if we are running in debug mode attach the stack trace to the error response

@@ -33,7 +33,8 @@ func (r *ReverseProxyMiddleware) ProxyRequest(responseHandler func(*gin.Context)
 		}
 
 		proxy.ErrorHandler = func(writer http.ResponseWriter, request *http.Request, err error) {
-			log.Panic("failed to reverse proxy request", zap.Error(err), zap.String("request", request.RequestURI))
+			// Log the route template only: the raw URI can carry keys in its path or query.
+			log.Panic("failed to reverse proxy request", zap.Error(err), zap.String("request", safeRequestSummary(c)))
 		}
 
 		proxy.ServeHTTP(c.Writer, c.Request)
