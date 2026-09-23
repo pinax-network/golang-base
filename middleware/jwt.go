@@ -41,13 +41,28 @@ type JwksMiddleware struct {
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 	certHandler   *CertHandler
 	config        *JwtMiddlewareConfig
+	// certLoader replaces the JWKS URL fetch in tests; nil uses loadCerts.
+	certLoader func() (map[string]*rsa.PublicKey, error)
 }
 
 type CertHandler struct {
 	certs       map[string]*rsa.PublicKey
 	lastRefresh time.Time
 	refreshMu   *sync.Mutex
+	// demandMu serializes refreshes triggered by unknown signing keys, so a
+	// burst of such tokens shares a single JWKS request. It is held while
+	// fetching; refreshMu only guards the key map and timestamps.
+	demandMu     sync.Mutex
+	nextOnDemand time.Time
+	failures     int
 }
+
+const (
+	// An unknown key can trigger at most one JWKS fetch per interval...
+	onDemandRefreshInterval = time.Minute
+	// ...and consecutive failures back off exponentially up to this limit.
+	onDemandRefreshMaxBackoff = 10 * time.Minute
+)
 
 func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewareConfig) (*JwksMiddleware, error) {
 
@@ -115,24 +130,14 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 			if !ok || kid == "" {
 				return nil, errors.New("missing signing key identifier")
 			}
-			cert, ok, lastRefresh := j.signingKey(kid)
-
+			cert, ok, _ := j.signingKey(kid)
+			if !ok && j.config.JwksFile == "" {
+				// An unknown key usually means Auth0 rotated its signing keys.
+				// Refresh (coalesced and rate limited), then look the key up again.
+				j.refreshForUnknownKey()
+				cert, ok, _ = j.signingKey(kid)
+			}
 			if !ok {
-				// occasionally make sure we still have up to date certs if we receive a "kid not found" issue for a token
-				// which could have happened due to signing key rotations
-				if j.config.JwksFile == "" && time.Since(lastRefresh) > 1*time.Minute {
-					log.Debug("signing key not found, refreshing certs")
-
-					err := j.refreshCerts()
-					log.CriticalIfError("failed to reload jwt certs from auth0", err)
-
-					if err == nil {
-						cert, ok, _ := j.signingKey(kid)
-						if ok {
-							return cert, nil
-						}
-					}
-				}
 				return nil, errors.New("unknown signing key")
 			}
 
@@ -206,7 +211,9 @@ func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients 
 			return
 		}
 
-		extractAuth0 := strings.Split(subject, "|")
+		// Split at the first separator only: SAML and custom-database subjects
+		// such as "samlp|connection|user" keep the identity suffix intact.
+		extractAuth0 := strings.SplitN(subject, "|", 2)
 		if len(extractAuth0) != 2 || extractAuth0[0] == "" || extractAuth0[1] == "" {
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid user subject")
 			return
@@ -293,8 +300,43 @@ func (j *JwksMiddleware) signingKey(kid string) (*rsa.PublicKey, bool, time.Time
 	return key, ok, j.certHandler.lastRefresh
 }
 
+// refreshForUnknownKey fetches the JWKS at most once per interval however many
+// concurrent requests carry unknown signing keys. Waiting callers re-check after
+// acquiring the guard, so they reuse a refresh that finished meanwhile, and a
+// failed fetch backs off instead of retrying on every unauthenticated request.
+func (j *JwksMiddleware) refreshForUnknownKey() {
+	h := j.certHandler
+	h.demandMu.Lock()
+	defer h.demandMu.Unlock()
+	_, _, lastRefresh := j.signingKey("")
+	now := time.Now()
+	if now.Sub(lastRefresh) <= onDemandRefreshInterval || now.Before(h.nextOnDemand) {
+		return
+	}
+	log.Debug("signing key not found, refreshing certs")
+	if err := j.refreshCerts(); err != nil {
+		h.failures++
+		backoff := onDemandRefreshInterval
+		for i := 1; i < h.failures && backoff < onDemandRefreshMaxBackoff; i++ {
+			backoff *= 2
+		}
+		if backoff > onDemandRefreshMaxBackoff {
+			backoff = onDemandRefreshMaxBackoff
+		}
+		h.nextOnDemand = now.Add(backoff)
+		log.CriticalIfError("failed to reload jwt certs from auth0", err, zap.Duration("retry_after", backoff))
+		return
+	}
+	h.failures = 0
+	h.nextOnDemand = time.Time{}
+}
+
 func (j *JwksMiddleware) refreshCerts() error {
-	certs, err := j.loadCerts()
+	load := j.loadCerts
+	if j.certLoader != nil {
+		load = j.certLoader
+	}
+	certs, err := load()
 
 	if err != nil {
 		return err
