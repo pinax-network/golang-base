@@ -40,6 +40,13 @@ audit_updated_resources 13
 
 Provides some helpers to easily load and validate config files from file.
 
+`Load` also accepts a comma-separated list of files, for example
+`-config /config/public.yaml,/config/secret.yaml`. This keeps public settings in a
+plaintext, reviewable file and only secrets in an encrypted one. Maps are merged
+across files, but each setting may be defined in only one file: a setting that
+appears in two files, or a value where another file has a map, fails loading.
+Error messages name settings and files, never values.
+
 ### Consul
 
 This modules wraps the Consul KV Api and provides some easy ways to load and store different data types without
