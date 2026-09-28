@@ -150,26 +150,6 @@ func NewJwksMiddleware(userService base_service.UserService, config *JwtMiddlewa
 }
 
 func (j *JwksMiddleware) Authenticate(extractUser, allowAnonymous bool) gin.HandlerFunc {
-	return j.authenticate(extractUser, allowAnonymous, nil)
-}
-
-// AuthenticateWithServiceClients explicitly enables administrative machine access
-// on the routes where it is installed. It maps exact Auth0 client IDs to
-// server-configured service principal GUIDs. User tokens keep the existing path.
-// The supplied user service must reject inactive principals and verify that the
-// mapped account belongs to this machine identity when extractUser is true.
-func (j *JwksMiddleware) AuthenticateWithServiceClients(extractUser bool, clients []ServiceClientConfig) gin.HandlerFunc {
-	authenticate := j.authenticate(extractUser, false, copyServiceClients(clients))
-	return func(c *gin.Context) {
-		// A credential-free probe can distinguish this safe service-auth path
-		// from older servers that reject and log machine tokens as user errors.
-		c.Header("X-Pinax-Admin-Service-Auth", "1")
-		c.Header("Cache-Control", "no-store")
-		authenticate(c)
-	}
-}
-
-func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// extract JWT from header
@@ -206,8 +186,10 @@ func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients 
 			helper.ReportPublicErrorAndAbort(c, response.Unauthorized, "invalid token subject")
 			return
 		}
+		// Only people authenticate here. Machine (client-credentials) tokens carry
+		// no user identity, so actions could not be attributed to an operator.
 		if strings.HasSuffix(subject, "@clients") || claims["gty"] == "client-credentials" {
-			j.authenticateService(c, claims, subject, extractUser, clients)
+			helper.ReportPublicErrorAndAbort(c, response.Forbidden, "machine tokens are not accepted")
 			return
 		}
 
@@ -291,6 +273,24 @@ func (j *JwksMiddleware) authenticate(extractUser, allowAnonymous bool, clients 
 
 		c.Next()
 	}
+}
+
+// permissionClaims accepts an absent claim or a list of strings; anything else
+// is a malformed token.
+func permissionClaims(value interface{}) ([]interface{}, bool) {
+	if value == nil {
+		return nil, true
+	}
+	permissions, ok := value.([]interface{})
+	if !ok {
+		return nil, false
+	}
+	for _, p := range permissions {
+		if _, ok := p.(string); !ok {
+			return nil, false
+		}
+	}
+	return permissions, true
 }
 
 func (j *JwksMiddleware) signingKey(kid string) (*rsa.PublicKey, bool, time.Time) {
